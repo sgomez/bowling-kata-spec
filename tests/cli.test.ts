@@ -141,7 +141,7 @@ describe("runCli", () => {
 
       expect(outputText).toContain("Marco 10, Lanzamiento 1: ");
       expect(outputText).toContain("Marco 10, Lanzamiento 2: ");
-      expect(outputText).toContain("Marco 10, Lanzamiento 3 (tiro extra): ");
+      expect(outputText).toContain("Marco 10, Lanzamiento 3: ");
       expect(outputText).toContain("|  | X|  | X|  | X|  | X|  | X|  | X|  | X|  | X|  | X| X| X| X|");
       expect(outputText).toContain("¡Partida finalizada! Puntuación final: 300");
       expect(outputText).toContain("¿Deseas jugar otra partida? (s/n): ");
@@ -170,7 +170,7 @@ describe("runCli", () => {
 
       expect(outputText).toContain("Marco 10, Lanzamiento 1: ");
       expect(outputText).toContain("Marco 10, Lanzamiento 2: ");
-      expect(outputText).toContain("Marco 10, Lanzamiento 3 (tiro extra): ");
+      expect(outputText).toContain("Marco 10, Lanzamiento 3: ");
       expect(outputText).toContain("¡Partida finalizada! Puntuación final: 20");
     });
 
@@ -222,8 +222,8 @@ describe("runCli", () => {
 
       await runCli(inStream, outStream);
 
-      expect(outputText).toContain("No se puede registrar un semipleno ('/') con todos los bolos en pie.");
-      expect(outputText).toContain("No se puede registrar un pleno ('X') cuando quedan menos de 10 bolos.");
+      expect(outputText).toContain("No se puede registrar un spare ('/') con todos los bolos en pie.");
+      expect(outputText).toContain("No se puede registrar un strike ('X') cuando quedan menos de 10 bolos.");
       expect(outputText).toContain("El total de bolos en el marco no puede superar 10 (bolos restantes: 1).");
       expect(outputText).toContain("¡Partida finalizada! Puntuación final: 20");
     });
@@ -405,8 +405,120 @@ describe("runCli", () => {
 
       expect(outputText).toContain("Marco 10, Lanzamiento 1: ");
       expect(outputText).toContain("Marco 10, Lanzamiento 2: ");
-      expect(outputText).toContain("Marco 10, Lanzamiento 3 (tiro extra): ");
+      expect(outputText).toContain("Marco 10, Lanzamiento 3: ");
       expect(outputText).toContain("¡Partida finalizada! Puntuación final: 9");
+    });
+  });
+
+  describe("Standards and Edge Case Validation Regressions", () => {
+    it("accepts '/' spare on roll 2 after a 0-pin first roll and advances frame", async () => {
+      // Frame 1: 0, / (spare of 10 pins)
+      // Frame 2: 7, 2 (open frame, 9 pins)
+      // Remaining 16 rolls as gutters
+      // 'n' to exit
+      const inputs = [
+        "0\n",
+        "/\n",
+        "7\n",
+        "2\n",
+        ...Array(16).fill("0\n"),
+        "n\n",
+      ];
+      const inStream = Readable.from(inputs);
+
+      let outputText = "";
+      const outStream = new Writable({
+        write(chunk, _encoding, callback) {
+          outputText += chunk.toString();
+          callback();
+        },
+      });
+
+      await runCli(inStream, outStream);
+
+      expect(outputText).toContain("Marco 1, Lanzamiento 1: ");
+      expect(outputText).toContain("Marco 1, Lanzamiento 2: ");
+      expect(outputText).toContain("Marco 2, Lanzamiento 1: ");
+      expect(outputText).not.toContain("No se puede registrar");
+      // Score: Frame 1 = 10 + 7 = 17. Frame 2 = 17 + 9 = 26.
+      expect(outputText).toContain("¡Partida finalizada! Puntuación final: 26");
+    });
+
+    it("rejects 'X' on roll 2 after a 0-pin first roll in frames 1-9 and uses 'strike' terminology", async () => {
+      // Frame 1, roll 1: 0
+      // Frame 1, roll 2: X (invalid, should reject with Spanish message using 'strike')
+      // Frame 1, roll 2 re-prompt: 5
+      // Remaining 18 rolls as gutters
+      const inputs = [
+        "0\n",
+        "X\n",
+        "5\n",
+        ...Array(18).fill("0\n"),
+        "n\n",
+      ];
+      const inStream = Readable.from(inputs);
+
+      let outputText = "";
+      const outStream = new Writable({
+        write(chunk, _encoding, callback) {
+          outputText += chunk.toString();
+          callback();
+        },
+      });
+
+      await runCli(inStream, outStream);
+
+      expect(outputText).toContain("No se puede registrar un strike ('X') en el segundo lanzamiento.");
+      expect(outputText.toLowerCase()).not.toContain("pleno");
+      expect(outputText).toContain("¡Partida finalizada! Puntuación final: 5");
+    });
+
+    it("rejects '/' on roll 1 and uses 'spare' terminology", async () => {
+      const inputs = [
+        "/\n",
+        "4\n",
+        "5\n",
+        ...Array(18).fill("0\n"),
+        "n\n",
+      ];
+      const inStream = Readable.from(inputs);
+
+      let outputText = "";
+      const outStream = new Writable({
+        write(chunk, _encoding, callback) {
+          outputText += chunk.toString();
+          callback();
+        },
+      });
+
+      await runCli(inStream, outStream);
+
+      expect(outputText).toContain("No se puede registrar un spare ('/') en el primer lanzamiento.");
+      expect(outputText.toLowerCase()).not.toContain("semipleno");
+      expect(outputText).toContain("¡Partida finalizada! Puntuación final: 9");
+    });
+
+    it("displays Spanish scorecard header 'MARCO' in CLI loop output without forbidden synonyms", async () => {
+      const inputs = [
+        ...Array(20).fill("1\n"),
+        "n\n",
+      ];
+      const inStream = Readable.from(inputs);
+
+      let outputText = "";
+      const outStream = new Writable({
+        write(chunk, _encoding, callback) {
+          outputText += chunk.toString();
+          callback();
+        },
+      });
+
+      await runCli(inStream, outStream);
+
+      expect(outputText).toContain("|                            MARCO                             |");
+      expect(outputText.toLowerCase()).not.toContain("pleno");
+      expect(outputText.toLowerCase()).not.toContain("semipleno");
+      expect(outputText.toLowerCase()).not.toContain("tiro extra");
     });
   });
 });

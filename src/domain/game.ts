@@ -1,11 +1,48 @@
 import { Frame } from "./frame.js";
 
+export type RollValidationFailure =
+  | { type: "GAME_COMPLETE" }
+  | { type: "INVALID_FORMAT"; input: unknown }
+  | { type: "PINS_OUT_OF_RANGE"; pinCount: number }
+  | { type: "STRIKE_ON_SECOND_ROLL" }
+  | { type: "STRIKE_FEWER_PINS" }
+  | { type: "SPARE_ON_FIRST_ROLL" }
+  | { type: "SPARE_ON_FRESH_RACK" }
+  | { type: "EXCEEDS_REMAINING_PINS"; remainingPins: number };
+
+export type RollValidationResult =
+  | { valid: true; pins: number }
+  | { valid: false; failure: RollValidationFailure };
+
 export class Game {
   private rolls: number[] = [];
 
-  roll(pins: number | string): void {
+  get isFreshRack(): boolean {
+    const activeFrame = this.frames.find((f) => !f.isComplete);
+    if (!activeFrame) {
+      return false;
+    }
+    if (activeFrame.frameNumber < 10) {
+      return activeFrame.rolls.length === 0;
+    }
+
+    // Tenth Frame
+    const rolls = activeFrame.rolls;
+    if (rolls.length === 0) {
+      return true;
+    }
+    if (rolls.length === 1) {
+      return rolls[0] === 10;
+    }
+    if (rolls.length === 2) {
+      return rolls[0] === 10 ? rolls[1] === 10 : rolls[0] + rolls[1] === 10;
+    }
+    return false;
+  }
+
+  validateRoll(pins: number | string): RollValidationResult {
     if (this.isComplete()) {
-      throw new Error("Game is already complete");
+      return { valid: false, failure: { type: "GAME_COMPLETE" } };
     }
 
     const remaining = this.remainingPins;
@@ -14,42 +51,84 @@ export class Game {
     if (typeof pins === "string") {
       const trimmed = pins.trim().toUpperCase();
       if (trimmed === "X") {
-        if (this.currentRoll !== 1 && this.currentFrame < 10) {
-          throw new Error("Cannot roll a strike on the second roll of frames 1-9");
-        }
-        if (remaining !== 10) {
-          throw new Error("Cannot roll a strike when fewer than 10 pins are standing");
+        if (!this.isFreshRack) {
+          if (this.currentFrame < 10) {
+            return { valid: false, failure: { type: "STRIKE_ON_SECOND_ROLL" } };
+          }
+          if (remaining !== 10) {
+            return { valid: false, failure: { type: "STRIKE_FEWER_PINS" } };
+          }
+          return { valid: false, failure: { type: "STRIKE_ON_SECOND_ROLL" } };
         }
         pinCount = 10;
       } else if (trimmed === "/") {
-        if (remaining === 10) {
-          throw new Error("Cannot roll a spare on the first roll");
+        if (this.isFreshRack) {
+          if (this.currentRoll === 1) {
+            return { valid: false, failure: { type: "SPARE_ON_FIRST_ROLL" } };
+          }
+          return { valid: false, failure: { type: "SPARE_ON_FRESH_RACK" } };
         }
         pinCount = remaining;
       } else if (trimmed === "-") {
         pinCount = 0;
       } else {
         if (!/^\d+$/.test(trimmed)) {
-          throw new Error(`Invalid roll input: ${pins}`);
+          return { valid: false, failure: { type: "INVALID_FORMAT", input: pins } };
         }
         pinCount = parseInt(trimmed, 10);
       }
     } else {
       if (!Number.isInteger(pins)) {
-        throw new Error(`Invalid roll input: ${pins}`);
+        return { valid: false, failure: { type: "INVALID_FORMAT", input: pins } };
       }
       pinCount = pins;
     }
 
     if (pinCount < 0 || pinCount > 10) {
-      throw new Error(`Invalid pin count: ${pinCount}`);
+      return { valid: false, failure: { type: "PINS_OUT_OF_RANGE", pinCount } };
     }
 
     if (pinCount > remaining) {
-      throw new Error(`Pin count exceeds remaining pins: ${pinCount} > ${remaining}`);
+      return {
+        valid: false,
+        failure: { type: "EXCEEDS_REMAINING_PINS", remainingPins: remaining },
+      };
     }
 
-    this.rolls.push(pinCount);
+    return { valid: true, pins: pinCount };
+  }
+
+  roll(pins: number | string): void {
+    const result = this.validateRoll(pins);
+    if (!result.valid) {
+      const f = result.failure;
+      switch (f.type) {
+        case "GAME_COMPLETE":
+          throw new Error("Game is already complete");
+        case "INVALID_FORMAT":
+          throw new Error(`Invalid roll input: ${pins}`);
+        case "PINS_OUT_OF_RANGE":
+          throw new Error(`Invalid pin count: ${f.pinCount}`);
+        case "STRIKE_ON_SECOND_ROLL":
+          throw new Error(
+            this.currentFrame < 10
+              ? "Cannot roll a strike on the second roll of frames 1-9"
+              : "Cannot roll a strike on the second roll of a frame"
+          );
+        case "STRIKE_FEWER_PINS":
+          throw new Error("Cannot roll a strike when fewer than 10 pins are standing");
+        case "SPARE_ON_FIRST_ROLL":
+          throw new Error("Cannot roll a spare on the first roll");
+        case "SPARE_ON_FRESH_RACK":
+          throw new Error("Cannot roll a spare when all pins are reset");
+        case "EXCEEDS_REMAINING_PINS":
+          throw new Error(
+            `Pin count exceeds remaining pins: ${pins} > ${f.remainingPins}`
+          );
+      }
+    }
+
+    this.rolls.push(result.pins);
   }
 
   canUndo(): boolean {

@@ -67,6 +67,8 @@ function formatTenthFrameRoll(
 export function formatScorecard(game: Game): string {
   const frames = game.frames;
 
+  const titleDivider = `+${"-".repeat(62)}+`;
+  const titleRow = `|${centerText("MARCO", 62)}|`;
   const topDivider = "+-----+-----+-----+-----+-----+-----+-----+-----+-----+--------+";
 
   const headerCells = frames.map((f) => {
@@ -108,7 +110,15 @@ export function formatScorecard(game: Game): string {
   });
   const scoreRow = `|${scoreCells.join("|")}|`;
 
-  return [topDivider, headerRow, topDivider, rollsRow, topDivider, scoreRow, topDivider].join(
-    "\n"
-  );
+  return [
+    titleDivider,
+    titleRow,
+    topDivider,
+    headerRow,
+    topDivider,
+    rollsRow,
+    topDivider,
+    scoreRow,
+    topDivider,
+  ].join("\n");
 }

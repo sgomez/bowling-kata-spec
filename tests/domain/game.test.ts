@@ -662,6 +662,108 @@ describe("Game", () => {
       expect(game.remainingPins).toBe(10);
       expect(() => game.roll(11)).toThrow();
     });
+
+    it("accepts '/' on roll 2 after a 0-pin first roll as a valid spare of 10 pins", () => {
+      const game = new Game();
+      game.roll(0);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(10);
+
+      // Roll 2: '/' knocks down all remaining 10 pins
+      game.roll("/");
+      expect(game.frames[0].rolls).toEqual([0, 10]);
+      expect(game.frames[0].isComplete).toBe(true);
+      expect(game.currentFrame).toBe(2);
+      expect(game.currentRoll).toBe(1);
+
+      // Next roll provides bonus to the spare
+      game.roll(5);
+      expect(game.frames[0].cumulativeScore).toBe(15);
+    });
+
+    it("accepts '/' on roll 2 after '-' shorthand first roll as a valid spare", () => {
+      const game = new Game();
+      game.roll("-");
+      game.roll("/");
+
+      expect(game.frames[0].rolls).toEqual([0, 10]);
+      expect(game.frames[0].isComplete).toBe(true);
+    });
+
+    it("rejects 'X' on roll 2 after a 0-pin first roll in frames 1-9", () => {
+      const game = new Game();
+      game.roll(0);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(10);
+
+      expect(() => game.roll("X")).toThrow(
+        "Cannot roll a strike on the second roll of frames 1-9"
+      );
+      expect(() => game.roll("x")).toThrow(
+        "Cannot roll a strike on the second roll of frames 1-9"
+      );
+    });
+
+    it("rejects 'X' on roll 2 after '-' shorthand first roll in frames 1-9", () => {
+      const game = new Game();
+      game.roll("-");
+      expect(() => game.roll("X")).toThrow(
+        "Cannot roll a strike on the second roll of frames 1-9"
+      );
+    });
+
+    it("accepts '/' on roll 2 in tenth frame after a 0-pin first roll, awarding a third roll", () => {
+      const game = new Game();
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(1);
+
+      game.roll(0);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(10);
+
+      // Spare on roll 2
+      game.roll("/");
+      expect(game.frames[9].rolls).toEqual([0, 10]);
+      expect(game.currentRoll).toBe(3);
+      expect(game.isComplete()).toBe(false);
+
+      // Bonus roll on roll 3
+      game.roll("X");
+      expect(game.frames[9].rolls).toEqual([0, 10, 10]);
+      expect(game.isComplete()).toBe(true);
+      expect(game.score()).toBe(20);
+    });
+
+    it("accepts '/' on roll 3 in tenth frame after a strike and 0-pin roll", () => {
+      const game = new Game();
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+      game.roll("X"); // Roll 1: Strike
+      game.roll(0);   // Roll 2: 0 pins
+      expect(game.currentRoll).toBe(3);
+      expect(game.remainingPins).toBe(10);
+
+      // Roll 3: Spare
+      game.roll("/");
+      expect(game.frames[9].rolls).toEqual([10, 0, 10]);
+      expect(game.isComplete()).toBe(true);
+      expect(game.score()).toBe(20);
+    });
+
+    it("rejects 'X' on roll 2 in tenth frame after a 0-pin first roll", () => {
+      const game = new Game();
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+      game.roll(0);
+      expect(() => game.roll("X")).toThrow(
+        "Cannot roll a strike on the second roll of a frame"
+      );
+    });
   });
 
   describe("Undo Functionality", () => {

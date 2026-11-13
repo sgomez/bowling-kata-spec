@@ -32,10 +32,7 @@ export async function runCli(
       output.write("\n" + formatScorecard(game) + "\n\n");
 
       while (!game.isComplete()) {
-        const isTenthFrameBonus = game.currentFrame === 10 && game.currentRoll === 3;
-        const prompt = isTenthFrameBonus
-          ? "Marco 10, Lanzamiento 3 (tiro extra): "
-          : `Marco ${game.currentFrame}, Lanzamiento ${game.currentRoll}: `;
+        const prompt = `Marco ${game.currentFrame}, Lanzamiento ${game.currentRoll}: `;
         const answer = await ask(prompt);
         if (answer === null) {
           return;
@@ -43,7 +40,6 @@ export async function runCli(
 
         const trimmed = answer.trim();
         const lower = trimmed.toLowerCase();
-        const upper = trimmed.toUpperCase();
 
         if (lower === "undo" || lower === "u") {
           if (!game.canUndo()) {
@@ -55,60 +51,36 @@ export async function runCli(
           continue;
         }
 
-        if (trimmed === "-") {
-          game.roll(0);
-          output.write("\n" + formatScorecard(game) + "\n\n");
-          continue;
-        }
-
-        if (upper === "X") {
-          if (game.remainingPins !== 10) {
-            if (game.currentFrame < 10 && game.currentRoll !== 1) {
-              output.write("No se puede registrar un pleno ('X') en el segundo lanzamiento.\n");
-            } else {
-              output.write("No se puede registrar un pleno ('X') cuando quedan menos de 10 bolos.\n");
-            }
-            continue;
+        const validation = game.validateRoll(trimmed);
+        if (!validation.valid) {
+          switch (validation.failure.type) {
+            case "STRIKE_ON_SECOND_ROLL":
+              output.write("No se puede registrar un strike ('X') en el segundo lanzamiento.\n");
+              break;
+            case "STRIKE_FEWER_PINS":
+              output.write("No se puede registrar un strike ('X') cuando quedan menos de 10 bolos.\n");
+              break;
+            case "SPARE_ON_FIRST_ROLL":
+              output.write("No se puede registrar un spare ('/') en el primer lanzamiento.\n");
+              break;
+            case "SPARE_ON_FRESH_RACK":
+              output.write("No se puede registrar un spare ('/') con todos los bolos en pie.\n");
+              break;
+            case "EXCEEDS_REMAINING_PINS":
+              output.write(
+                `El total de bolos en el marco no puede superar 10 (bolos restantes: ${validation.failure.remainingPins}).\n`
+              );
+              break;
+            case "INVALID_FORMAT":
+            case "PINS_OUT_OF_RANGE":
+            default:
+              output.write("Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n");
+              break;
           }
-          game.roll(10);
-          output.write("\n" + formatScorecard(game) + "\n\n");
           continue;
         }
 
-        if (upper === "/") {
-          if (game.remainingPins === 10) {
-            if (game.currentRoll === 1) {
-              output.write("No se puede registrar un semipleno ('/') en el primer lanzamiento.\n");
-            } else {
-              output.write("No se puede registrar un semipleno ('/') con todos los bolos en pie.\n");
-            }
-            continue;
-          }
-          const remainingPins = game.remainingPins;
-          game.roll(remainingPins);
-          output.write("\n" + formatScorecard(game) + "\n\n");
-          continue;
-        }
-
-        if (!/^\d+$/.test(trimmed)) {
-          output.write("Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n");
-          continue;
-        }
-
-        const pins = parseInt(trimmed, 10);
-        if (pins < 0 || pins > 10) {
-          output.write("Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n");
-          continue;
-        }
-
-        if (pins > game.remainingPins) {
-          output.write(
-            `El total de bolos en el marco no puede superar 10 (bolos restantes: ${game.remainingPins}).\n`
-          );
-          continue;
-        }
-
-        game.roll(pins);
+        game.roll(validation.pins);
         output.write("\n" + formatScorecard(game) + "\n\n");
       }
 
