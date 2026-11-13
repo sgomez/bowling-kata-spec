@@ -1,0 +1,25 @@
+{
+  "name": "bowling-kata",
+  "version": "1.0.0",
+  "description": "Interactive Ten-Pin Bowling Game Calculator CLI",
+  "type": "module",
+  "main": "src/cli.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "tsx src/cli.ts"
+  },
+  "keywords": [
+    "bowling",
+    "kata",
+    "tdd"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}
