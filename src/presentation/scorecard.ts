@@ -12,6 +12,9 @@ function formatRoll(pins: number | undefined): string {
   if (pins === undefined) {
     return "  ";
   }
+  if (pins === 0) {
+    return " -";
+  }
   return pins.toString().padStart(2);
 }
 

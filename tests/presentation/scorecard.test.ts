@@ -113,7 +113,7 @@ describe("formatScorecard", () => {
       game.roll("/");
 
       const lines = formatScorecard(game).trim().split("\n");
-      expect(lines[3]).toBe("| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| X| 9| /|");
+      expect(lines[3]).toBe("| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| X| 9| /|");
       expect(lines[5]).toBe("|  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |   20   |");
     });
 
@@ -127,7 +127,7 @@ describe("formatScorecard", () => {
       game.roll("X");
 
       const lines = formatScorecard(game).trim().split("\n");
-      expect(lines[3]).toBe("| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 8| /| X|");
+      expect(lines[3]).toBe("| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| 8| /| X|");
       expect(lines[5]).toBe("|  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |   20   |");
     });
 
@@ -140,7 +140,7 @@ describe("formatScorecard", () => {
       game.roll(2);
 
       const lines = formatScorecard(game).trim().split("\n");
-      expect(lines[3]).toBe("| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 7| 2|  |");
+      expect(lines[3]).toBe("| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| 7| 2|  |");
       expect(lines[5]).toBe("|  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |   9    |");
     });
 
@@ -152,13 +152,67 @@ describe("formatScorecard", () => {
       game.roll("X");
 
       let lines = formatScorecard(game).trim().split("\n");
-      expect(lines[3]).toBe("| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| X|  |  |");
+      expect(lines[3]).toBe("| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| X|  |  |");
       expect(lines[5]).toBe("|  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |        |");
 
       game.roll(9);
       lines = formatScorecard(game).trim().split("\n");
-      expect(lines[3]).toBe("| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| X| 9|  |");
+      expect(lines[3]).toBe("| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| X| 9|  |");
       expect(lines[5]).toBe("|  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |        |");
+    });
+  });
+
+  describe("Scorecard Notation and Undo Display", () => {
+    it("renders '-' for zero-pin rolls in open frames and gutter games", () => {
+      const game = new Game();
+      game.roll("-");
+      game.roll(7);
+      game.roll(8);
+      game.roll("-");
+
+      const lines = formatScorecard(game).trim().split("\n");
+      expect(lines[3]).toBe("| -| 7| 8| -|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |");
+      expect(lines[5]).toBe("|  7  | 15  |     |     |     |     |     |     |     |        |");
+    });
+
+    it("renders '-' for a complete gutter game", () => {
+      const game = new Game();
+      for (let i = 0; i < 20; i++) {
+        game.roll("-");
+      }
+
+      const lines = formatScorecard(game).trim().split("\n");
+      expect(lines[3]).toBe("| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -|  |");
+      expect(lines[5]).toBe("|  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |   0    |");
+    });
+
+    it("immediately reflects undone rolls and restored cumulative scores on the scorecard", () => {
+      const game = new Game();
+      game.roll(10); // Frame 1: strike
+      game.roll(7);  // Frame 2, roll 1
+      game.roll(2);  // Frame 2, roll 2
+
+      let lines = formatScorecard(game).trim().split("\n");
+      expect(lines[3]).toBe("|  | X| 7| 2|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |");
+      expect(lines[5]).toBe("| 19  | 28  |     |     |     |     |     |     |     |        |");
+
+      // Undo roll 2 of Frame 2
+      game.undo();
+      lines = formatScorecard(game).trim().split("\n");
+      expect(lines[3]).toBe("|  | X| 7|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |");
+      expect(lines[5]).toBe("|     |     |     |     |     |     |     |     |     |        |");
+
+      // Undo roll 1 of Frame 2
+      game.undo();
+      lines = formatScorecard(game).trim().split("\n");
+      expect(lines[3]).toBe("|  | X|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |");
+      expect(lines[5]).toBe("|     |     |     |     |     |     |     |     |     |        |");
+
+      // Undo strike in Frame 1
+      game.undo();
+      lines = formatScorecard(game).trim().split("\n");
+      expect(lines[3]).toBe("|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |");
+      expect(lines[5]).toBe("|     |     |     |     |     |     |     |     |     |        |");
     });
   });
 });

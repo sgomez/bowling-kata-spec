@@ -26,18 +26,42 @@ export class Game {
           throw new Error("Cannot roll a spare on the first roll");
         }
         pinCount = remaining;
+      } else if (trimmed === "-") {
+        pinCount = 0;
       } else {
-        const parsed = parseInt(trimmed, 10);
-        if (isNaN(parsed)) {
+        if (!/^\d+$/.test(trimmed)) {
           throw new Error(`Invalid roll input: ${pins}`);
         }
-        pinCount = parsed;
+        pinCount = parseInt(trimmed, 10);
       }
     } else {
+      if (!Number.isInteger(pins)) {
+        throw new Error(`Invalid roll input: ${pins}`);
+      }
       pinCount = pins;
     }
 
+    if (pinCount < 0 || pinCount > 10) {
+      throw new Error(`Invalid pin count: ${pinCount}`);
+    }
+
+    if (pinCount > remaining) {
+      throw new Error(`Pin count exceeds remaining pins: ${pinCount} > ${remaining}`);
+    }
+
     this.rolls.push(pinCount);
+  }
+
+  canUndo(): boolean {
+    return this.rolls.length > 0;
+  }
+
+  undo(): boolean {
+    if (this.rolls.length === 0) {
+      return false;
+    }
+    this.rolls.pop();
+    return true;
   }
 
   get remainingPins(): number {

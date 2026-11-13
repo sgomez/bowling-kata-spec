@@ -42,7 +42,24 @@ export async function runCli(
         }
 
         const trimmed = answer.trim();
+        const lower = trimmed.toLowerCase();
         const upper = trimmed.toUpperCase();
+
+        if (lower === "undo" || lower === "u") {
+          if (!game.canUndo()) {
+            output.write("No hay lanzamientos para deshacer.\n");
+            continue;
+          }
+          game.undo();
+          output.write("\n" + formatScorecard(game) + "\n\n");
+          continue;
+        }
+
+        if (trimmed === "-") {
+          game.roll(0);
+          output.write("\n" + formatScorecard(game) + "\n\n");
+          continue;
+        }
 
         if (upper === "X") {
           if (game.remainingPins !== 10) {
@@ -73,9 +90,14 @@ export async function runCli(
           continue;
         }
 
+        if (!/^\d+$/.test(trimmed)) {
+          output.write("Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n");
+          continue;
+        }
+
         const pins = parseInt(trimmed, 10);
-        if (isNaN(pins) || pins < 0 || pins > 10) {
-          output.write("Por favor, introduce un número válido de bolos (0-10), 'X' o '/'.\n");
+        if (pins < 0 || pins > 10) {
+          output.write("Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n");
           continue;
         }
 

@@ -599,4 +599,279 @@ describe("Game", () => {
       expect(() => game3.roll("X")).toThrow();
     });
   });
+
+  describe("Validation and Shorthand Notation", () => {
+    it("accepts '-' as 0 pins knocked down", () => {
+      const game = new Game();
+      game.roll("-");
+
+      expect(game.frames[0].rolls).toEqual([0]);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(10);
+
+      game.roll(7);
+      expect(game.frames[0].rolls).toEqual([0, 7]);
+      expect(game.currentFrame).toBe(2);
+      expect(game.score()).toBe(7);
+    });
+
+    it("rejects negative numbers and negative number strings", () => {
+      const game = new Game();
+      expect(() => game.roll(-1)).toThrow();
+      expect(() => game.roll("-1")).toThrow();
+    });
+
+    it("rejects numbers greater than 10", () => {
+      const game = new Game();
+      expect(() => game.roll(11)).toThrow();
+      expect(() => game.roll("12")).toThrow();
+    });
+
+    it("rejects invalid characters and malformed strings", () => {
+      const game = new Game();
+      expect(() => game.roll("abc")).toThrow();
+      expect(() => game.roll("4abc")).toThrow();
+      expect(() => game.roll("")).toThrow();
+      expect(() => game.roll(" ")).toThrow();
+    });
+
+    it("rejects pin count exceeding remaining pins in frames 1-9", () => {
+      const game = new Game();
+      game.roll(6);
+      expect(game.remainingPins).toBe(4);
+      expect(() => game.roll(5)).toThrow();
+      expect(() => game.roll("7")).toThrow();
+
+      // Valid roll within remaining pins works
+      game.roll(3);
+      expect(game.frames[0].rolls).toEqual([6, 3]);
+    });
+
+    it("rejects pin count exceeding remaining pins in the tenth frame", () => {
+      const game = new Game();
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+      expect(game.currentFrame).toBe(10);
+      game.roll(8);
+      expect(game.remainingPins).toBe(2);
+      expect(() => game.roll(3)).toThrow();
+
+      // Valid roll of 2 completes the frame with a spare
+      game.roll(2);
+      expect(game.remainingPins).toBe(10);
+      expect(() => game.roll(11)).toThrow();
+    });
+  });
+
+  describe("Undo Functionality", () => {
+    it("handles empty history gracefully (canUndo returns false, undo returns false)", () => {
+      const game = new Game();
+      expect(game.canUndo()).toBe(false);
+      expect(game.undo()).toBe(false);
+      expect(game.currentFrame).toBe(1);
+      expect(game.currentRoll).toBe(1);
+    });
+
+    it("undoes the second roll of an open frame and restores remaining pins and frame state", () => {
+      const game = new Game();
+      game.roll(4);
+      game.roll(3);
+
+      // Frame 1 complete, now on Frame 2, Roll 1
+      expect(game.currentFrame).toBe(2);
+      expect(game.currentRoll).toBe(1);
+      expect(game.score()).toBe(7);
+
+      expect(game.canUndo()).toBe(true);
+      expect(game.undo()).toBe(true);
+
+      // Should be back to Frame 1, Roll 2
+      expect(game.currentFrame).toBe(1);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(6);
+      expect(game.frames[0].isComplete).toBe(false);
+      expect(game.frames[0].rolls).toEqual([4]);
+      expect(game.frames[0].cumulativeScore).toBeNull();
+      expect(game.score()).toBe(0);
+    });
+
+    it("undoes the first roll of an open frame back to start of frame", () => {
+      const game = new Game();
+      game.roll(4);
+      expect(game.currentFrame).toBe(1);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(6);
+
+      expect(game.undo()).toBe(true);
+
+      expect(game.currentFrame).toBe(1);
+      expect(game.currentRoll).toBe(1);
+      expect(game.remainingPins).toBe(10);
+      expect(game.frames[0].rolls).toEqual([]);
+      expect(game.frames[0].isComplete).toBe(false);
+      expect(game.canUndo()).toBe(false);
+    });
+
+    it("undoes across frame boundaries for open frames", () => {
+      const game = new Game();
+      game.roll(3);
+      game.roll(4);
+      game.roll(5); // Frame 2, roll 1
+
+      expect(game.currentFrame).toBe(2);
+      expect(game.currentRoll).toBe(2);
+
+      // Undo roll 1 of Frame 2 -> should revert to Frame 2, Roll 1
+      expect(game.undo()).toBe(true);
+      expect(game.currentFrame).toBe(2);
+      expect(game.currentRoll).toBe(1);
+      expect(game.remainingPins).toBe(10);
+
+      // Undo roll 2 of Frame 1 -> should revert to Frame 1, Roll 2
+      expect(game.undo()).toBe(true);
+      expect(game.currentFrame).toBe(1);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(7);
+      expect(game.frames[0].rolls).toEqual([3]);
+    });
+
+    it("undoes a strike in frames 1-9 and restores the frame state", () => {
+      const game = new Game();
+      game.roll(10); // Frame 1: strike
+
+      expect(game.currentFrame).toBe(2);
+      expect(game.currentRoll).toBe(1);
+      expect(game.frames[0].isComplete).toBe(true);
+
+      expect(game.undo()).toBe(true);
+
+      expect(game.currentFrame).toBe(1);
+      expect(game.currentRoll).toBe(1);
+      expect(game.remainingPins).toBe(10);
+      expect(game.frames[0].rolls).toEqual([]);
+      expect(game.frames[0].isComplete).toBe(false);
+    });
+
+    it("undoes a spare in frames 1-9 and restores the remaining pins from roll 1", () => {
+      const game = new Game();
+      game.roll(7);
+      game.roll("/"); // Frame 1: spare
+
+      expect(game.currentFrame).toBe(2);
+      expect(game.currentRoll).toBe(1);
+      expect(game.frames[0].isComplete).toBe(true);
+
+      expect(game.undo()).toBe(true);
+
+      expect(game.currentFrame).toBe(1);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(3);
+      expect(game.frames[0].rolls).toEqual([7]);
+      expect(game.frames[0].isComplete).toBe(false);
+    });
+
+    it("reverts resolved deferred bonuses when subsequent bonus rolls are undone", () => {
+      const game = new Game();
+      game.roll(10); // Frame 1: strike
+      game.roll(4);  // Frame 2, roll 1 (bonus 1)
+      game.roll(3);  // Frame 2, roll 2 (bonus 2)
+
+      // Frame 1 resolved: 10 + 4 + 3 = 17. Frame 2: 7 -> 24
+      expect(game.cumulativeScores()[0]).toBe(17);
+      expect(game.cumulativeScores()[1]).toBe(24);
+      expect(game.score()).toBe(24);
+
+      // Undo roll 2 of Frame 2 (bonus 2 for Frame 1)
+      expect(game.undo()).toBe(true);
+
+      // Frame 1 score is now unresolved again!
+      expect(game.cumulativeScores()[0]).toBeNull();
+      expect(game.cumulativeScores()[1]).toBeNull();
+      expect(game.score()).toBe(0);
+      expect(game.currentFrame).toBe(2);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(6);
+    });
+
+    it("undoes tenth frame rolls and restores isComplete to false", () => {
+      const game = new Game();
+      // 18 gutter rolls for frames 1-9
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(1);
+
+      // Roll 1: Strike
+      game.roll("X");
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(10);
+
+      // Roll 2: Strike
+      game.roll("X");
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(3);
+      expect(game.remainingPins).toBe(10);
+
+      // Roll 3: Strike -> Perfect finish to 10th frame
+      game.roll("X");
+      expect(game.isComplete()).toBe(true);
+      expect(game.score()).toBe(30);
+
+      // Undo roll 3
+      expect(game.undo()).toBe(true);
+      expect(game.isComplete()).toBe(false);
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(3);
+      expect(game.remainingPins).toBe(10);
+      expect(game.frames[9].isComplete).toBe(false);
+      expect(game.frames[9].rolls).toEqual([10, 10]);
+
+      // Can roll again after undoing!
+      game.roll(7);
+      expect(game.isComplete()).toBe(true);
+      expect(game.frames[9].rolls).toEqual([10, 10, 7]);
+      expect(game.score()).toBe(27);
+    });
+
+    it("supports multiple consecutive undos back to the start of the game", () => {
+      const game = new Game();
+      game.roll(10); // Frame 1
+      game.roll(5);  // Frame 2, roll 1
+      game.roll(5);  // Frame 2, roll 2 (spare)
+      game.roll(3);  // Frame 3, roll 1
+
+      expect(game.currentFrame).toBe(3);
+      expect(game.currentRoll).toBe(2);
+
+      // 4 rolls total, undo all 4
+      expect(game.undo()).toBe(true); // undo Frame 3 roll 1
+      expect(game.currentFrame).toBe(3);
+      expect(game.currentRoll).toBe(1);
+
+      expect(game.undo()).toBe(true); // undo Frame 2 roll 2
+      expect(game.currentFrame).toBe(2);
+      expect(game.currentRoll).toBe(2);
+      expect(game.remainingPins).toBe(5);
+
+      expect(game.undo()).toBe(true); // undo Frame 2 roll 1
+      expect(game.currentFrame).toBe(2);
+      expect(game.currentRoll).toBe(1);
+      expect(game.remainingPins).toBe(10);
+
+      expect(game.undo()).toBe(true); // undo Frame 1 roll 1
+      expect(game.currentFrame).toBe(1);
+      expect(game.currentRoll).toBe(1);
+      expect(game.remainingPins).toBe(10);
+      expect(game.canUndo()).toBe(false);
+      expect(game.score()).toBe(0);
+
+      // Next undo returns false and does nothing
+      expect(game.undo()).toBe(false);
+      expect(game.currentFrame).toBe(1);
+      expect(game.currentRoll).toBe(1);
+    });
+  });
 });
