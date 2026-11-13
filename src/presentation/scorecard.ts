@@ -35,6 +35,15 @@ export function formatScorecard(game: Game): string {
       const r3 = formatRoll(f.rolls[2]);
       return `${r1}|${r2}|${r3}`;
     }
+
+    if (f.rolls.length === 1 && f.rolls[0] === 10) {
+      return "  | X";
+    }
+
+    if (f.rolls.length === 2 && f.rolls[0] + f.rolls[1] === 10) {
+      return `${formatRoll(f.rolls[0])}| /`;
+    }
+
     const r1 = formatRoll(f.rolls[0]);
     const r2 = formatRoll(f.rolls[1]);
     return `${r1}|${r2}`;

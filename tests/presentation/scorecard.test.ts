@@ -48,4 +48,45 @@ describe("formatScorecard", () => {
     expect(lines[3]).toBe("| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1| 1|  |");
     expect(lines[5]).toBe("|  2  |  4  |  6  |  8  | 10  | 12  | 14  | 16  | 18  |   20   |");
   });
+
+  it("renders 'X' for strike and '/' for spare with blank score boxes for pending frames", () => {
+    const game = new Game();
+    // Frame 1: strike
+    game.roll(10);
+
+    let lines = formatScorecard(game).trim().split("\n");
+    // Frame 1 roll cell: "  | X", Frame 1 score: blank
+    expect(lines[3]).toBe("|  | X|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |");
+    expect(lines[5]).toBe("|     |     |     |     |     |     |     |     |     |        |");
+
+    // Frame 2: spare (7, 3)
+    game.roll(7);
+    game.roll(3);
+
+    lines = formatScorecard(game).trim().split("\n");
+    // Frame 1 is "  | X", Frame 2 is " 7| /"
+    expect(lines[3]).toBe("|  | X| 7| /|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |");
+    // Frame 1 resolves to 20, Frame 2 is pending (blank)
+    expect(lines[5]).toBe("| 20  |     |     |     |     |     |     |     |     |        |");
+
+    // Frame 3: open frame (4, 2)
+    game.roll(4);
+    game.roll(2);
+
+    lines = formatScorecard(game).trim().split("\n");
+    expect(lines[3]).toBe("|  | X| 7| /| 4| 2|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |");
+    // Frame 1: 20, Frame 2: 34, Frame 3: 40
+    expect(lines[5]).toBe("| 20  | 34  | 40  |     |     |     |     |     |     |        |");
+  });
+
+  it("renders consecutive strikes correctly in scorecard", () => {
+    const game = new Game();
+    game.roll(10);
+    game.roll(10);
+    game.roll(10);
+
+    const lines = formatScorecard(game).trim().split("\n");
+    expect(lines[3]).toBe("|  | X|  | X|  | X|  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |");
+    expect(lines[5]).toBe("| 30  |     |     |     |     |     |     |     |     |        |");
+  });
 });

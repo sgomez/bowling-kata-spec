@@ -38,17 +38,42 @@ export async function runCli(
           return;
         }
 
-        const pins = parseInt(answer.trim(), 10);
-        if (isNaN(pins) || pins < 0 || pins > 9) {
-          output.write("Por favor, introduce un número válido de bolos (0-9).\n");
+        const trimmed = answer.trim();
+        const upper = trimmed.toUpperCase();
+
+        if (upper === "X") {
+          if (game.currentFrame < 10 && game.currentRoll !== 1) {
+            output.write("No se puede registrar un pleno ('X') en el segundo lanzamiento.\n");
+            continue;
+          }
+          game.roll(10);
+          output.write("\n" + formatScorecard(game) + "\n\n");
+          continue;
+        }
+
+        if (upper === "/") {
+          if (game.currentRoll !== 2) {
+            output.write("No se puede registrar un semipleno ('/') en el primer lanzamiento.\n");
+            continue;
+          }
+          const currentFrameRolls = game.frames[game.currentFrame - 1].rolls;
+          const remainingPins = 10 - currentFrameRolls[0];
+          game.roll(remainingPins);
+          output.write("\n" + formatScorecard(game) + "\n\n");
+          continue;
+        }
+
+        const pins = parseInt(trimmed, 10);
+        if (isNaN(pins) || pins < 0 || pins > 10) {
+          output.write("Por favor, introduce un número válido de bolos (0-10), 'X' o '/'.\n");
           continue;
         }
 
         const currentFrameRolls = game.frames[game.currentFrame - 1].rolls;
-        if (currentFrameRolls.length === 1 && currentFrameRolls[0] + pins >= 10) {
+        if (currentFrameRolls.length === 1 && currentFrameRolls[0] + pins > 10) {
           output.write(
-            `En un marco abierto, el total debe ser menor a 10 (bolos restantes: ${
-              9 - currentFrameRolls[0]
+            `El total de bolos en el marco no puede superar 10 (bolos restantes: ${
+              10 - currentFrameRolls[0]
             }).\n`
           );
           continue;
