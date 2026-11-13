@@ -15,6 +15,52 @@ function formatRoll(pins: number | undefined): string {
   return pins.toString().padStart(2);
 }
 
+function formatTenthFrameRoll(
+  rollIndex: number,
+  rolls: readonly number[]
+): string {
+  const pins = rolls[rollIndex];
+  if (pins === undefined) {
+    return "  ";
+  }
+
+  if (rollIndex === 0) {
+    if (pins === 10) {
+      return " X";
+    }
+    return formatRoll(pins);
+  }
+
+  if (rollIndex === 1) {
+    if (rolls[0] === 10) {
+      if (pins === 10) {
+        return " X";
+      }
+      return formatRoll(pins);
+    }
+    if (rolls[0] + pins === 10) {
+      return " /";
+    }
+    return formatRoll(pins);
+  }
+
+  if (rollIndex === 2) {
+    if (rolls[0] === 10) {
+      if (rolls[1] === 10) {
+        return pins === 10 ? " X" : formatRoll(pins);
+      }
+      return rolls[1] + pins === 10 ? " /" : formatRoll(pins);
+    }
+    // rolls[0] < 10, rolls[1] was spare
+    if (pins === 10) {
+      return " X";
+    }
+    return formatRoll(pins);
+  }
+
+  return formatRoll(pins);
+}
+
 export function formatScorecard(game: Game): string {
   const frames = game.frames;
 
@@ -30,9 +76,9 @@ export function formatScorecard(game: Game): string {
 
   const rollCells = frames.map((f) => {
     if (f.frameNumber === 10) {
-      const r1 = formatRoll(f.rolls[0]);
-      const r2 = formatRoll(f.rolls[1]);
-      const r3 = formatRoll(f.rolls[2]);
+      const r1 = formatTenthFrameRoll(0, f.rolls);
+      const r2 = formatTenthFrameRoll(1, f.rolls);
+      const r3 = formatTenthFrameRoll(2, f.rolls);
       return `${r1}|${r2}|${r3}`;
     }
 

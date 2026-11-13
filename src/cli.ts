@@ -32,7 +32,10 @@ export async function runCli(
       output.write("\n" + formatScorecard(game) + "\n\n");
 
       while (!game.isComplete()) {
-        const prompt = `Marco ${game.currentFrame}, Lanzamiento ${game.currentRoll}: `;
+        const isTenthFrameBonus = game.currentFrame === 10 && game.currentRoll === 3;
+        const prompt = isTenthFrameBonus
+          ? "Marco 10, Lanzamiento 3 (tiro extra): "
+          : `Marco ${game.currentFrame}, Lanzamiento ${game.currentRoll}: `;
         const answer = await ask(prompt);
         if (answer === null) {
           return;
@@ -42,8 +45,12 @@ export async function runCli(
         const upper = trimmed.toUpperCase();
 
         if (upper === "X") {
-          if (game.currentFrame < 10 && game.currentRoll !== 1) {
-            output.write("No se puede registrar un pleno ('X') en el segundo lanzamiento.\n");
+          if (game.remainingPins !== 10) {
+            if (game.currentFrame < 10 && game.currentRoll !== 1) {
+              output.write("No se puede registrar un pleno ('X') en el segundo lanzamiento.\n");
+            } else {
+              output.write("No se puede registrar un pleno ('X') cuando quedan menos de 10 bolos.\n");
+            }
             continue;
           }
           game.roll(10);
@@ -52,12 +59,15 @@ export async function runCli(
         }
 
         if (upper === "/") {
-          if (game.currentRoll !== 2) {
-            output.write("No se puede registrar un semipleno ('/') en el primer lanzamiento.\n");
+          if (game.remainingPins === 10) {
+            if (game.currentRoll === 1) {
+              output.write("No se puede registrar un semipleno ('/') en el primer lanzamiento.\n");
+            } else {
+              output.write("No se puede registrar un semipleno ('/') con todos los bolos en pie.\n");
+            }
             continue;
           }
-          const currentFrameRolls = game.frames[game.currentFrame - 1].rolls;
-          const remainingPins = 10 - currentFrameRolls[0];
+          const remainingPins = game.remainingPins;
           game.roll(remainingPins);
           output.write("\n" + formatScorecard(game) + "\n\n");
           continue;
@@ -69,12 +79,9 @@ export async function runCli(
           continue;
         }
 
-        const currentFrameRolls = game.frames[game.currentFrame - 1].rolls;
-        if (currentFrameRolls.length === 1 && currentFrameRolls[0] + pins > 10) {
+        if (pins > game.remainingPins) {
           output.write(
-            `El total de bolos en el marco no puede superar 10 (bolos restantes: ${
-              10 - currentFrameRolls[0]
-            }).\n`
+            `El total de bolos en el marco no puede superar 10 (bolos restantes: ${game.remainingPins}).\n`
           );
           continue;
         }

@@ -8,6 +8,7 @@ export class Game {
       throw new Error("Game is already complete");
     }
 
+    const remaining = this.remainingPins;
     let pinCount: number;
 
     if (typeof pins === "string") {
@@ -16,13 +17,15 @@ export class Game {
         if (this.currentRoll !== 1 && this.currentFrame < 10) {
           throw new Error("Cannot roll a strike on the second roll of frames 1-9");
         }
+        if (remaining !== 10) {
+          throw new Error("Cannot roll a strike when fewer than 10 pins are standing");
+        }
         pinCount = 10;
       } else if (trimmed === "/") {
-        if (this.currentRoll !== 2) {
+        if (remaining === 10) {
           throw new Error("Cannot roll a spare on the first roll");
         }
-        const currentFrameRolls = this.frames[this.currentFrame - 1].rolls;
-        pinCount = 10 - currentFrameRolls[0];
+        pinCount = remaining;
       } else {
         const parsed = parseInt(trimmed, 10);
         if (isNaN(parsed)) {
@@ -35,6 +38,37 @@ export class Game {
     }
 
     this.rolls.push(pinCount);
+  }
+
+  get remainingPins(): number {
+    const activeFrame = this.frames.find((f) => !f.isComplete);
+    if (!activeFrame) {
+      return 0;
+    }
+
+    if (activeFrame.frameNumber < 10) {
+      if (activeFrame.rolls.length === 0) {
+        return 10;
+      }
+      return 10 - activeFrame.rolls[0];
+    }
+
+    // Tenth Frame
+    const rolls = activeFrame.rolls;
+    if (rolls.length === 0) {
+      return 10;
+    }
+    if (rolls.length === 1) {
+      return rolls[0] === 10 ? 10 : 10 - rolls[0];
+    }
+    if (rolls.length === 2) {
+      if (rolls[0] === 10) {
+        return rolls[1] === 10 ? 10 : 10 - rolls[1];
+      }
+      // Spare on first two rolls
+      return 10;
+    }
+    return 0;
   }
 
   get currentFrame(): number {
@@ -101,11 +135,24 @@ export class Game {
           startIndex,
         });
       } else {
-        while (frameRolls.length < 2 && rollIndex < this.rolls.length) {
-          frameRolls.push(this.rolls[rollIndex++]);
+        if (rollIndex < this.rolls.length) {
+          const first = this.rolls[rollIndex++];
+          frameRolls.push(first);
+
+          if (rollIndex < this.rolls.length) {
+            const second = this.rolls[rollIndex++];
+            frameRolls.push(second);
+
+            const earnsThirdRoll = first === 10 || first + second === 10;
+            if (earnsThirdRoll && rollIndex < this.rolls.length) {
+              frameRolls.push(this.rolls[rollIndex++]);
+            }
+          }
         }
 
-        const isComplete = frameRolls.length === 2;
+        const isComplete =
+          frameRolls.length === 3 ||
+          (frameRolls.length === 2 && frameRolls[0] + frameRolls[1] < 10);
 
         frameData.push({
           frameNumber: frameIndex,
@@ -146,11 +193,11 @@ export class Game {
 
         return null;
       } else {
-        // 10th frame (open frame for now)
-        if (f.rolls.length === 2) {
-          return f.rolls[0] + f.rolls[1];
+        // 10th frame
+        if (!f.isComplete) {
+          return null;
         }
-        return null;
+        return f.rolls.reduce((sum, r) => sum + r, 0);
       }
     });
 

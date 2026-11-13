@@ -341,4 +341,262 @@ describe("Game", () => {
     expect(game.isComplete()).toBe(true);
     expect(() => game.roll(1)).toThrow("Game is already complete");
   });
+
+  describe("Tenth Frame Special Rules", () => {
+    it("concludes strictly after 2 rolls in the tenth frame if neither strike nor spare (open frame)", () => {
+      const game = new Game();
+      // Frames 1-9: 18 rolls of 1 (total 18)
+      for (let i = 0; i < 18; i++) {
+        game.roll(1);
+      }
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(1);
+
+      game.roll(4);
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(2);
+      expect(game.isComplete()).toBe(false);
+
+      game.roll(3); // Open frame: 4 + 3 = 7
+      expect(game.isComplete()).toBe(true);
+      expect(game.frames[9].rolls).toEqual([4, 3]);
+      expect(game.frames[9].isComplete).toBe(true);
+      expect(game.frames[9].cumulativeScore).toBe(25);
+      expect(game.score()).toBe(25);
+
+      expect(() => game.roll(1)).toThrow("Game is already complete");
+    });
+
+    it("permits a 3rd bonus roll in the tenth frame after a spare", () => {
+      const game = new Game();
+      // Frames 1-9: gutters
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+
+      game.roll(6);
+      game.roll("/"); // Spare in frame 10 (4 pins)
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(3);
+      expect(game.isComplete()).toBe(false);
+      expect(game.frames[9].isComplete).toBe(false);
+      expect(game.frames[9].cumulativeScore).toBeNull();
+
+      game.roll(7); // Bonus roll
+      expect(game.isComplete()).toBe(true);
+      expect(game.frames[9].rolls).toEqual([6, 4, 7]);
+      expect(game.frames[9].isComplete).toBe(true);
+      expect(game.frames[9].cumulativeScore).toBe(17);
+      expect(game.score()).toBe(17);
+
+      expect(() => game.roll(1)).toThrow("Game is already complete");
+    });
+
+    it("resets pin rack to 10 after a spare in the tenth frame, permitting a strike on the bonus roll", () => {
+      const game = new Game();
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+
+      game.roll(8);
+      game.roll("/"); // Spare
+      game.roll("X"); // Strike on bonus roll (10 pins)
+
+      expect(game.isComplete()).toBe(true);
+      expect(game.frames[9].rolls).toEqual([8, 2, 10]);
+      expect(game.frames[9].cumulativeScore).toBe(20);
+      expect(game.score()).toBe(20);
+    });
+
+    it("permits 2 bonus rolls in the tenth frame after a strike on roll 1", () => {
+      const game = new Game();
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+
+      game.roll("X"); // Frame 10, roll 1: Strike
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(2);
+      expect(game.isComplete()).toBe(false);
+
+      game.roll(7); // Bonus roll 1
+      expect(game.currentFrame).toBe(10);
+      expect(game.currentRoll).toBe(3);
+      expect(game.isComplete()).toBe(false);
+
+      game.roll(2); // Bonus roll 2
+      expect(game.isComplete()).toBe(true);
+      expect(game.frames[9].rolls).toEqual([10, 7, 2]);
+      expect(game.frames[9].cumulativeScore).toBe(19);
+      expect(game.score()).toBe(19);
+
+      expect(() => game.roll(1)).toThrow("Game is already complete");
+    });
+
+    it("allows up to 3 strikes in the tenth frame", () => {
+      const game = new Game();
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+
+      game.roll("X");
+      game.roll("X");
+      game.roll("X");
+
+      expect(game.isComplete()).toBe(true);
+      expect(game.frames[9].rolls).toEqual([10, 10, 10]);
+      expect(game.frames[9].cumulativeScore).toBe(30);
+      expect(game.score()).toBe(30);
+    });
+
+    it("allows a strike followed by a non-strike and a spare in the tenth frame", () => {
+      const game = new Game();
+      for (let i = 0; i < 18; i++) {
+        game.roll(0);
+      }
+
+      game.roll("X");
+      game.roll(9);
+      game.roll("/"); // Spare on remaining 1 pin
+
+      expect(game.isComplete()).toBe(true);
+      expect(game.frames[9].rolls).toEqual([10, 9, 1]);
+      expect(game.frames[9].cumulativeScore).toBe(20);
+      expect(game.score()).toBe(20);
+    });
+
+    it("calculates a perfect game of 12 consecutive strikes to 300 points", () => {
+      const game = new Game();
+      for (let i = 0; i < 12; i++) {
+        game.roll(10);
+      }
+
+      expect(game.isComplete()).toBe(true);
+      expect(game.frames[9].rolls).toEqual([10, 10, 10]);
+      expect(game.cumulativeScores()).toEqual([
+        30,
+        60,
+        90,
+        120,
+        150,
+        180,
+        210,
+        240,
+        270,
+        300,
+      ]);
+      expect(game.score()).toBe(300);
+    });
+
+    it("calculates Dutch 200 (alternating strikes and spares) to exactly 200 points", () => {
+      const game = new Game();
+      // Frame 1: Strike
+      game.roll(10);
+      // Frame 2: Spare
+      game.roll(9);
+      game.roll(1);
+      // Frame 3: Strike
+      game.roll(10);
+      // Frame 4: Spare
+      game.roll(9);
+      game.roll(1);
+      // Frame 5: Strike
+      game.roll(10);
+      // Frame 6: Spare
+      game.roll(9);
+      game.roll(1);
+      // Frame 7: Strike
+      game.roll(10);
+      // Frame 8: Spare
+      game.roll(9);
+      game.roll(1);
+      // Frame 9: Strike
+      game.roll(10);
+      // Frame 10: Spare + Strike bonus
+      game.roll(9);
+      game.roll(1);
+      game.roll(10);
+
+      expect(game.isComplete()).toBe(true);
+      expect(game.cumulativeScores()).toEqual([
+        20,
+        40,
+        60,
+        80,
+        100,
+        120,
+        140,
+        160,
+        180,
+        200,
+      ]);
+      expect(game.score()).toBe(200);
+    });
+
+    it("resolves deferred bonuses of frames 8 and 9 through tenth frame rolls", () => {
+      const game = new Game();
+      // Frames 1-7: gutters
+      for (let i = 0; i < 14; i++) {
+        game.roll(0);
+      }
+      // Frame 8: Strike
+      game.roll(10);
+      // Frame 9: Strike
+      game.roll(10);
+
+      expect(game.cumulativeScores()[7]).toBeNull();
+      expect(game.cumulativeScores()[8]).toBeNull();
+
+      // Frame 10, Roll 1: Strike
+      game.roll(10);
+      // Frame 8 resolves: 0 + 10 + 10 + 10 = 30
+      expect(game.cumulativeScores()[7]).toBe(30);
+      // Frame 9 needs 1 more roll
+      expect(game.cumulativeScores()[8]).toBeNull();
+
+      // Frame 10, Roll 2: 7
+      game.roll(7);
+      // Frame 9 resolves: 30 + (10 + 10 + 7) = 57
+      expect(game.cumulativeScores()[8]).toBe(57);
+      // Frame 10 needs roll 3
+      expect(game.cumulativeScores()[9]).toBeNull();
+
+      // Frame 10, Roll 3: 2
+      game.roll(2);
+      // Frame 10 resolves: 57 + (10 + 7 + 2) = 76
+      expect(game.cumulativeScores()[9]).toBe(76);
+      expect(game.score()).toBe(76);
+    });
+
+    it("validates physical constraints and shorthand rules in the tenth frame", () => {
+      const game1 = new Game();
+      for (let i = 0; i < 18; i++) {
+        game1.roll(0);
+      }
+      // Roll 1 is 7 -> cannot roll strike on roll 2
+      game1.roll(7);
+      expect(() => game1.roll("X")).toThrow();
+
+      const game2 = new Game();
+      for (let i = 0; i < 18; i++) {
+        game2.roll(0);
+      }
+      // Roll 1 is Strike -> cannot roll spare on roll 2 because rack was reset
+      game2.roll("X");
+      expect(() => game2.roll("/")).toThrow();
+
+      // Roll 2 is Strike -> cannot roll spare on roll 3
+      game2.roll("X");
+      expect(() => game2.roll("/")).toThrow();
+
+      const game3 = new Game();
+      for (let i = 0; i < 18; i++) {
+        game3.roll(0);
+      }
+      // Roll 1 is Strike, roll 2 is 8 -> roll 3 cannot be Strike (only 2 pins left)
+      game3.roll("X");
+      game3.roll(8);
+      expect(() => game3.roll("X")).toThrow();
+    });
+  });
 });
