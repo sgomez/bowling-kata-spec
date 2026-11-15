@@ -6,6 +6,11 @@ import { PINS, type Pin } from "./pins.js";
 
 export type BowlerId = string;
 
+export interface Newcomer {
+  id: BowlerId;
+  nickname: string;
+}
+
 export interface Bowler {
   readonly id: BowlerId;
   readonly nickname: string;

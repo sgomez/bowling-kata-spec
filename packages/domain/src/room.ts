@@ -5,6 +5,7 @@ import {
   fillFrame,
   hasFinished,
   knock,
+  type Newcomer,
   newBowler,
 } from "./bowler.js";
 import { type FrameNumber, TENTH_FRAME } from "./frame.js";
@@ -15,42 +16,18 @@ import {
   openWindow,
   revealWindow,
 } from "./frame-window.js";
+import { connectedHeirOf, heirOf } from "./host.js";
+import { nicknameProblem } from "./nickname.js";
 import type { Pin } from "./pins.js";
 import type { RoomCode } from "./room-code.js";
+import { type Created, OK, type RoomResult, refuse } from "./room-result.js";
 import {
   type Phase,
   type RoomSnapshot,
   roomSnapshot,
 } from "./room-snapshot.js";
 
-export type RoomFailure =
-  | { type: "NICKNAME_INVALID" }
-  | { type: "NICKNAME_TAKEN" }
-  | { type: "ROOM_FULL" }
-  | { type: "GAMES_STARTED" }
-  | { type: "NOT_HOST" }
-  | { type: "NOT_IN_ROOM" }
-  | { type: "WINDOW_CLOSED" }
-  | { type: "FRAME_FINISHED" }
-  | { type: "PIN_NOT_STANDING" };
-
-export type RoomResult = { ok: true } | { ok: false; failure: RoomFailure };
-
-interface Newcomer {
-  id: BowlerId;
-  nickname: string;
-}
-
 export const MAX_BOWLERS = 6;
-export const MAX_NICKNAME_LENGTH = 16;
-
-const OK = { ok: true } as const;
-
-const refuse = (type: RoomFailure["type"]) =>
-  ({ ok: false, failure: { type } }) as const;
-
-const isValidNickname = (nickname: string) =>
-  nickname.length > 0 && [...nickname].length <= MAX_NICKNAME_LENGTH;
 
 export class Room {
   private readonly bowlers: Bowler[] = [];
@@ -58,14 +35,11 @@ export class Room {
   private window: FrameWindow | undefined;
 
   private constructor(
-    private readonly code: RoomCode,
-    private readonly hostId: BowlerId,
+    readonly code: RoomCode,
+    private hostId: BowlerId,
   ) {}
 
-  static create(
-    code: RoomCode,
-    host: Newcomer,
-  ): { ok: true; room: Room } | { ok: false; failure: RoomFailure } {
+  static create(code: RoomCode, host: Newcomer): Created<Room> {
     const room = new Room(code, host.id);
     const joined = room.join(host);
     return joined.ok ? { ok: true, room } : joined;
@@ -79,12 +53,9 @@ export class Room {
       return refuse("ROOM_FULL");
     }
     const trimmed = nickname.trim();
-    if (!isValidNickname(trimmed)) {
-      return refuse("NICKNAME_INVALID");
-    }
-    const key = trimmed.toLocaleLowerCase();
-    if (this.bowlers.some((b) => b.nickname.toLocaleLowerCase() === key)) {
-      return refuse("NICKNAME_TAKEN");
+    const problem = nicknameProblem(trimmed, this.bowlers);
+    if (problem) {
+      return refuse(problem);
     }
     this.bowlers.push(newBowler(id, trimmed));
     return OK;
@@ -126,8 +97,46 @@ export class Room {
     const bowler = this.find(bowlerId);
     if (bowler) {
       bowler.connected = false;
+      if (bowlerId === this.hostId) {
+        this.hostId = connectedHeirOf(this.bowlers, bowlerId);
+      }
       this.closeIfEveryoneFinished(now);
     }
+  }
+
+  reconnect(bowlerId: BowlerId): RoomResult {
+    const bowler = this.find(bowlerId);
+    if (!bowler) {
+      return refuse("NOT_IN_ROOM");
+    }
+    bowler.connected = true;
+    if (!this.find(this.hostId)?.connected) {
+      this.hostId = bowlerId;
+    }
+    return OK;
+  }
+
+  leave(bowlerId: BowlerId, now: number): RoomResult {
+    const at = this.bowlers.findIndex((b) => b.id === bowlerId);
+    if (at < 0) {
+      return refuse("NOT_IN_ROOM");
+    }
+    if (bowlerId === this.hostId) {
+      this.hostId = heirOf(this.bowlers, bowlerId);
+    }
+    this.bowlers.splice(at, 1);
+    this.closeIfEveryoneFinished(now);
+    return OK;
+  }
+
+  remove(hostId: BowlerId, bowlerId: BowlerId, now: number): RoomResult {
+    return hostId === this.hostId
+      ? this.leave(bowlerId, now)
+      : refuse("NOT_HOST");
+  }
+
+  isEmpty() {
+    return this.bowlers.length === 0;
   }
 
   nextDeadline(): number | undefined {
