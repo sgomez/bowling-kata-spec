@@ -67,12 +67,14 @@ describe("session", () => {
 
     session.start();
     session.roll([1, 5]);
+    session.rematch();
 
     expect(sockets).toHaveLength(1);
     expect(sockets[0].sent).toEqual([
       { type: "join", code: "k7mpq", nickname: "Bea" },
       { type: "start" },
       { type: "roll", pins: [1, 5] },
+      { type: "rematch" },
     ]);
   });
 
