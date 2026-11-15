@@ -1,0 +1,47 @@
+import { render } from "preact-render-to-string";
+import { describe, expect, it } from "vitest";
+import { Button, Chip, Field, Notice, Toast } from "../src/ui.js";
+
+describe("base components", () => {
+  it("shows a busy button as waiting, not pressable", () => {
+    const html = render(
+      <Button variant="primary" busy="Conectando…">
+        Crear sala
+      </Button>,
+    );
+
+    expect(html).toContain("Conectando…");
+    expect(html).not.toContain("Crear sala");
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain("disabled");
+  });
+
+  it("labels a field's input", () => {
+    const html = render(<Field label="Tu apodo" name="nickname" value="" />);
+
+    expect(html).toMatch(/<label for="nickname"[^>]*>Tu apodo<\/label>/);
+    expect(html).toContain('id="nickname"');
+  });
+
+  it("shows a chip's text", () => {
+    expect(render(<Chip tone="warning">sala completa</Chip>)).toContain(
+      "sala completa",
+    );
+  });
+
+  it("raises an error notice as an alert and anything else as a status", () => {
+    expect(render(<Notice tone="error">No existe.</Notice>)).toContain(
+      'role="alert"',
+    );
+    expect(render(<Notice tone="info">Te han invitado.</Notice>)).toContain(
+      'role="status"',
+    );
+  });
+
+  it("announces a toast politely", () => {
+    const html = render(<Toast tone="success">Enlace copiado.</Toast>);
+
+    expect(html).toContain('role="status"');
+    expect(html).toContain("Enlace copiado.");
+  });
+});
