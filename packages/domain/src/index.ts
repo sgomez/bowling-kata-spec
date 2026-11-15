@@ -4,6 +4,7 @@ export { Game, type RollValidationResult } from "./game.js";
 export { PINS, type Pin } from "./pins.js";
 export {
   type ClientMessage,
+  type CloseReason,
   type ErrorCode,
   parseClientMessage,
   type ServerMessage,

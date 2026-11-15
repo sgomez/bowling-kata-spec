@@ -27,11 +27,18 @@ export type ErrorCode =
   | "INVALID_MESSAGE"
   | "UNKNOWN_ROOM"
   | "ALREADY_IN_ROOM"
-  | "NOT_IN_ROOM";
+  | "NOT_IN_ROOM"
+  | "TOO_MANY_ROOMS"
+  | "TOO_MANY_CONNECTIONS"
+  | "MESSAGE_TOO_LARGE"
+  | "TOO_MANY_MESSAGES";
+
+export type CloseReason = "ROOM_CLOSED" | "SERVER_SHUTDOWN";
 
 export type ServerMessage =
   | { type: "room"; you: BowlerId; room: RoomSnapshot }
-  | { type: "error"; error: ErrorCode };
+  | { type: "error"; error: ErrorCode }
+  | { type: "closed"; reason: CloseReason };
 
 const parseJson = (raw: string): unknown => {
   try {

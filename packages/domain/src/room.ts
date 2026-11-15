@@ -146,6 +146,10 @@ export class Room {
     }
   }
 
+  lifecycle(): { phase: Phase; bowlerCount: number } {
+    return { phase: this.phase, bowlerCount: this.bowlers.length };
+  }
+
   snapshot(viewer: BowlerId, now: number): RoomSnapshot {
     return roomSnapshot({
       code: this.code,
