@@ -32,16 +32,8 @@ ul {
   padding: 0;
 }
 
-.invite,
-.url {
+.invite {
   overflow-wrap: anywhere;
-}
-
-.qr svg {
-  width: min(320px, 80vw);
-  height: auto;
-  background: white;
-  padding: 16px;
 }
 
 .lane canvas {

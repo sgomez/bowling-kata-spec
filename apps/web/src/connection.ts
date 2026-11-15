@@ -28,9 +28,15 @@ export interface Seat {
   receivedAt: number;
 }
 
+export interface Reconnecting {
+  attempt: number;
+  nextAt: number;
+}
+
 interface ConnectionOptions {
   storage?: () => TokenStore;
-  retry?: (run: () => void, failures: number) => void;
+  backoff?: (failures: number) => number;
+  retry?: (run: () => void, delayMs: number) => void;
   invitedTo?: string;
 }
 
@@ -49,7 +55,8 @@ export const createConnection = (
   now: () => number = Date.now,
   {
     storage = () => localStorage,
-    retry = (run, failures) => setTimeout(run, reconnectDelay(failures)),
+    backoff = reconnectDelay,
+    retry = (run, delayMs) => setTimeout(run, delayMs),
     invitedTo = "",
   }: ConnectionOptions = {},
 ) => {
@@ -61,6 +68,7 @@ export const createConnection = (
   const stored = attempt(() => storage().getItem(TOKEN_KEY)) ?? undefined;
   let token = resumableToken(stored, invitedTo);
   const closed = signal<CloseReason | undefined>(undefined);
+  const reconnecting = signal<Reconnecting | undefined>(undefined);
   let socket: ConnectionSocket | undefined;
   let pending: ClientMessage[] = [];
   let failures = 0;
@@ -105,6 +113,7 @@ export const createConnection = (
     const next = connect();
     next.onopen = () => {
       failures = 0;
+      reconnecting.value = undefined;
       for (const message of pending) {
         next.send(JSON.stringify(message));
       }
@@ -116,7 +125,9 @@ export const createConnection = (
       pending = [];
       entering.value = undefined;
       if (token) {
-        retry(resume, failures++);
+        const delay = backoff(failures++);
+        reconnecting.value = { attempt: failures, nextAt: now() + delay };
+        retry(resume, delay);
       }
     };
     return next;
@@ -147,6 +158,7 @@ export const createConnection = (
     error,
     removed,
     closed,
+    reconnecting,
     missed,
     entering,
     miss: () => {

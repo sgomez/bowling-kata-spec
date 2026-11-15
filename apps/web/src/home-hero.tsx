@@ -14,12 +14,16 @@ const PINS: [number, number, number][] = [
   [195, 302.1, 0.427],
 ];
 
-export const HomeHero = () => (
+export const HomeHero = ({
+  viewBox = "0 70 390 330",
+}: {
+  viewBox?: string;
+}) => (
   <svg
     class="home-hero"
     role="img"
     aria-label="Pista de bolos con los diez bolos al fondo"
-    viewBox="0 70 390 330"
+    viewBox={viewBox}
     preserveAspectRatio="xMidYMid slice"
   >
     <defs>
