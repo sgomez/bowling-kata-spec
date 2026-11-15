@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { rack } from "./knock.js";
+import { canStartSwipe, checkTime, type LaneActivity } from "./lane-gate.js";
 import { FOUL_LINE } from "./lane-geometry.js";
 import type { LaneRoll } from "./lane-physics.js";
 import { drawLane, type LaneScene } from "./lane-render.js";
@@ -24,9 +25,15 @@ export const Lane = (input: RollInputProps) => {
   });
   const roll = useRef<LaneRoll | undefined>(undefined);
   const aiming = useRef(false);
+  const activity = (): LaneActivity =>
+    roll.current ? "rolling" : aiming.current ? "aiming" : "idle";
+  const frameTime = () => ({
+    now: props.current.now(),
+    endsAt: props.current.endsAt,
+  });
 
   useEffect(() => {
-    if (roll.current || aiming.current) return;
+    if (activity() !== "idle") return;
     scene.current = { pins: rack(standing), ball: IDLE_BALL, trail: [] };
   }, [standing]);
 
@@ -36,8 +43,10 @@ export const Lane = (input: RollInputProps) => {
     let last = performance.now();
     let settledAt: number | undefined;
     const expire = () => {
+      const time = checkTime(activity(), frameTime());
+      if (time === "running") return;
       setTimeUp(true);
-      if (!roll.current && !aiming.current) return;
+      if (time === "over") return;
       roll.current = undefined;
       aiming.current = false;
       settledAt = undefined;
@@ -49,7 +58,7 @@ export const Lane = (input: RollInputProps) => {
       props.current.onMiss();
     };
     const tick = (now: number) => {
-      if (props.current.now() >= props.current.endsAt) expire();
+      expire();
       const current = roll.current;
       if (current) {
         current.step(now - last);
@@ -86,8 +95,7 @@ export const Lane = (input: RollInputProps) => {
   const onPointerDown = (event: PointerEvent) => {
     const target = event.currentTarget as Element;
     const start = toLane(event, target.getBoundingClientRect());
-    const late = props.current.now() >= props.current.endsAt;
-    if (late || roll.current || start.y > FOUL_LINE) return;
+    if (!canStartSwipe(activity(), frameTime(), start.y)) return;
     target.setPointerCapture(event.pointerId);
     aiming.current = true;
     scene.current = { ...scene.current, ball: start, trail: [start] };
