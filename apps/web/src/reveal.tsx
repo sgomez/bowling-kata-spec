@@ -7,6 +7,7 @@ import {
 } from "@bowling/domain";
 import type { ComponentChildren } from "preact";
 import { NextFrame } from "./next-frame.js";
+import { kindOfMark } from "./roll-kind.js";
 import { ScorecardButton } from "./scorecard-sheet.js";
 import { Avatar, Button, Chip, Icon } from "./ui.js";
 import "./styles/reveal.css";
@@ -25,9 +26,6 @@ const totalBefore = (bowler: BowlerView, frame: FrameNumber) =>
 
 const bonusPending = (bowler: BowlerView) =>
   bowler.frames.some((f) => f.rolls.length > 0 && f.score === null);
-
-const rollClass = (roll: string) =>
-  roll === "X" ? "roll strike" : roll === "/" ? "roll spare" : "roll";
 
 interface RevealProps {
   you: BowlerId;
@@ -111,7 +109,7 @@ export const Reveal = ({
               {bowler.frames[frame - 1].rolls.map((roll, i) => (
                 <span
                   key={i}
-                  class={rollClass(roll)}
+                  class={`roll ${kindOfMark(roll)}`}
                   style={{ animationDelay: `${flipAt(bowler, i)}ms` }}
                 >
                   {roll}
