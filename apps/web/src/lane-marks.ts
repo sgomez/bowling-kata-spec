@@ -3,8 +3,8 @@ import { FOUL_LINE } from "./lane-geometry.js";
 
 // Lane metres; an arrow's y is its tip. Hand-tuned to the "Pista" sheet.
 const BOARDS = 0.149;
-const CENTRE_ARROW = 1.02;
-const ARROW_STEP = 0.045;
+const CENTRE_ARROW = 1.62;
+const ARROW_STEP = 0.1;
 
 export const ARROWS: readonly Spot[] = [-3, -2, -1, 0, 1, 2, 3].map((i) => ({
   x: i * BOARDS,
@@ -13,7 +13,7 @@ export const ARROWS: readonly Spot[] = [-3, -2, -1, 0, 1, 2, 3].map((i) => ({
 
 const laneDots = [-4, -3, -2, -1, 1, 2, 3, 4].map((i) => ({
   x: Math.sign(i) * (0.018 + Math.abs(i) * 0.096),
-  y: FOUL_LINE + 0.13,
+  y: FOUL_LINE + 0.45,
 }));
 
 const approachDots = [-3, -2, -1, 0, 1, 2, 3].map((i) => ({

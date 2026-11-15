@@ -8,7 +8,7 @@ import {
 import { ARROWS, GUIDE_DOTS } from "./lane-marks.js";
 
 const WIDTH = 256;
-const HEIGHT = 1024;
+const HEIGHT = 2048;
 const BOARDS = 39;
 const DECK = HEAD_PIN - 0.12;
 const MARK = "#8A3F1C";
@@ -61,8 +61,8 @@ const marks = (ctx: CanvasRenderingContext2D) => {
   for (const { x, y } of ARROWS) {
     ctx.beginPath();
     ctx.moveTo(px(x), py(y));
-    ctx.lineTo(px(x) - 0.014 * across, py(y - 0.08));
-    ctx.lineTo(px(x) + 0.014 * across, py(y - 0.08));
+    ctx.lineTo(px(x) - 0.014 * across, py(y - 0.2));
+    ctx.lineTo(px(x) + 0.014 * across, py(y - 0.2));
     ctx.fill();
   }
   for (const { x, y } of GUIDE_DOTS) {

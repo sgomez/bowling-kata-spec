@@ -13,7 +13,7 @@ import { NO_MARKS } from "./lane-swipe-marks.js";
 import type { RollInputProps } from "./roll-input.js";
 import { toLane } from "./swipe.js";
 
-const IDLE_BALL = { x: 0, y: FOUL_LINE / 2 };
+const IDLE_BALL = { x: 0, y: FOUL_LINE - 0.2 };
 const manner = () => ({
   reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
 });

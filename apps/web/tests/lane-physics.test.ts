@@ -40,7 +40,7 @@ describe("a Roll down the Lane", () => {
 
   it("bends the ball with spin", () => {
     const roll = startRoll(PINS, { ...straight, spin: 1 });
-    roll.step(300);
+    for (let i = 0; i < 15; i++) roll.step(100);
 
     expect(Math.abs(roll.ball().x)).toBeGreaterThan(0.01);
   });

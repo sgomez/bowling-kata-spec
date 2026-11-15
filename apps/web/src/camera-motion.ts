@@ -12,7 +12,7 @@ export const RETURN_MS = 600;
 
 const follow = (ball: number): LaneCamera => {
   const run = (ball - FOUL_LINE) / (HEAD_PIN - FOUL_LINE);
-  const share = exit(Math.max(0, Math.min(1, run)));
+  const share = pulse(Math.max(0, Math.min(1, run)));
   return { ...REST_CAMERA, y: REST_CAMERA.y + (STOP - REST_CAMERA.y) * share };
 };
 

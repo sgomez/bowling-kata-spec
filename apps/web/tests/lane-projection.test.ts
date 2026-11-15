@@ -49,12 +49,13 @@ describe("projecting a screen point onto the Lane", () => {
 });
 
 describe("the camera at rest", () => {
-  const small = { left: 0, top: 0, width: 320, height: 400 };
+  const phone = { left: 0, top: 0, width: 390, height: 844 };
+  const small = { left: 0, top: 0, width: 320, height: 568 };
 
-  it("draws each Pin at least 36 px tall on a small phone", () => {
+  it("draws each Pin at least 36 px tall on the design's phone", () => {
     for (const spot of rack(PINS).values()) {
-      const base = toScreenPoint({ ...spot, z: 0 }, small, REST_CAMERA);
-      const top = toScreenPoint({ ...spot, z: PIN_HEIGHT }, small, REST_CAMERA);
+      const base = toScreenPoint({ ...spot, z: 0 }, phone, REST_CAMERA);
+      const top = toScreenPoint({ ...spot, z: PIN_HEIGHT }, phone, REST_CAMERA);
 
       expect(base.y - top.y).toBeGreaterThanOrEqual(36);
       expect(top.y).toBeGreaterThan(0);

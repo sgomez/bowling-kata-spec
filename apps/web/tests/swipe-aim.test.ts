@@ -25,7 +25,7 @@ describe("the aim line", () => {
   });
 
   it("curves the way the spin hooks the ball", () => {
-    // Hook 2.5 × spin 0.4 at 2 m/s bends the path on a 2 m radius.
+    // Hook 0.105 × spin 0.4 at 2 m/s bends the path on a 48 m radius.
     const right = aimOf({ ...straight, spin: 0.4 }).at(-1);
     const left = aimOf({ ...straight, spin: -0.4 }).at(-1);
 

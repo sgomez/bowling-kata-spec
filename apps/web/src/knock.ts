@@ -14,7 +14,7 @@ export interface Pose extends Spot {
 const DISPLACED = 0.03;
 const TILTED = 0.3;
 const STILL_SPEED = 0.02;
-const MAX_ROLL_MS = 8_000;
+const MAX_ROLL_MS = 10_000;
 
 const ROWS: Pin[][] = [[1], [2, 3], [4, 5, 6], [7, 8, 9, 10]];
 

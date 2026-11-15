@@ -21,12 +21,12 @@ export interface Viewport {
   height: number;
 }
 
-// Hand-tuned so the approach fills the bottom and the Pins the top.
+// Fitted to the design's "Juego · preparado" artboard.
 export const REST_CAMERA: LaneCamera = {
   x: 0,
-  y: -0.6,
-  height: 1.7,
-  tilt: 44,
+  y: -1.89,
+  height: 2.43,
+  tilt: 28.5,
   fov: 56,
 };
 

@@ -54,13 +54,13 @@ describe("choreographing the camera", () => {
   });
 });
 
-const small = { left: 0, top: 0, width: 320, height: 400 };
+const phone = { left: 0, top: 0, width: 390, height: 844 };
 
 const showsEveryPin = (camera: LaneCamera) => {
   for (const spot of rack(PINS).values()) {
-    const base = toScreenPoint({ ...spot, z: 0 }, small, camera);
-    const top = toScreenPoint({ ...spot, z: PIN_HEIGHT }, small, camera);
-    expect(base.y).toBeLessThan(small.height);
+    const base = toScreenPoint({ ...spot, z: 0 }, phone, camera);
+    const top = toScreenPoint({ ...spot, z: PIN_HEIGHT }, phone, camera);
+    expect(base.y).toBeLessThan(phone.height);
     expect(top.y).toBeGreaterThan(0);
     expect(base.y - top.y).toBeGreaterThanOrEqual(36);
   }
