@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "arch": "depcruise src tests",
     "knip": "knip",
-    "size": "node scripts/size.mjs --report-only",
+    "size": "node scripts/size.mjs",
     "prepare": "lefthook install",
     "check": "pnpm lint && pnpm typecheck && pnpm size && pnpm arch && pnpm knip && pnpm test"
   },
