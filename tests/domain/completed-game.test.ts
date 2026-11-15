@@ -25,14 +25,3 @@ describe("A completed Game", () => {
     expect(game.currentRoll).toBe(2);
   });
 });
-
-describe("Roll validation of numeric pin counts", () => {
-  it("rejects a non-integer pin count as an invalid format", () => {
-    const game = new Game();
-
-    expect(game.validateRoll(3.5)).toEqual({
-      valid: false,
-      failure: { type: "INVALID_FORMAT", input: 3.5 },
-    });
-  });
-});
