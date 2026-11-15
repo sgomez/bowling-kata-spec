@@ -1,0 +1,3 @@
+# Rooms live only in memory, with a bounded lifecycle
+
+Nothing outlives a Room: there are no accounts, records or history, so there is no database and a restart or deploy ends every Room in progress. To keep memory bounded, every Room has hard limits enforced by the server: Lobby not started in 15 min, all Bowlers disconnected for 2 min, finished Games kept 5 min, and an absolute 2 h from creation that Rematches don't reset. There are also global caps on Rooms and on connections per IP. The Room model is pure and receives time from outside; only the server owns timers and sockets, and a test proves the registry is empty again once Rooms are destroyed.

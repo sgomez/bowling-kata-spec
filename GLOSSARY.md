@@ -47,3 +47,45 @@ _Avoid_: Extra shot, fill ball, free roll
 **Notation**:
 The symbolic way of recording a roll on a scoresheet: `X` for a strike, `/` for a spare, `-` for zero pins, digits otherwise.
 _Avoid_: Shorthand, symbols, codes
+
+## Online play
+
+**Bowler**:
+A person taking part in a Room under a nickname, with a Game of their own.
+_Avoid_: Player, user, participant
+
+**Room**:
+An online space where up to six Bowlers play their Games together, from Lobby to final Score, and that disappears afterwards.
+_Avoid_: Match, session, lobby, table
+
+**Room Code**:
+The five-character code that identifies a Room while it exists.
+_Avoid_: Room ID, PIN, password
+
+**Invite Link**:
+The link that opens a Room directly from its Room Code.
+_Avoid_: Share URL, invitation
+
+**Host**:
+The Bowler who starts the Room's Games and may remove other Bowlers.
+_Avoid_: Owner, admin, leader
+
+**Lobby**:
+The phase of a Room before its Games start, the only time Bowlers can join.
+_Avoid_: Waiting room, pre-game
+
+**Frame Window**:
+The shared time limit in which every Bowler in a Room plays the same Frame; Rolls not made when it closes count as zero pins.
+_Avoid_: Turn, round, timer
+
+**Rematch**:
+A fresh set of Games in the same Room for the Bowlers still present.
+_Avoid_: Replay, new game, restart
+
+**Swipe**:
+The finger gesture on the Lane that makes a Roll, read as release position, direction, speed and spin.
+_Avoid_: Throw, flick, drag
+
+**Lane**:
+The surface on screen where the ball travels and the Pins stand.
+_Avoid_: Alley, track, field
