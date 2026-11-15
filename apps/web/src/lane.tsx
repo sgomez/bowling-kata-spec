@@ -5,8 +5,10 @@ import { FOUL_LINE } from "./lane-geometry.js";
 import type { LaneRoll } from "./lane-physics.js";
 import { REST_CAMERA } from "./lane-projection.js";
 import type { LaneScene, LaneView } from "./lane-scene.js";
+import { useSwipe } from "./lane-swipe.js";
+import { NO_MARKS } from "./lane-swipe-marks.js";
 import type { RollInputProps } from "./roll-input.js";
-import { readSwipe, type SwipeSample, toLane } from "./swipe.js";
+import { toLane } from "./swipe.js";
 
 const IDLE_BALL = { x: 0, y: FOUL_LINE / 2 };
 
@@ -27,21 +29,21 @@ export const Lane = (input: RollInputProps) => {
   const props = useRef(input);
   props.current = input;
   const [timeUp, setTimeUp] = useState(false);
+  const swipe = useSwipe();
   const view = useRef<LaneView>({
     pins: rack(standing),
     ball: IDLE_BALL,
-    trail: [],
+    marks: NO_MARKS,
   });
   const roll = useRef<LaneRoll | undefined>(undefined);
-  const aiming = useRef(false);
   const activity = (): LaneActivity =>
-    roll.current ? "rolling" : aiming.current ? "aiming" : "idle";
+    roll.current ? "rolling" : swipe.aiming() ? "aiming" : "idle";
   const frameTime = () => ({
     now: props.current.now(),
     endsAt: props.current.endsAt,
   });
   const rest = (standing: RollInputProps["standing"]) => {
-    view.current = { pins: rack(standing), ball: IDLE_BALL, trail: [] };
+    view.current = { ...view.current, pins: rack(standing), ball: IDLE_BALL };
   };
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export const Lane = (input: RollInputProps) => {
       setTimeUp(true);
       if (time === "over") return;
       roll.current = undefined;
-      aiming.current = false;
+      cancel();
       rest(props.current.standing);
       props.current.onMiss();
     };
@@ -74,9 +76,9 @@ export const Lane = (input: RollInputProps) => {
       if (current) {
         current.step(now - last);
         view.current = {
+          ...view.current,
           pins: current.pins(),
           ball: current.ball(),
-          trail: [],
         };
         if (current.settled) {
           const knocked = current.knocked();
@@ -86,6 +88,7 @@ export const Lane = (input: RollInputProps) => {
         }
       }
       last = now;
+      view.current.marks = swipe.marks(now);
       scene?.draw(view.current, REST_CAMERA);
       frame = requestAnimationFrame(tick);
     };
@@ -103,29 +106,28 @@ export const Lane = (input: RollInputProps) => {
     const [start] = samplesOf(event);
     if (!start || !canStartSwipe(activity(), frameTime(), start)) return;
     target.setPointerCapture(event.pointerId);
-    aiming.current = true;
-    view.current = { ...view.current, ball: start, trail: [start] };
+    swipe.start(start);
+    view.current = { ...view.current, ball: start };
   };
 
   const onPointerMove = (event: PointerEvent) => {
-    if (!aiming.current) return;
-    const trail = [...view.current.trail, ...samplesOf(event)];
-    const ball = trail.at(-1) as SwipeSample;
-    view.current = { ...view.current, ball, trail };
+    if (!swipe.aiming()) return;
+    const ball = swipe.extend(samplesOf(event));
+    view.current = { ...view.current, ball };
   };
 
   const cancel = () => {
-    aiming.current = false;
-    view.current = { ...view.current, ball: IDLE_BALL, trail: [] };
+    swipe.drop();
+    view.current = { ...view.current, ball: IDLE_BALL };
   };
 
   const onPointerUp = async () => {
-    if (!aiming.current) return;
-    const swipe = readSwipe(view.current.trail);
-    cancel();
-    if (!swipe) return;
+    if (!swipe.aiming()) return;
+    const reading = swipe.release();
+    view.current = { ...view.current, ball: IDLE_BALL };
+    if (!reading) return;
     const { startRoll } = await physics();
-    roll.current = startRoll(props.current.standing, swipe);
+    roll.current = startRoll(props.current.standing, reading);
   };
 
   return (
@@ -138,11 +140,8 @@ export const Lane = (input: RollInputProps) => {
         onPointerUp={onPointerUp}
         onPointerCancel={cancel}
       />
-      <p>
-        {timeUp
-          ? "Se acabó el tiempo."
-          : "Desliza el dedo hacia los bolos. Curva el gesto para darle efecto."}
-      </p>
+      {swipe.overlay(timeUp)}
+      {timeUp && <p>Se acabó el tiempo.</p>}
     </div>
   );
 };

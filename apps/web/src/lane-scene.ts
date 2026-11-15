@@ -1,11 +1,8 @@
 import type { Pin } from "@bowling/domain";
 import {
   AmbientLight,
-  BufferGeometry,
   Color,
   DirectionalLight,
-  Line,
-  LineBasicMaterial,
   Mesh,
   PerspectiveCamera,
   Scene,
@@ -21,12 +18,12 @@ import { ballMesh, pinGeometry, pinMaterial } from "./lane-models.js";
 import type { LaneCamera } from "./lane-projection.js";
 import { createReflections } from "./lane-reflection.js";
 import { buildSet } from "./lane-set.js";
-import type { SwipeSample } from "./swipe.js";
+import { createSwipeMarks, type SwipeMarks } from "./lane-swipe-marks.js";
 
 export interface LaneView {
   pins: ReadonlyMap<Pin, Spot>;
   ball: Spot;
-  trail: readonly SwipeSample[];
+  marks: SwipeMarks;
 }
 
 export interface LaneScene {
@@ -60,17 +57,10 @@ export const createLaneScene = (
   const material = pinMaterial();
   const pins = new Map<Pin, Mesh>();
   const ball = ballMesh(ballColour);
-  const trail = new Line(
-    new BufferGeometry(),
-    new LineBasicMaterial({
-      color: "#ffffff",
-      transparent: true,
-      opacity: 0.6,
-    }),
-  );
   const halo = glow(ballColour, 0.55);
   halo.scale.setScalar(BALL_RADIUS * 5);
-  scene.add(ball, halo, trail);
+  scene.add(ball, halo);
+  const marks = createSwipeMarks(scene);
   let warned = false;
   const lens = new PerspectiveCamera();
 
@@ -107,9 +97,9 @@ export const createLaneScene = (
       const limit = LANE_WIDTH / 2 - BALL_RADIUS / 2;
       const x = Math.max(-limit, Math.min(limit, view.ball.x));
       ball.position.copy(world({ x, y: view.ball.y }, BALL_RADIUS));
-      trail.geometry.setFromPoints(view.trail.map((s) => world(s, 0.002)));
       halo.position.copy(ball.position);
       reflections.update([...pins.values(), ball]);
+      marks.draw(view.marks);
       aim(camera);
       renderer.render(scene, lens);
       if (!warned && overBudget(renderer.info.render)) {
