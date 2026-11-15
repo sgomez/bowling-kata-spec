@@ -38,11 +38,26 @@ describe("base components", () => {
     );
   });
 
+  const toast = (at: number) =>
+    render(
+      <Toast tone="success" since={1_000} now={() => at}>
+        Enlace copiado.
+      </Toast>,
+    );
+
   it("announces a toast politely", () => {
-    const html = render(<Toast tone="success">Enlace copiado.</Toast>);
+    const html = toast(1_000);
 
     expect(html).toContain('role="status"');
     expect(html).toContain("Enlace copiado.");
+  });
+
+  it("keeps a toast on screen while it leaves", () => {
+    expect(toast(4_100)).toContain("Enlace copiado.");
+  });
+
+  it("drops a toast once it has left", () => {
+    expect(toast(4_180)).toBe("");
   });
 
   it("draws an avatar as the nickname's first two letters, upper-cased", () => {

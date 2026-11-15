@@ -28,7 +28,10 @@ export const App = (props: AppProps) => {
 };
 
 const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
-  const shared = useSignal<ShareOutcome | undefined>(undefined);
+  const shared = useSignal<{ outcome: ShareOutcome; at: number } | undefined>(
+    undefined,
+  );
+  const missedAt = useSignal(0);
   const removing = useSignal<BowlerId | undefined>(undefined);
   const leaving = useSignal(false);
   const playing = useSignal<number | undefined>(undefined);
@@ -83,8 +86,13 @@ const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
             playing.value = undefined;
           }}
           webgl={webgl}
-          missed={connection.missed.value === number}
-          onMiss={connection.miss}
+          missedAt={
+            connection.missed.value === number ? missedAt.value : undefined
+          }
+          onMiss={() => {
+            missedAt.value = Date.now();
+            connection.miss();
+          }}
           leaving={leaving.value}
           onAskLeave={() => {
             leaving.value = true;
@@ -111,7 +119,10 @@ const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
       error={notice}
       removing={removing.value}
       onShare={async () => {
-        shared.value = await shareInvite(link, navigator);
+        shared.value = {
+          outcome: await shareInvite(link, navigator),
+          at: Date.now(),
+        };
       }}
       onStart={connection.start}
       onLeave={connection.leave}

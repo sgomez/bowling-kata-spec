@@ -24,7 +24,7 @@ const SHARE_TOASTS: Partial<
 interface LobbyProps {
   seat: Seat;
   link: string;
-  shared?: ShareOutcome;
+  shared?: { outcome: ShareOutcome; at: number };
   error?: string;
   removing?: BowlerId;
   onShare: () => void;
@@ -33,6 +33,7 @@ interface LobbyProps {
   onAskRemove: (bowlerId: BowlerId) => void;
   onCancelRemove: () => void;
   onRemove: (bowlerId: BowlerId) => void;
+  now?: () => number;
 }
 
 export const Lobby = ({
@@ -47,11 +48,12 @@ export const Lobby = ({
   onAskRemove,
   onCancelRemove,
   onRemove,
+  now = Date.now,
 }: LobbyProps) => {
   const isHost = room.hostId === you;
   const full = room.bowlers.length >= MAX_BOWLERS;
   const freeSeats = MAX_BOWLERS - room.bowlers.length;
-  const toast = shared && SHARE_TOASTS[shared];
+  const toast = shared && SHARE_TOASTS[shared.outcome];
   const confirming = room.bowlers.find((b) => b.id === removing);
 
   return (
@@ -99,7 +101,11 @@ export const Lobby = ({
       </section>
       <footer class="lobby-footer">
         {error && <Notice tone="error">{error}</Notice>}
-        {toast && <Toast tone={toast.tone}>{toast.text}</Toast>}
+        {toast && (
+          <Toast key={shared.at} tone={toast.tone} since={shared.at} now={now}>
+            {toast.text}
+          </Toast>
+        )}
         {isHost ? (
           <Button variant="primary" onClick={onStart}>
             Empezar partida

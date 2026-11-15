@@ -46,3 +46,9 @@
   background: var(--surface-raised);
   box-shadow: 0 12px 32px rgb(0 0 0 / 45%);
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast.leaving {
+    animation: rise 180ms var(--ease-entry) reverse both;
+  }
+}

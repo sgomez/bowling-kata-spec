@@ -14,7 +14,7 @@ interface PlayProps {
   seat: Seat;
   frame: NonNullable<RoomSnapshot["frame"]>;
   onRoll: (knocked: Pin[]) => void;
-  missed: boolean;
+  missedAt?: number;
   onMiss: () => void;
   leaving: boolean;
   onAskLeave: () => void;
@@ -32,7 +32,7 @@ export const Play = ({
   seat: { you, room, receivedAt },
   frame,
   onRoll,
-  missed,
+  missedAt,
   onMiss,
   leaving,
   onAskLeave,
@@ -45,8 +45,10 @@ export const Play = ({
   now = Date.now,
 }: PlayProps) => {
   const endsAt = receivedAt + frame.remainingMs;
-  const notice = missed && (
-    <Toast tone="warning">Se acabó el tiempo: esa tirada no ha contado.</Toast>
+  const notice = missedAt !== undefined && (
+    <Toast tone="warning" since={missedAt} now={now}>
+      Se acabó el tiempo: esa tirada no ha contado.
+    </Toast>
   );
 
   if (!frame.open) {
