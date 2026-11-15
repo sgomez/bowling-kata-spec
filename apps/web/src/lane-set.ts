@@ -14,6 +14,13 @@ import { laneTexture } from "./lane-texture.js";
 
 // Lane metres: x across, y along the Lane, h up.
 type Corner = [x: number, y: number, h: number];
+type Range = [from: number, to: number];
+
+interface Area {
+  x: Range;
+  y: Range;
+  h?: number;
+}
 
 const GUTTER = 0.12;
 const GUTTER_DEPTH = 0.05;
@@ -49,27 +56,17 @@ class Quads {
   }
 }
 
-// A flat quad from (x0, y0) to (x1, y1) at height h, facing up.
 const floor = (
   q: Quads,
   colour: string,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-  h = 0,
+  { x: [x0, x1], y: [y0, y1], h = 0 }: Area,
 ) => q.add(colour, [x0, y0, h], [x1, y0, h], [x1, y1, h], [x0, y1, h]);
 
-// A wall along the Lane at x, facing towards `facing` (±1).
-const wall = (
-  q: Quads,
-  colour: string,
-  x: number,
-  facing: number,
-  from: number,
-  to: number,
-) => {
-  const [a, b] = facing > 0 ? [from, to] : [to, from];
+const GUTTER_RUN: Range = [FOUL_LINE, LANE_LENGTH];
+
+// Facing (±1) picks the winding, so each wall faces into the gutter.
+const wall = (q: Quads, colour: string, x: number, facing: number) => {
+  const [a, b] = facing > 0 ? GUTTER_RUN : [GUTTER_RUN[1], GUTTER_RUN[0]];
   q.add(
     colour,
     [x, a, -GUTTER_DEPTH],
@@ -81,18 +78,22 @@ const wall = (
 
 const surroundings = () => {
   const q = new Quads();
-  floor(q, "#E7C489", -EDGE, BEHIND, EDGE, 0);
+  floor(q, "#E7C489", { x: [-EDGE, EDGE], y: [BEHIND, 0] });
   for (const s of [-1, 1]) {
     const [inner, outer] = [(s * LANE_WIDTH) / 2, s * EDGE];
-    const [l, r] = s < 0 ? [outer, inner] : [inner, outer];
-    floor(q, "#E7C489", l, 0, r, FOUL_LINE);
-    floor(q, "#33273A", l, FOUL_LINE, r, LANE_LENGTH, -GUTTER_DEPTH);
-    wall(q, "#1A1430", inner, s, FOUL_LINE, LANE_LENGTH);
-    wall(q, "#1A1430", outer, -s, FOUL_LINE, LANE_LENGTH);
-    const [fl, fr] = s < 0 ? [-SIDE, outer] : [outer, SIDE];
-    floor(q, "#090712", fl, BEHIND, fr, LANE_LENGTH);
+    const x: Range = s < 0 ? [outer, inner] : [inner, outer];
+    floor(q, "#E7C489", { x, y: [0, FOUL_LINE] });
+    floor(q, "#33273A", { x, y: GUTTER_RUN, h: -GUTTER_DEPTH });
+    wall(q, "#1A1430", inner, s);
+    wall(q, "#1A1430", outer, -s);
+    const side: Range = s < 0 ? [-SIDE, outer] : [outer, SIDE];
+    floor(q, "#090712", { x: side, y: [BEHIND, LANE_LENGTH] });
   }
-  floor(q, "#040309", -SIDE, LANE_LENGTH, SIDE, PIT, -GUTTER_DEPTH);
+  floor(q, "#040309", {
+    x: [-SIDE, SIDE],
+    y: [LANE_LENGTH, PIT],
+    h: -GUTTER_DEPTH,
+  });
   q.add(
     "#040309",
     [-SIDE, PIT, -GUTTER_DEPTH],
