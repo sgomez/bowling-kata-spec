@@ -3,6 +3,7 @@ import type { ComponentType } from "preact";
 
 export interface RollInputProps {
   standing: readonly Pin[];
+  ball: string;
   onRoll: (knocked: Pin[]) => void;
   endsAt: number;
   now: () => number;

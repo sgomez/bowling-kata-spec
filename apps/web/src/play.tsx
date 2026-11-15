@@ -1,4 +1,5 @@
 import type { Pin, RoomSnapshot } from "@bowling/domain";
+import { bowlerColour } from "./bowler-colour.js";
 import type { Seat } from "./connection.js";
 import { Lane } from "./lane.js";
 import { PlayHeader } from "./play-header.js";
@@ -20,6 +21,7 @@ interface PlayProps {
   onCancelLeave: () => void;
   onLeave: () => void;
   RollInput?: RollInput;
+  webgl: boolean;
   now?: () => number;
 }
 
@@ -34,6 +36,7 @@ export const Play = ({
   onCancelLeave,
   onLeave,
   RollInput = Lane,
+  webgl,
   now = Date.now,
 }: PlayProps) => {
   const endsAt = receivedAt + frame.remainingMs;
@@ -85,10 +88,13 @@ export const Play = ({
             Los resultados se revelan al cerrarse el frame.
           </p>
         </section>
+      ) : !webgl ? (
+        <p class="play-no-lane">Tu móvil no puede mostrar la pista</p>
       ) : (
         <RollInput
           key={frame.number}
           standing={room.standing}
+          ball={bowlerColour(own?.colour ?? 0)}
           onRoll={onRoll}
           endsAt={endsAt}
           now={now}

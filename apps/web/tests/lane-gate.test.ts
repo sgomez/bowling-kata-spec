@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { canStartSwipe, checkTime } from "../src/lane-gate.js";
-import { FOUL_LINE } from "../src/lane-geometry.js";
+import { FOUL_LINE, LANE_WIDTH } from "../src/lane-geometry.js";
 
 const open = { now: 1_000, endsAt: 2_000 };
 const over = { now: 2_000, endsAt: 2_000 };
-const behindFoulLine = FOUL_LINE - 0.1;
+const behindFoulLine = { x: 0, y: FOUL_LINE - 0.1 };
 
 describe("the Lane's time gate", () => {
   it.each(["idle", "aiming", "rolling"] as const)(
@@ -38,6 +38,17 @@ describe("the Lane's time gate", () => {
   });
 
   it("refuses a Swipe starting past the foul line", () => {
-    expect(canStartSwipe("idle", open, FOUL_LINE + 0.1)).toBe(false);
+    expect(canStartSwipe("idle", open, { x: 0, y: FOUL_LINE + 0.1 })).toBe(
+      false,
+    );
+  });
+
+  it("refuses a Swipe starting off the approach", () => {
+    const beside = { x: LANE_WIDTH / 2 + 0.05, y: FOUL_LINE - 0.1 };
+    const before = { x: 0, y: -0.05 };
+
+    expect(canStartSwipe("idle", open, beside)).toBe(false);
+    expect(canStartSwipe("idle", open, before)).toBe(false);
+    expect(canStartSwipe("idle", open, undefined)).toBe(false);
   });
 });

@@ -10,8 +10,24 @@ describe("an open Frame Window", () => {
     expect(html).toContain("input:3,5");
   });
 
+  it("rolls the Bowler's ball in their Bowler Colour", () => {
+    const html = play(
+      "ana",
+      room({ bowlers: [bowler("ana", { colour: 2 }), bowler("bea")] }),
+    );
+
+    expect(html).toContain("ball:#FFC53D");
+  });
+
   it("stops the Lane when the window runs out", () => {
     expect(play("ana", room({}))).toContain("until:13300");
+  });
+
+  it("tells a Bowler whose phone has no WebGL that it can't show the Lane", () => {
+    const html = play("ana", room({}), false, false, false);
+
+    expect(html).toContain("Tu móvil no puede mostrar la pista");
+    expect(html).not.toContain("input:");
   });
 
   it("makes a finished Bowler wait for the reveal with their own result", () => {
