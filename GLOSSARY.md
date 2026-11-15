@@ -54,6 +54,10 @@ _Avoid_: Shorthand, symbols, codes
 A person taking part in a Room under a nickname, with a Game of their own.
 _Avoid_: Player, user, participant
 
+**Bowler Colour**:
+The colour that tells a Bowler apart in a Room, unique among its Bowlers and kept until they leave.
+_Avoid_: Player colour, theme, team
+
 **Room**:
 An online space where up to six Bowlers play their Games together, from Lobby to final Score, and that disappears afterwards.
 _Avoid_: Match, session, lobby, table
