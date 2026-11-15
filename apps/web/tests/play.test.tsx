@@ -46,7 +46,7 @@ describe("an open Frame Window", () => {
 });
 
 describe("the reveal", () => {
-  it("shows everyone's scorecard until the next window", () => {
+  it("reveals everyone's results until the next window", () => {
     const frames = emptyFrames();
     frames[0] = { rolls: ["X"], score: null };
     frames[1] = { rolls: ["7", "/"], score: 20 };
@@ -58,8 +58,9 @@ describe("the reveal", () => {
       }),
     );
 
-    expect(html).toMatch(/ANA.*X.*7 \/.*20/s);
-    expect(html).toMatch(/Siguiente frame en.*2.*s/s);
+    expect(html).toMatch(/Resultados.*Frame 2/s);
+    expect(html).toMatch(/ANA.*7.*\/.*20/s);
+    expect(html).toMatch(/Siguiente frame en 2 s/);
     expect(html).not.toContain("input:");
   });
 });

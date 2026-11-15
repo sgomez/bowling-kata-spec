@@ -1,12 +1,11 @@
 import type { Pin, RoomSnapshot } from "@bowling/domain";
 import type { Seat } from "./connection.js";
-import { Countdown } from "./countdown.js";
 import { Lane } from "./lane.js";
 import { PlayHeader } from "./play-header.js";
+import { Reveal } from "./reveal.js";
 import { RivalStrip } from "./rival-strip.js";
 import type { RollInput } from "./roll-input.js";
 import { RollOutcome } from "./roll-outcome.js";
-import { Scorecard } from "./scorecard.js";
 import { Button, Chip, Dialog, Toast } from "./ui.js";
 import "./styles/play.css";
 
@@ -38,19 +37,21 @@ export const Play = ({
   now = Date.now,
 }: PlayProps) => {
   const endsAt = receivedAt + frame.remainingMs;
-  const countdown = <Countdown endsAt={endsAt} now={now} />;
   const notice = missed && (
     <Toast tone="warning">Se acabó el tiempo: esa tirada no ha contado.</Toast>
   );
 
   if (!frame.open) {
     return (
-      <main class="play">
-        <h1>Frame {frame.number}</h1>
+      <Reveal
+        you={you}
+        bowlers={room.bowlers}
+        frame={frame.number}
+        endsAt={endsAt}
+        now={now}
+      >
         {notice}
-        <Scorecard bowlers={room.bowlers} />
-        <p>Siguiente frame en {countdown}</p>
-      </main>
+      </Reveal>
     );
   }
 

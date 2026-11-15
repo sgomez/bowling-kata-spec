@@ -1,10 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
 
-interface CountdownProps {
-  endsAt: number;
-  now: () => number;
-}
-
 export const useTick = () => {
   const [, setTick] = useState(0);
   useEffect(() => {
@@ -15,9 +10,3 @@ export const useTick = () => {
 
 export const secondsLeft = (endsAt: number, now: () => number) =>
   Math.max(0, Math.ceil((endsAt - now()) / 1000));
-
-export const Countdown = ({ endsAt, now }: CountdownProps) => {
-  useTick();
-  const seconds = secondsLeft(endsAt, now);
-  return <span role="timer">{seconds} s</span>;
-};
