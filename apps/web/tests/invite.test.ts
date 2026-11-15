@@ -71,8 +71,32 @@ describe("sharing the Invite Link", () => {
     expect(await shareInvite(link, {})).toBe("failed");
   });
 
+  it("calls the share sheet on the navigator itself", async () => {
+    const sharer = {
+      share(this: unknown) {
+        if (this !== sharer) throw new TypeError("Illegal invocation");
+        return Promise.resolve();
+      },
+    };
+
+    expect(await shareInvite(link, sharer)).toBe("shared");
+  });
+
+  it("copies the link when the share sheet refuses", async () => {
+    const share = vi
+      .fn()
+      .mockRejectedValue(new DOMException("blocked", "NotAllowedError"));
+    const writeText = vi.fn().mockResolvedValue(undefined);
+
+    expect(await shareInvite(link, { share, clipboard: { writeText } })).toBe(
+      "copied",
+    );
+  });
+
   it("stays quiet when the Bowler dismisses the share sheet", async () => {
-    const share = vi.fn().mockRejectedValue(new Error("AbortError"));
+    const share = vi
+      .fn()
+      .mockRejectedValue(new DOMException("cancelled", "AbortError"));
 
     expect(await shareInvite(link, { share })).toBe("dismissed");
   });

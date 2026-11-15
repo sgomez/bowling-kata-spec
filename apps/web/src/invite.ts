@@ -22,19 +22,25 @@ export type ShareOutcome = "shared" | "dismissed" | "copied" | "failed";
 
 export const shareInvite = async (
   url: string,
-  { share, clipboard }: Sharer,
+  sharer: Sharer,
 ): Promise<ShareOutcome> => {
-  if (share) {
-    return share({ title: "Bolos", url }).then(
-      () => "shared",
-      () => "dismissed",
-    );
+  if (sharer.share) {
+    try {
+      await sharer.share({ title: "Bolos", url });
+      return "shared";
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return "dismissed";
+      }
+    }
   }
-  if (clipboard) {
-    return clipboard.writeText(url).then(
-      () => "copied",
-      () => "failed",
-    );
+  if (sharer.clipboard) {
+    try {
+      await sharer.clipboard.writeText(url);
+      return "copied";
+    } catch {
+      return "failed";
+    }
   }
   return "failed";
 };
