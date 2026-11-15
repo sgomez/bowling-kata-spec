@@ -1,5 +1,8 @@
 import * as v from "valibot";
-import type { BowlerId, RoomFailure, RoomSnapshot } from "./room.js";
+import type { BowlerId } from "./bowler.js";
+import { PINS } from "./pins.js";
+import type { RoomFailure } from "./room.js";
+import type { RoomSnapshot } from "./room-snapshot.js";
 
 const nickname = v.pipe(v.string(), v.maxLength(64));
 
@@ -11,6 +14,10 @@ const ClientMessageSchema = v.variant("type", [
     nickname,
   }),
   v.object({ type: v.literal("start") }),
+  v.object({
+    type: v.literal("roll"),
+    pins: v.pipe(v.array(v.picklist(PINS)), v.maxLength(PINS.length)),
+  }),
 ]);
 
 export type ClientMessage = v.InferOutput<typeof ClientMessageSchema>;

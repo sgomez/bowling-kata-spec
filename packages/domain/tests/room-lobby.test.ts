@@ -16,12 +16,13 @@ describe("creating a Room", () => {
   it("opens its Lobby with the creator as Host and only Bowler", () => {
     const room = createRoom();
 
-    expect(room.snapshot()).toEqual({
+    expect(room.snapshot("ana", 0)).toMatchObject({
       code: "K7MPQ",
       phase: "lobby",
       hostId: "ana",
       bowlers: [{ id: "ana", nickname: "Ana" }],
     });
+    expect(room.snapshot("ana", 0).frame).toBeUndefined();
   });
 
   it("refuses an invalid nickname", () => {
@@ -41,12 +42,12 @@ describe("joining a Room's Lobby", () => {
       ok: true,
     });
 
-    expect(room.snapshot().bowlers).toEqual([
+    expect(room.snapshot("ana", 0).bowlers).toMatchObject([
       { id: "ana", nickname: "Ana" },
       { id: "bea", nickname: "Bea" },
       { id: "carlos", nickname: "Carlos" },
     ]);
-    expect(room.snapshot().hostId).toBe("ana");
+    expect(room.snapshot("ana", 0).hostId).toBe("ana");
   });
 
   it("accepts nicknames of 1 to 16 characters", () => {
@@ -77,7 +78,7 @@ describe("joining a Room's Lobby", () => {
       ok: false,
       failure: { type: "NICKNAME_TAKEN" },
     });
-    expect(room.snapshot().bowlers).toHaveLength(1);
+    expect(room.snapshot("ana", 0).bowlers).toHaveLength(1);
   });
 
   it("refuses a seventh Bowler", () => {
@@ -90,7 +91,7 @@ describe("joining a Room's Lobby", () => {
       ok: false,
       failure: { type: "ROOM_FULL" },
     });
-    expect(room.snapshot().bowlers).toHaveLength(6);
+    expect(room.snapshot("ana", 0).bowlers).toHaveLength(6);
   });
 });
 
@@ -99,23 +100,23 @@ describe("leaving the Lobby", () => {
     const room = createRoom();
     room.join({ id: "bea", nickname: "Bea" });
 
-    expect(room.start("bea")).toEqual({
+    expect(room.start("bea", 0)).toEqual({
       ok: false,
       failure: { type: "NOT_HOST" },
     });
-    expect(room.snapshot().phase).toBe("lobby");
+    expect(room.snapshot("ana", 0).phase).toBe("lobby");
   });
 
   it("starts the Games, even with the Host alone", () => {
     const room = createRoom();
 
-    expect(room.start("ana")).toEqual({ ok: true });
-    expect(room.snapshot().phase).toBe("playing");
+    expect(room.start("ana", 0)).toEqual({ ok: true });
+    expect(room.snapshot("ana", 0).phase).toBe("playing");
   });
 
   it("closes the Room to new Bowlers", () => {
     const room = createRoom();
-    room.start("ana");
+    room.start("ana", 0);
 
     expect(room.join({ id: "bea", nickname: "Bea" })).toEqual({
       ok: false,
@@ -125,9 +126,9 @@ describe("leaving the Lobby", () => {
 
   it("happens only once", () => {
     const room = createRoom();
-    room.start("ana");
+    room.start("ana", 0);
 
-    expect(room.start("ana")).toEqual({
+    expect(room.start("ana", 0)).toEqual({
       ok: false,
       failure: { type: "GAMES_STARTED" },
     });

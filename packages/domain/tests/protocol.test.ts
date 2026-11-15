@@ -22,6 +22,12 @@ describe("client messages", () => {
     });
   });
 
+  it("read a Roll as the Pins knocked", () => {
+    expect(
+      parseClientMessage(JSON.stringify({ type: "roll", pins: [1, 3, 10] })),
+    ).toEqual({ type: "roll", pins: [1, 3, 10] });
+  });
+
   it.each([
     ["not JSON", "{"],
     ["not an object", "42"],
@@ -35,6 +41,12 @@ describe("client messages", () => {
     [
       "an oversized code",
       JSON.stringify({ type: "join", code: "K".repeat(100), nickname: "Bea" }),
+    ],
+    ["a Pin out of range", JSON.stringify({ type: "roll", pins: [0] })],
+    ["a fractional Pin", JSON.stringify({ type: "roll", pins: [1.5] })],
+    [
+      "too many Pins",
+      JSON.stringify({ type: "roll", pins: Array(11).fill(1) }),
     ],
   ])("reject %s", (_, raw) => {
     expect(parseClientMessage(raw)).toBeUndefined();

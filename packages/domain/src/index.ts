@@ -1,5 +1,7 @@
+export type { BowlerId, BowlerView, FrameView } from "./bowler.js";
 export type { Frame, FrameNumber, PinCount } from "./frame.js";
 export { Game, type RollValidationResult } from "./game.js";
+export { PINS, type Pin } from "./pins.js";
 export {
   type ClientMessage,
   type ErrorCode,
@@ -7,11 +9,10 @@ export {
   type ServerMessage,
 } from "./protocol.js";
 export {
-  type BowlerId,
   MAX_BOWLERS,
   MAX_NICKNAME_LENGTH,
   Room,
   type RoomFailure,
-  type RoomSnapshot,
 } from "./room.js";
 export { generateRoomCode, parseRoomCode, type RoomCode } from "./room-code.js";
+export type { RoomSnapshot } from "./room-snapshot.js";
