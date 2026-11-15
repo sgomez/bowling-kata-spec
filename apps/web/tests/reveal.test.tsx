@@ -101,5 +101,6 @@ describe("the reveal between Frames", () => {
 
     expect(html).toMatch(/Siguiente frame en\s+5 s/);
     expect(html).toContain("Ver marcador completo");
+    expect(html).not.toContain(`role="dialog"`);
   });
 });

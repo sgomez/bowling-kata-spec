@@ -26,7 +26,7 @@ export const Final = ({
           ? `¡Gana ${winners[0]}!`
           : `Empate entre ${names.format(winners)}`}
       </p>
-      <Scorecard bowlers={room.bowlers} />
+      <Scorecard you={you} bowlers={room.bowlers} />
       {room.hostId === you ? (
         <button type="button" onClick={onRematch}>
           Revancha
