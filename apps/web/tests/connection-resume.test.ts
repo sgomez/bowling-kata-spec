@@ -31,6 +31,14 @@ describe("resume token", () => {
     expect(sockets[0].sent).toEqual([{ type: "resume", token: "K7MPQ.abc" }]);
   });
 
+  it("is dropped when an Invite Link opens another Room", () => {
+    const { items, store } = memoryStore("K7MPQ.abc");
+    const { sockets } = setup(store, "ZZ234");
+
+    expect(sockets).toEqual([]);
+    expect(items.has("token")).toBe(false);
+  });
+
   it("resumes automatically after the connection drops", () => {
     const { connection, sockets, retries, seated } = setup(memoryStore().store);
     connection.create("Ana");

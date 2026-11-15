@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { codeFromPath, inviteLink, shareInvite } from "../src/invite.js";
+import {
+  codeFromPath,
+  inviteLink,
+  resumableToken,
+  shareInvite,
+} from "../src/invite.js";
 
 describe("Invite Link", () => {
   it("points at the Room Code on the app's origin", () => {
@@ -18,6 +23,24 @@ describe("Invite Link", () => {
       expect(codeFromPath(path)).toBe("");
     },
   );
+});
+
+describe("opening an Invite Link with a stored resume token", () => {
+  it("resumes when the link is for the same Room", () => {
+    expect(resumableToken("K7MPQ.abc", "K7MPQ")).toBe("K7MPQ.abc");
+  });
+
+  it("drops the token when the link is for another Room", () => {
+    expect(resumableToken("K7MPQ.abc", "ZZ234")).toBeUndefined();
+  });
+
+  it("resumes when there is no Invite Link", () => {
+    expect(resumableToken("K7MPQ.abc", "")).toBe("K7MPQ.abc");
+  });
+
+  it("has nothing to resume without a token", () => {
+    expect(resumableToken(undefined, "K7MPQ")).toBeUndefined();
+  });
 });
 
 describe("sharing the Invite Link", () => {

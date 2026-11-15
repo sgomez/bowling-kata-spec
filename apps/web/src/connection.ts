@@ -8,6 +8,7 @@ import type {
   ServerMessage,
 } from "@bowling/domain";
 import { signal } from "@preact/signals";
+import { resumableToken } from "./invite.js";
 
 const OPEN = 1;
 const TOKEN_KEY = "token";
@@ -29,6 +30,7 @@ export interface Seat {
 interface ConnectionOptions {
   storage?: () => TokenStore;
   retry?: (run: () => void) => void;
+  invitedTo?: string;
 }
 
 export type Connection = ReturnType<typeof createConnection>;
@@ -47,12 +49,14 @@ export const createConnection = (
   {
     storage = () => localStorage,
     retry = (run) => setTimeout(run, RETRY_MS),
+    invitedTo = "",
   }: ConnectionOptions = {},
 ) => {
   const seat = signal<Seat | undefined>(undefined);
   const error = signal<ErrorCode | undefined>(undefined);
   const removed = signal(false);
-  let token = attempt(() => storage().getItem(TOKEN_KEY)) ?? undefined;
+  const stored = attempt(() => storage().getItem(TOKEN_KEY)) ?? undefined;
+  let token = resumableToken(stored, invitedTo);
   const closed = signal<CloseReason | undefined>(undefined);
   let socket: ConnectionSocket | undefined;
   let pending: ClientMessage[] = [];
@@ -123,6 +127,9 @@ export const createConnection = (
     }
   };
 
+  if (stored && !token) {
+    forget();
+  }
   resume();
 
   return {

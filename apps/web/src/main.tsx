@@ -17,8 +17,11 @@ if (root && desktop) {
   render(<DesktopGate url={location.href} />, root);
 } else if (root) {
   const scheme = location.protocol === "https:" ? "wss" : "ws";
+  const initialCode = codeFromPath(location.pathname);
   const connection = createConnection(
     () => new WebSocket(`${scheme}://${location.host}/ws`),
+    Date.now,
+    { invitedTo: initialCode },
   );
   effect(() => {
     const code = connection.seat.value?.room.code;
@@ -32,7 +35,7 @@ if (root && desktop) {
   render(
     <App
       connection={connection}
-      initialCode={codeFromPath(location.pathname)}
+      initialCode={initialCode}
       origin={location.origin}
     />,
     root,

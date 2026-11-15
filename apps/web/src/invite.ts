@@ -1,9 +1,17 @@
-import { parseRoomCode } from "@bowling/domain";
+import { parseRoomCode, roomOfResumeToken } from "@bowling/domain";
 
 export const inviteLink = (origin: string, code: string) => `${origin}/${code}`;
 
 export const codeFromPath = (pathname: string) =>
   parseRoomCode(pathname.slice(1)) ?? "";
+
+export const resumableToken = (
+  token: string | undefined,
+  invitedCode: string,
+) =>
+  token && (!invitedCode || roomOfResumeToken(token) === invitedCode)
+    ? token
+    : undefined;
 
 interface Sharer {
   share?: (data: ShareData) => Promise<void>;
