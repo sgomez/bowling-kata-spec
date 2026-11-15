@@ -12,7 +12,9 @@ import {
 } from "@bowling/domain";
 import { WebSocketServer } from "ws";
 import type { Clock } from "./clock.js";
-import { RoomEntry, send } from "./room-entry.js";
+import { addressOf, createAddressBook, createMessageGate } from "./guard.js";
+import type { Limits } from "./limits.js";
+import { RoomEntry, send, sendClosed } from "./room-entry.js";
 
 interface Seat {
   entry: RoomEntry;
@@ -30,9 +32,15 @@ export const attachRoomSocket = (
   server: Server,
   random: () => number,
   clock: Clock,
+  limits: Limits,
 ) => {
   const rooms = new Map<RoomCode, RoomEntry>();
-  const wss = new WebSocketServer({ server, path: "/ws" });
+  const addresses = createAddressBook(limits.connectionsPerAddress);
+  const wss = new WebSocketServer({
+    server,
+    path: "/ws",
+    maxPayload: 4 * limits.messageBytes,
+  });
   server.on("close", () => {
     for (const entry of rooms.values()) {
       entry.dispose();
@@ -40,9 +48,16 @@ export const attachRoomSocket = (
     wss.close();
   });
 
-  wss.on("connection", (socket) => {
-    let seat: Seat | undefined;
+  wss.on("connection", (socket, request) => {
     const fail = (error: ErrorCode) => send(socket, { type: "error", error });
+    const address = addressOf(request);
+    if (!addresses.admit(address)) {
+      fail("TOO_MANY_CONNECTIONS");
+      socket.close(1008);
+      return;
+    }
+    const gate = createMessageGate(limits, clock);
+    let seat: Seat | undefined;
 
     const sit = (entry: RoomEntry, bowlerId: BowlerId) => {
       seat = { entry, bowlerId };
@@ -63,12 +78,17 @@ export const attachRoomSocket = (
       }
       const bowler = { id: randomUUID(), nickname: message.nickname };
       if (message.type === "create") {
+        if (rooms.size >= limits.rooms) {
+          return fail("TOO_MANY_ROOMS");
+        }
         const code = generateRoomCode((c) => rooms.has(c), random);
         const created = Room.create(code, bowler);
         if (!created.ok) {
           return fail(created.failure.type);
         }
-        const entry = new RoomEntry(created.room, clock);
+        const entry = new RoomEntry(created.room, clock, limits, () =>
+          rooms.delete(code),
+        );
         rooms.set(code, entry);
         return sit(entry, bowler.id);
       }
@@ -82,15 +102,18 @@ export const attachRoomSocket = (
     };
 
     socket.on("message", (data) => {
-      const message = parseClientMessage(String(data));
+      const raw = String(data);
+      const refusal = gate(Buffer.byteLength(raw));
+      const message = refusal ? undefined : parseClientMessage(raw);
       if (message) {
         handle(message);
       } else {
-        fail("INVALID_MESSAGE");
+        fail(refusal ?? "INVALID_MESSAGE");
       }
     });
 
     socket.on("close", () => {
+      addresses.release(address);
       if (seat) {
         seat.entry.sockets.delete(seat.bowlerId);
         seat.entry.room.disconnect(seat.bowlerId, clock.now());
@@ -98,4 +121,22 @@ export const attachRoomSocket = (
       }
     });
   });
+
+  return {
+    usage: () => ({
+      rooms: rooms.size,
+      connections: wss.clients.size,
+      addresses: addresses.size,
+    }),
+    shutdown: () => {
+      for (const entry of rooms.values()) {
+        entry.close("SERVER_SHUTDOWN");
+      }
+      for (const socket of wss.clients) {
+        if (socket.readyState === socket.OPEN) {
+          sendClosed(socket, "SERVER_SHUTDOWN");
+        }
+      }
+    },
+  };
 };

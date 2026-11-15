@@ -2,13 +2,20 @@ import { readFile, stat } from "node:fs/promises";
 import { createServer, type Server, type ServerResponse } from "node:http";
 import { extname, join, resolve, sep } from "node:path";
 import { type Clock, systemClock } from "./clock.js";
+import { DEFAULT_LIMITS, type Limits } from "./limits.js";
 import { attachRoomSocket } from "./room-socket.js";
 
 interface AppServerOptions {
   webRoot: string;
   random?: () => number;
   clock?: Clock;
+  limits?: Partial<Limits>;
 }
+
+export type AppServer = Server & {
+  usage(): { rooms: number; connections: number; addresses: number };
+  shutdown(): Promise<void>;
+};
 
 const CONTENT_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -36,7 +43,8 @@ export const createAppServer = ({
   webRoot,
   random = Math.random,
   clock = systemClock,
-}: AppServerOptions): Server => {
+  limits = {},
+}: AppServerOptions): AppServer => {
   const root = resolve(webRoot);
   const indexHtml = join(root, "index.html");
 
@@ -56,6 +64,17 @@ export const createAppServer = ({
     }
     await sendFile(response, await resolveAsset(url));
   });
-  attachRoomSocket(server, random, clock);
-  return server;
+  const rooms = attachRoomSocket(server, random, clock, {
+    ...DEFAULT_LIMITS,
+    ...limits,
+  });
+  return Object.assign(server, {
+    usage: rooms.usage,
+    shutdown: () =>
+      new Promise<void>((resolve) => {
+        rooms.shutdown();
+        server.close(() => resolve());
+        server.closeIdleConnections();
+      }),
+  });
 };
