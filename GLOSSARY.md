@@ -43,3 +43,7 @@ _Avoid_: Final round, bonus frame
 **Bonus Roll**:
 An additional roll earned in the tenth frame as a result of achieving a strike or spare.
 _Avoid_: Extra shot, fill ball, free roll
+
+**Notation**:
+The symbolic way of recording a roll on a scoresheet: `X` for a strike, `/` for a spare, `-` for zero pins, digits otherwise.
+_Avoid_: Shorthand, symbols, codes
