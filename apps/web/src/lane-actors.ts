@@ -4,7 +4,6 @@ import type { BallStaging, PinStaging } from "./lane-choreography.js";
 import { BALL_RADIUS, GUTTER_WIDTH, LANE_WIDTH } from "./lane-geometry.js";
 
 const GUTTER_DROP = 0.04;
-const HALO = 0.6;
 const axis = new Vector3();
 
 // Lane metres to world: x across, y up, z = -(along the Lane).
@@ -28,7 +27,4 @@ export const poseBall = (mesh: Mesh, ball: BallStaging) => {
   mesh.position.set(x, BALL_RADIUS - drop, -ball.y);
   // Rolls about the axis across the Lane, spins about the vertical.
   mesh.rotation.set(-ball.roll, ball.spin, 0, "YXZ");
-  const material = mesh.material as MeshStandardMaterial;
-  material.emissive.copy(material.color);
-  material.emissiveIntensity = ball.gutter ? 0 : HALO;
 };

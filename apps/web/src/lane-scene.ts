@@ -4,23 +4,20 @@ import {
   Color,
   DirectionalLight,
   Mesh,
-  MeshStandardMaterial,
   PerspectiveCamera,
-  PlaneGeometry,
   Scene,
   Vector2,
   WebGLRenderer,
 } from "three";
 import { poseBall, posePin } from "./lane-actors.js";
 import type { Staging } from "./lane-choreography.js";
-import {
-  FOUL_LINE,
-  GUTTER_WIDTH,
-  LANE_LENGTH,
-  LANE_WIDTH,
-} from "./lane-geometry.js";
+import { BALL_RADIUS } from "./lane-geometry.js";
+import { glow } from "./lane-glow.js";
+import { overBudget } from "./lane-marks.js";
 import { ballMesh, pinGeometry, pinMaterial } from "./lane-models.js";
 import type { LaneCamera } from "./lane-projection.js";
+import { createReflections } from "./lane-reflection.js";
+import { buildSet } from "./lane-set.js";
 import { createSwipeMarks, type SwipeMarks } from "./lane-swipe-marks.js";
 
 export interface LaneView extends Staging {
@@ -34,29 +31,6 @@ export interface LaneScene {
 
 const MAX_PIXEL_RATIO = 2;
 
-const strip = (width: number, length: number, colour: string) => {
-  const mesh = new Mesh(
-    new PlaneGeometry(width, length),
-    new MeshStandardMaterial({ color: colour, roughness: 0.25 }),
-  );
-  mesh.rotation.x = -Math.PI / 2;
-  return mesh;
-};
-
-const floor = (scene: Scene) => {
-  const lane = strip(LANE_WIDTH, LANE_LENGTH, "#D9B274");
-  lane.position.set(0, 0, -LANE_LENGTH / 2);
-  const foul = strip(LANE_WIDTH, 0.012, "#8A3F1C");
-  foul.position.set(0, 0.001, -FOUL_LINE);
-  scene.add(lane, foul);
-  for (const side of [-1, 1]) {
-    const gutter = strip(GUTTER_WIDTH, LANE_LENGTH, "#090712");
-    const x = (side * (LANE_WIDTH + GUTTER_WIDTH)) / 2;
-    gutter.position.set(x, -0.01, -LANE_LENGTH / 2);
-    scene.add(gutter);
-  }
-};
-
 export const createLaneScene = (
   canvas: HTMLCanvasElement,
   ballColour: string,
@@ -66,19 +40,23 @@ export const createLaneScene = (
     Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO),
   );
   const scene = new Scene();
-  scene.background = new Color("#090712");
+  scene.background = new Color("#0B0817");
   scene.add(new AmbientLight("#ffffff", 1.2));
   const sun = new DirectionalLight("#ffffff", 1.6);
   sun.position.set(0.5, 3, 1);
   scene.add(sun);
-  floor(scene);
+  buildSet(scene);
+  const reflections = createReflections(scene);
 
   const geometry = pinGeometry();
   const material = pinMaterial();
   const pins = new Map<Pin, Mesh>();
   const ball = ballMesh(ballColour);
-  scene.add(ball);
+  const halo = glow(ballColour, 0.55);
+  halo.scale.setScalar(BALL_RADIUS * 5);
+  scene.add(ball, halo);
   const marks = createSwipeMarks(scene);
+  let warned = false;
   const lens = new PerspectiveCamera();
 
   const placePins = (staged: Staging["pins"]) => {
@@ -111,9 +89,16 @@ export const createLaneScene = (
     draw(view, camera) {
       placePins(view.pins);
       poseBall(ball, view.ball);
+      halo.position.copy(ball.position);
+      halo.visible = !view.ball.gutter;
+      reflections.update([...pins.values(), ball]);
       marks.draw(view.marks);
       aim(camera);
       renderer.render(scene, lens);
+      if (!warned && overBudget(renderer.info.render)) {
+        warned = true;
+        console.warn("The Lane is over budget", renderer.info.render);
+      }
     },
     dispose() {
       renderer.dispose();

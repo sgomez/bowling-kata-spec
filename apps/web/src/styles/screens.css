@@ -36,18 +36,51 @@ ul {
   overflow-wrap: anywhere;
 }
 
+/* Full-bleed behind the playing screen's chrome. */
+.lane {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.lane::before,
+.lane::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.lane::before {
+  top: 0;
+  height: 230px;
+  background: linear-gradient(rgb(14 11 26 / 95%), rgb(14 11 26 / 0%));
+}
+
+.lane::after {
+  bottom: 0;
+  height: 154px;
+  background: linear-gradient(rgb(14 11 26 / 0%), rgb(14 11 26 / 60%));
+}
+
 .lane canvas {
   display: block;
-  margin: 0 auto;
   width: 100%;
-  height: max(320px, calc(100dvh - 300px));
+  height: 100%;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  border-radius: 8px;
 }
 
 .lane p {
+  position: absolute;
+  z-index: 1;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: max(env(safe-area-inset-bottom), var(--space-4));
+  margin: 0;
   font-size: 0.875rem;
-  margin: 8px 0 0;
+  text-align: center;
+  pointer-events: none;
 }
