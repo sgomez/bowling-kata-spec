@@ -10,6 +10,7 @@ interface AppServerOptions {
   random?: () => number;
   clock?: Clock;
   limits?: Partial<Limits>;
+  trustProxy?: boolean;
 }
 
 export type AppServer = Server & {
@@ -44,6 +45,7 @@ export const createAppServer = ({
   random = Math.random,
   clock = systemClock,
   limits = {},
+  trustProxy = false,
 }: AppServerOptions): AppServer => {
   const root = resolve(webRoot);
   const indexHtml = join(root, "index.html");
@@ -64,10 +66,16 @@ export const createAppServer = ({
     }
     await sendFile(response, await resolveAsset(url));
   });
-  const rooms = attachRoomSocket(server, random, clock, {
-    ...DEFAULT_LIMITS,
-    ...limits,
-  });
+  const rooms = attachRoomSocket(
+    server,
+    random,
+    clock,
+    {
+      ...DEFAULT_LIMITS,
+      ...limits,
+    },
+    trustProxy,
+  );
   return Object.assign(server, {
     usage: rooms.usage,
     shutdown: () =>

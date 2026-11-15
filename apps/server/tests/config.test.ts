@@ -9,4 +9,9 @@ describe("server config", () => {
   it("listens on the port given by PORT", () => {
     expect(readServerConfig({ PORT: "8787" }).port).toBe(8787);
   });
+
+  it("ignores X-Forwarded-For unless TRUST_PROXY is 1", () => {
+    expect(readServerConfig({}).trustProxy).toBe(false);
+    expect(readServerConfig({ TRUST_PROXY: "1" }).trustProxy).toBe(true);
+  });
 });

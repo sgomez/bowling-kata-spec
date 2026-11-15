@@ -14,3 +14,5 @@ docker run --rm -p 3000:3000 bowling-kata
 ```
 
 The app listens on `PORT` (default 3000): `docker run --rm -e PORT=8080 -p 8080:8080 bowling-kata`. The image has a healthcheck on `GET /health`.
+
+`TRUST_PROXY=1` takes the client address for the per-address connection cap from the last `X-Forwarded-For` entry, which the reverse proxy (Coolify's) appends; otherwise the socket address is used. The image sets it; run with `-e TRUST_PROXY=0` when no proxy sits in front, or clients can spoof their address.

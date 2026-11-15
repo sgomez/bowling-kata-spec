@@ -24,7 +24,10 @@ export const noticeOf = async (client: Client) => {
   return message;
 };
 
-export const useServer = (limits: Partial<Limits> = {}) => {
+export const useServer = (
+  limits: Partial<Limits> = {},
+  { trustProxy = false } = {},
+) => {
   let server: AppServer;
   let wsUrl: string;
   const sockets: WebSocket[] = [];
@@ -38,6 +41,7 @@ export const useServer = (limits: Partial<Limits> = {}) => {
       random,
       clock: time.clock,
       limits,
+      trustProxy,
     });
     await new Promise<void>((resolve) => server.listen(0, resolve));
     wsUrl = `ws://localhost:${(server.address() as AddressInfo).port}/ws`;

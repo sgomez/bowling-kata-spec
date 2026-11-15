@@ -4,8 +4,11 @@ import type { Clock } from "./clock.js";
 import type { Limits } from "./limits.js";
 
 // The proxy appends the real client address last; earlier entries are client-supplied.
-export const addressOf = (request: IncomingMessage): string => {
-  const forwarded = request.headers["x-forwarded-for"];
+export const addressOf = (
+  request: IncomingMessage,
+  trustProxy: boolean,
+): string => {
+  const forwarded = trustProxy ? request.headers["x-forwarded-for"] : "";
   const last = String(forwarded ?? "")
     .split(",")
     .at(-1)

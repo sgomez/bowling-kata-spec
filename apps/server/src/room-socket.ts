@@ -23,6 +23,7 @@ export const attachRoomSocket = (
   random: () => number,
   clock: Clock,
   limits: Limits,
+  trustProxy: boolean,
 ) => {
   const rooms = new Map<RoomCode, RoomEntry>();
   const seats = createSeats();
@@ -41,7 +42,7 @@ export const attachRoomSocket = (
 
   wss.on("connection", (socket, request) => {
     const fail = (error: ErrorCode) => send(socket, { type: "error", error });
-    const address = addressOf(request);
+    const address = addressOf(request, trustProxy);
     if (!addresses.admit(address)) {
       fail("TOO_MANY_CONNECTIONS");
       socket.close(1008);

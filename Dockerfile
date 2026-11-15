@@ -17,7 +17,7 @@ FROM base AS prod-deps
 RUN pnpm install --frozen-lockfile --ignore-scripts --prod --filter @bowling/server...
 
 FROM node:22-slim
-ENV NODE_ENV=production
+ENV NODE_ENV=production TRUST_PROXY=1
 WORKDIR /app
 COPY --from=prod-deps /app ./
 COPY packages/domain/src packages/domain/src
