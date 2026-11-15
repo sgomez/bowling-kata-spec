@@ -2,11 +2,11 @@ pre-commit:
   parallel: true
   jobs:
     - name: biome
-      glob: "*.{js,mjs,cjs,ts,json}"
+      glob: "*.{js,mjs,cjs,ts,tsx,json,css}"
       run: pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
     - name: size
-      glob: "*.ts"
+      glob: "*.{ts,tsx}"
       run: pnpm size {staged_files}
 
 commit-msg:

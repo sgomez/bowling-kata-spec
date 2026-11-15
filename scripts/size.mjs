@@ -4,19 +4,23 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const LIMIT = 5000;
-const ROOTS = ["src", "tests"];
+const ROOTS = ["packages", "apps"];
 
 const files = process.argv.slice(2);
 
+const SKIPPED = new Set(["node_modules", "dist", "coverage"]);
+
 const isChecked = (file) =>
-  file.endsWith(".ts") &&
+  /\.tsx?$/.test(file) &&
   ROOTS.some((root) => file.replaceAll("\\", "/").startsWith(`${root}/`));
 
 const walk = (dir) =>
-  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name);
-    return entry.isDirectory() ? walk(path) : [path];
-  });
+  readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => !SKIPPED.has(entry.name))
+    .flatMap((entry) => {
+      const path = join(dir, entry.name);
+      return entry.isDirectory() ? walk(path) : [path];
+    });
 
 const candidates = files.length > 0 ? files : ROOTS.flatMap(walk);
 

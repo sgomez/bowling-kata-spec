@@ -1,0 +1,73 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0 16px;
+}
+
+main {
+  width: 100%;
+  max-width: 420px;
+}
+
+form,
+label {
+  display: grid;
+  gap: 8px;
+}
+
+form {
+  gap: 16px;
+}
+
+input,
+button {
+  font: inherit;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+input[name="code"] {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+.invite,
+.url {
+  overflow-wrap: anywhere;
+}
+
+.qr svg {
+  width: min(320px, 80vw);
+  height: auto;
+  background: white;
+  padding: 16px;
+}
+
+.lane canvas {
+  display: block;
+  margin: 0 auto;
+  width: min(100%, calc((100dvh - 220px) * 1.05 / 2.3));
+  aspect-ratio: 1.05 / 2.3;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 8px;
+}
+
+.lane p {
+  font-size: 0.875rem;
+  margin: 8px 0 0;
+}
