@@ -22,6 +22,7 @@ body {
 
 #app {
   min-height: 100dvh;
+  overflow-x: clip;
   padding: max(env(safe-area-inset-top), var(--space-4))
     max(env(safe-area-inset-right), var(--space-4))
     max(env(safe-area-inset-bottom), var(--space-4))
