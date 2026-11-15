@@ -3,6 +3,7 @@ import { createServer, type Server, type ServerResponse } from "node:http";
 import { extname, join, resolve, sep } from "node:path";
 import { type Clock, systemClock } from "./clock.js";
 import { DEFAULT_LIMITS, type Limits } from "./limits.js";
+import { originOf } from "./origin.js";
 import { attachRoomSocket } from "./room-socket.js";
 
 interface AppServerOptions {
@@ -29,6 +30,9 @@ const CONTENT_TYPES: Record<string, string> = {
   ".webmanifest": "application/manifest+json",
   ".woff2": "font/woff2",
 };
+
+// Stands for the public address in index.html's share preview.
+const ORIGIN = "__ORIGIN__";
 
 const isFile = async (path: string): Promise<boolean> =>
   (await stat(path).catch(() => null))?.isFile() ?? false;
@@ -64,7 +68,14 @@ export const createAppServer = ({
       response.end(JSON.stringify({ status: "ok" }));
       return;
     }
-    await sendFile(response, await resolveAsset(url));
+    const path = await resolveAsset(url);
+    if (path !== indexHtml) {
+      await sendFile(response, path);
+      return;
+    }
+    const html = await readFile(path, "utf8");
+    response.writeHead(200, { "content-type": CONTENT_TYPES[".html"] });
+    response.end(html.replaceAll(ORIGIN, originOf(request, trustProxy)));
   });
   const rooms = attachRoomSocket(
     server,
