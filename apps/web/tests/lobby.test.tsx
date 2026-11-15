@@ -33,6 +33,7 @@ const lobby = (
       onAskRemove={noop}
       onCancelRemove={noop}
       onRemove={noop}
+      now={() => 1_000}
       {...extra}
     />,
   );
@@ -114,13 +115,15 @@ describe("Lobby screen", () => {
   });
 
   it("tells the Bowler the Invite Link was copied", () => {
-    expect(lobby("bea", { shared: "copied" })).toMatch(
+    expect(lobby("bea", { shared: { outcome: "copied", at: 1_000 } })).toMatch(
       /role="status".*Enlace copiado\./s,
     );
-    expect(lobby("bea", { shared: "failed" })).toContain(
-      "No se ha podido compartir; copia el enlace a mano.",
-    );
-    expect(lobby("bea", { shared: "shared" })).not.toContain('role="status"');
+    expect(
+      lobby("bea", { shared: { outcome: "failed", at: 1_000 } }),
+    ).toContain("No se ha podido compartir; copia el enlace a mano.");
+    expect(
+      lobby("bea", { shared: { outcome: "shared", at: 1_000 } }),
+    ).not.toContain('role="status"');
   });
 
   it("shows a refusal as an alert", () => {

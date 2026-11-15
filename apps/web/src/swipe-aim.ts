@@ -1,9 +1,6 @@
 import type { Spot } from "./knock.js";
-import { FOUL_LINE, HEAD_PIN, LANE_WIDTH } from "./lane-geometry.js";
+import { FOUL_LINE, HEAD_PIN, HOOK, LANE_WIDTH } from "./lane-geometry.js";
 import type { Swipe } from "./swipe.js";
-
-// Sideways pull per unit of spin, shared with the physics so the aim tells the truth.
-export const HOOK = 2.5;
 
 const STEP = 0.02;
 const EDGE = LANE_WIDTH / 2;

@@ -16,6 +16,7 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/screens.css";
 
+// Only WebGL2 counts: three.js no longer renders with WebGL1.
 const hasWebGL = () => {
   try {
     return document.createElement("canvas").getContext("webgl2") !== null;

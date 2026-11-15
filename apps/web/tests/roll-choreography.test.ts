@@ -4,9 +4,9 @@ import type { Spot } from "../src/knock.js";
 import {
   atRest,
   observe,
+  recordRoll,
   settle,
   stage,
-  trackRoll,
 } from "../src/lane-choreography.js";
 import { BALL_RADIUS, FOUL_LINE, LANE_WIDTH } from "../src/lane-geometry.js";
 import { hit, shifted, spotOf, still, straight } from "./choreography-setup.js";
@@ -14,13 +14,13 @@ import { hit, shifted, spotOf, still, straight } from "./choreography-setup.js";
 describe("choreographing the ball", () => {
   const rollTo = (swipe: typeof straight, ...path: Spot[]) =>
     path.reduce(
-      (track, ball, i) =>
-        observe(track, {
+      (record, ball, i) =>
+        observe(record, {
           elapsed: (i + 1) * 100,
           ball: { ...ball, angle: 0 },
           pins: still(),
         }),
-      trackRoll(PINS, swipe),
+      recordRoll(PINS, swipe),
     );
 
   it("rolls by the distance it travelled over its radius", () => {
@@ -58,15 +58,15 @@ describe("choreographing the ball", () => {
 
 describe("choreographing with reduced motion", () => {
   const calm = { reducedMotion: true };
-  const track = hit(shifted(1, 0.1), shifted(3, 0.01));
+  const record = hit(shifted(1, 0.1), shifted(3, 0.01));
   const tilts = (manner = {}) =>
     [500, 580, 660, 740, 820].map(
-      (elapsed) => stage(track, elapsed, manner).pins.get(1)?.tilt ?? -1,
+      (elapsed) => stage(record, elapsed, manner).pins.get(1)?.tilt ?? -1,
     );
 
   it("keeps a nudged Pin still instead of wobbling", () => {
     for (const elapsed of [520, 650, 800, 1000]) {
-      expect(stage(track, elapsed, calm).pins.get(3)).toMatchObject({
+      expect(stage(record, elapsed, calm).pins.get(3)).toMatchObject({
         ...spotOf(3),
         state: "standing",
         tilt: 0,
@@ -78,7 +78,7 @@ describe("choreographing with reduced motion", () => {
     expect(tilts(calm).map((tilt) => tilt / (Math.PI / 2))).toEqual(
       [0, 0.25, 0.5, 0.75, 1].map((share) => expect.closeTo(share)),
     );
-    expect(stage(track, 820, calm).pins.get(1)?.state).toBe("knocked");
+    expect(stage(record, 820, calm).pins.get(1)?.state).toBe("knocked");
   });
 
   it("lets a Pin fall slowly at first, then faster, when motion is welcome", () => {
@@ -92,14 +92,14 @@ describe("choreographing with reduced motion", () => {
 });
 
 describe("telling when the choreography is over", () => {
-  const track = hit(shifted(1, 0.1), shifted(3, 0.01));
+  const record = hit(shifted(1, 0.1), shifted(3, 0.01));
 
   it("is never over while the ball still rolls", () => {
-    expect(stage(track, 5000).done).toBe(false);
+    expect(stage(record, 5000).done).toBe(false);
   });
 
   it("is over once the Roll settled, every Pin stands or is removed and the camera is back", () => {
-    const settled = settle(track, [1]);
+    const settled = settle(record, [1]);
 
     expect(stage(settled, 1100).done).toBe(false);
     expect(stage(settled, 2369).done).toBe(false);

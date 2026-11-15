@@ -1,40 +1,17 @@
-const RACK = 10;
-
-const pinsOf = (roll: string) => (roll === "-" ? 0 : Number(roll));
-
-const leftAfter = (rolls: readonly string[]) => {
-  let left = RACK;
-  let first: number | undefined;
-  for (const roll of rolls) {
-    if (roll === "X" || roll === "/") {
-      first = undefined;
-    } else if (first === undefined) {
-      first = pinsOf(roll);
-      left = RACK - first;
-    } else {
-      left = RACK - first - pinsOf(roll);
-      first = undefined;
-    }
-  }
-  return left;
-};
+import { kindOfMark, standingAfter } from "./roll-kind.js";
 
 const describe = (rolls: readonly string[]) => {
-  const last = rolls.at(-1);
-  if (last === "X") return { kind: "strike", symbol: "X", label: "¡Pleno!" };
-  if (last === "/") return { kind: "spare", symbol: "/", label: "¡Semipleno!" };
-  if (last === "-") {
-    return {
-      kind: "zero",
-      symbol: "–",
-      label: "Al canal",
-      detail: "Cero bolos",
-    };
+  const last = rolls.at(-1) ?? "";
+  const kind = kindOfMark(last);
+  if (kind === "strike") return { kind, symbol: "X", label: "¡Pleno!" };
+  if (kind === "spare") return { kind, symbol: "/", label: "¡Semipleno!" };
+  if (kind === "zero") {
+    return { kind, symbol: "–", label: "Al canal", detail: "Cero bolos" };
   }
   const pins = Number(last);
-  const left = leftAfter(rolls);
+  const left = standingAfter(rolls);
   return {
-    kind: "count",
+    kind,
     symbol: last,
     label: pins === 1 ? "bolo" : "bolos",
     detail: left === 1 ? "Queda 1 en pie" : `Quedan ${left} en pie`,

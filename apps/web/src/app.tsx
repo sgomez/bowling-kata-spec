@@ -5,7 +5,7 @@ import { Final } from "./final.js";
 import { Home } from "./home.js";
 import { inviteLink, type ShareOutcome, shareInvite } from "./invite.js";
 import { Lobby } from "./lobby.js";
-import { closedMessage, errorMessage } from "./messages.js";
+import { closedMessage, errorMessage, refusal } from "./messages.js";
 import { Reconnecting, ServerRestart } from "./notices.js";
 import { Play } from "./play.js";
 import { Notice } from "./ui.js";
@@ -28,7 +28,10 @@ export const App = (props: AppProps) => {
 };
 
 const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
-  const shared = useSignal<ShareOutcome | undefined>(undefined);
+  const shared = useSignal<{ outcome: ShareOutcome; at: number } | undefined>(
+    undefined,
+  );
+  const missedAt = useSignal(0);
   const removing = useSignal<BowlerId | undefined>(undefined);
   const leaving = useSignal(false);
   const playing = useSignal<number | undefined>(undefined);
@@ -43,12 +46,12 @@ const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
     return (
       <Home
         initialCode={closed ? "" : initialCode}
-        error={
+        refusal={
           closed
-            ? closedMessage(closed)
+            ? { text: closedMessage(closed), tone: "error" }
             : connection.removed.value
-              ? "El anfitrión te ha sacado de la sala."
-              : error && errorMessage(error)
+              ? { text: "El anfitrión te ha sacado de la sala.", tone: "error" }
+              : error && refusal(error)
         }
         entering={connection.entering.value}
         onCreate={connection.create}
@@ -83,8 +86,13 @@ const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
             playing.value = undefined;
           }}
           webgl={webgl}
-          missed={connection.missed.value === number}
-          onMiss={connection.miss}
+          missedAt={
+            connection.missed.value === number ? missedAt.value : undefined
+          }
+          onMiss={() => {
+            missedAt.value = Date.now();
+            connection.miss();
+          }}
           leaving={leaving.value}
           onAskLeave={() => {
             leaving.value = true;
@@ -111,7 +119,10 @@ const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
       error={notice}
       removing={removing.value}
       onShare={async () => {
-        shared.value = await shareInvite(link, navigator);
+        shared.value = {
+          outcome: await shareInvite(link, navigator),
+          at: Date.now(),
+        };
       }}
       onStart={connection.start}
       onLeave={connection.leave}

@@ -4,14 +4,12 @@ import {
   type FrameView,
   standings,
 } from "@bowling/domain";
+import { kindOfMark } from "./roll-kind.js";
 import { Avatar, Chip } from "./ui.js";
 import "./styles/scorecard.css";
 
 const FRAME_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const EMPTY: FrameView = { rolls: [], score: null };
-
-const markClass = (roll: string) =>
-  roll === "X" ? "strike" : roll === "/" ? "spare" : undefined;
 
 // A Strike sits in the second box of Frames 1 to 9, as on a paper scorecard.
 const boxes = (rolls: string[], tenth: boolean) =>
@@ -26,7 +24,7 @@ const Frame = ({ frame, n }: { frame: FrameView; n: number }) => {
     >
       <span class="scorecard-rolls">
         {boxes(frame.rolls, n === 10).map((roll, i) => (
-          <span key={i} class={markClass(roll)}>
+          <span key={i} class={kindOfMark(roll)}>
             {roll}
           </span>
         ))}

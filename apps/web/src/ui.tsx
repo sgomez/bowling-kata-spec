@@ -4,6 +4,7 @@ import type {
   ComponentChildren,
   InputHTMLAttributes,
 } from "preact";
+import { useEffect, useState } from "preact/hooks";
 import { bowlerColour } from "./bowler-colour.js";
 import "./styles/button.css";
 import "./styles/field.css";
@@ -11,6 +12,7 @@ import "./styles/chip.css";
 import "./styles/notice.css";
 import "./styles/avatar.css";
 import "./styles/dialog.css";
+import { SPINNER } from "./icons.js";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant: "primary" | "secondary" | "danger" | "plain";
@@ -34,7 +36,7 @@ export const Button = ({
   >
     {busy ? (
       <>
-        <Icon class="spinner" d="M21 12a9 9 0 1 1-6.22-8.56" />
+        <Icon class="spinner" d={SPINNER} />
         {busy}
       </>
     ) : (
@@ -104,12 +106,41 @@ export const Notice = ({ tone, children }: NoticeProps) => (
   </div>
 );
 
-export const Toast = ({ tone, children }: NoticeProps) => (
-  <div role="status" class={`notice toast ${tone}`}>
-    <Icon d={ICONS[tone]} />
-    <span>{children}</span>
-  </div>
-);
+const TOAST_MS = 3_000;
+const TOAST_EXIT_MS = 180;
+
+interface ToastProps extends NoticeProps {
+  since: number;
+  now: () => number;
+}
+
+export const Toast = ({ tone, since, now, children }: ToastProps) => {
+  const [, rerender] = useState(0);
+  const left = since + TOAST_MS - now();
+  const gone = left <= -TOAST_EXIT_MS;
+  useEffect(() => {
+    if (gone) {
+      return;
+    }
+    const timer = setTimeout(
+      () => rerender((n) => n + 1),
+      left > 0 ? left : left + TOAST_EXIT_MS,
+    );
+    return () => clearTimeout(timer);
+  });
+  if (gone) {
+    return null;
+  }
+  return (
+    <div
+      role="status"
+      class={left > 0 ? `notice toast ${tone}` : `notice toast ${tone} leaving`}
+    >
+      <Icon d={ICONS[tone]} />
+      <span>{children}</span>
+    </div>
+  );
+};
 
 interface AvatarProps {
   nickname: string;

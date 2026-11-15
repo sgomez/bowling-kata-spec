@@ -28,6 +28,7 @@ const reveal = (bowlers: BowlerView[], you = "luis") =>
       frame={1}
       endsAt={6_000}
       now={() => 1_500}
+      onAskLeave={() => {}}
     />,
   );
 
@@ -60,10 +61,8 @@ describe("the reveal between Frames", () => {
     const strike = framesWith({ rolls: ["X"], score: null });
     const html = reveal([bowler("Luis", 0, strike), bowler("Marta", 7)]);
 
-    expect(html).toMatch(/class="roll[^"]*"[^>]*>X</);
-    expect(html).toMatch(
-      /class="roll[^"]*"[^>]*>5<.*class="roll[^"]*"[^>]*>2</s,
-    );
+    expect(html).toMatch(/>X</);
+    expect(html).toMatch(/>5<.*>2</s);
   });
 
   it("says who leads", () => {

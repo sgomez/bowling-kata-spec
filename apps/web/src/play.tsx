@@ -6,6 +6,7 @@ import { PlayHeader } from "./play-header.js";
 import { Reveal } from "./reveal.js";
 import { RivalStrip } from "./rival-strip.js";
 import type { RollInput } from "./roll-input.js";
+import { clearsRack } from "./roll-kind.js";
 import { RollOutcome } from "./roll-outcome.js";
 import { Button, Chip, Dialog, Toast } from "./ui.js";
 import "./styles/play.css";
@@ -14,7 +15,7 @@ interface PlayProps {
   seat: Seat;
   frame: NonNullable<RoomSnapshot["frame"]>;
   onRoll: (knocked: Pin[]) => void;
-  missed: boolean;
+  missedAt?: number;
   onMiss: () => void;
   leaving: boolean;
   onAskLeave: () => void;
@@ -32,7 +33,7 @@ export const Play = ({
   seat: { you, room, receivedAt },
   frame,
   onRoll,
-  missed,
+  missedAt,
   onMiss,
   leaving,
   onAskLeave,
@@ -45,8 +46,22 @@ export const Play = ({
   now = Date.now,
 }: PlayProps) => {
   const endsAt = receivedAt + frame.remainingMs;
-  const notice = missed && (
-    <Toast tone="warning">Se acabó el tiempo: esa tirada no ha contado.</Toast>
+  const notice = missedAt !== undefined && (
+    <Toast tone="warning" since={missedAt} now={now}>
+      Se acabó el tiempo: esa tirada no ha contado.
+    </Toast>
+  );
+
+  const dialog = leaving && (
+    <Dialog title="¿Salir de la sala?">
+      <p>La partida seguirá sin ti y no podrás volver a entrar.</p>
+      <Button variant="danger" onClick={onLeave}>
+        Salir de la sala
+      </Button>
+      <Button variant="plain" onClick={onCancelLeave}>
+        Seguir jugando
+      </Button>
+    </Dialog>
   );
 
   if (!frame.open) {
@@ -57,8 +72,10 @@ export const Play = ({
         frame={frame.number}
         endsAt={endsAt}
         now={now}
+        onAskLeave={onAskLeave}
       >
         {notice}
+        {dialog}
       </Reveal>
     );
   }
@@ -74,7 +91,7 @@ export const Play = ({
         frame={frame.number}
         rolls={rolls}
         finished={finished}
-        standing={room.standing}
+        standing={playing && clearsRack(rolls.at(-1)) ? [] : room.standing}
         endsAt={endsAt}
         now={now}
         onAskLeave={onAskLeave}
@@ -111,17 +128,7 @@ export const Play = ({
       )}
       {onLane && <RollOutcome rolls={rolls} />}
       <RivalStrip rivals={room.bowlers.filter((b) => b.id !== you)} />
-      {leaving && (
-        <Dialog title="¿Salir de la sala?">
-          <p>La partida seguirá sin ti y no podrás volver a entrar.</p>
-          <Button variant="danger" onClick={onLeave}>
-            Salir de la sala
-          </Button>
-          <Button variant="plain" onClick={onCancelLeave}>
-            Seguir jugando
-          </Button>
-        </Dialog>
-      )}
+      {dialog}
     </main>
   );
 };

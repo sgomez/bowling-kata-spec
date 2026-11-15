@@ -65,7 +65,7 @@ export const play = (
       seat={{ you, room: snapshot, receivedAt: 1_000 }}
       frame={snapshot.frame as NonNullable<RoomSnapshot["frame"]>}
       onRoll={() => {}}
-      missed={missed}
+      missedAt={missed ? 2_000 : undefined}
       onMiss={() => {}}
       leaving={leaving}
       onAskLeave={() => {}}

@@ -2,6 +2,7 @@ import { MAX_NICKNAME_LENGTH } from "@bowling/domain";
 import { useState } from "preact/hooks";
 import { CodeBoxes } from "./code-boxes.js";
 import { HomeHero } from "./home-hero.js";
+import type { Refusal } from "./messages.js";
 import { Button, Field, Notice } from "./ui.js";
 import "./styles/home.css";
 
@@ -9,7 +10,7 @@ const CONNECTING = "Conectando…";
 
 interface HomeProps {
   initialCode: string;
-  error?: string;
+  refusal?: Refusal;
   entering?: "create" | "join";
   onCreate: (nickname: string) => void;
   onJoin: (code: string, nickname: string) => void;
@@ -17,7 +18,7 @@ interface HomeProps {
 
 export const Home = ({
   initialCode,
-  error,
+  refusal,
   entering,
   onCreate,
   onJoin,
@@ -79,6 +80,7 @@ export const Home = ({
           autoFocus={invited}
           disabled={waiting}
           required
+          aria-invalid={refusal?.nickname ? "true" : undefined}
           onInput={(event) => setNickname(event.currentTarget.value)}
         />
         {invited ? (
@@ -96,7 +98,7 @@ export const Home = ({
             {join}
           </>
         )}
-        {error && <Notice tone="error">{error}</Notice>}
+        {refusal && <Notice tone={refusal.tone}>{refusal.text}</Notice>}
       </form>
       <footer class="home-footer">
         Sin registro: nada se guarda al terminar.

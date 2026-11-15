@@ -1,6 +1,6 @@
 import { PINS, type Pin } from "@bowling/domain";
 import { type Pose, rack, type Spot } from "../src/knock.js";
-import { observe, trackRoll } from "../src/lane-choreography.js";
+import { observe, recordRoll } from "../src/lane-choreography.js";
 
 export const straight = { release: 0, direction: 0, speed: 3, spin: 0 };
 
@@ -18,7 +18,7 @@ export const shifted = (pin: Pin, dx: number, dy = 0): [Pin, Pose] => {
 // The ball reaches the head Pin 500 ms into the Roll, moving these Pins.
 const IMPACT = 500;
 export const hit = (...moved: [Pin, Pose][]) =>
-  observe(trackRoll(PINS, straight), {
+  observe(recordRoll(PINS, straight), {
     elapsed: IMPACT,
     ball: { ...spotOf(1), angle: 0 },
     pins: new Map([...still(), ...moved]),

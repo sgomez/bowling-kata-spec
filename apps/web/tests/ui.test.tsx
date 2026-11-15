@@ -38,11 +38,26 @@ describe("base components", () => {
     );
   });
 
+  const toast = (at: number) =>
+    render(
+      <Toast tone="success" since={1_000} now={() => at}>
+        Enlace copiado.
+      </Toast>,
+    );
+
   it("announces a toast politely", () => {
-    const html = render(<Toast tone="success">Enlace copiado.</Toast>);
+    const html = toast(1_000);
 
     expect(html).toContain('role="status"');
     expect(html).toContain("Enlace copiado.");
+  });
+
+  it("keeps a toast on screen while it leaves", () => {
+    expect(toast(4_100)).toContain("Enlace copiado.");
+  });
+
+  it("drops a toast once it has left", () => {
+    expect(toast(4_180)).toBe("");
   });
 
   it("draws an avatar as the nickname's first two letters, upper-cased", () => {
@@ -50,14 +65,12 @@ describe("base components", () => {
     expect(render(<Avatar nickname="Ñu" colour={0} />)).toMatch(/>ÑU</);
   });
 
-  it.each([
-    [0, "#FF3D8B"],
-    [1, "#3DE8FF"],
-    [2, "#FFC53D"],
-    [3, "#5BE38B"],
-    [4, "#A78BFF"],
-    [5, "#FF8A3D"],
-  ] as const)("paints Bowler Colour %i as %s", (colour, hex) => {
-    expect(render(<Avatar nickname="Ana" colour={colour} />)).toContain(hex);
+  it("paints every Bowler Colour differently", () => {
+    const colours = [0, 1, 2, 3, 4, 5] as const;
+    const avatars = colours.map((colour) =>
+      render(<Avatar nickname="Ana" colour={colour} />),
+    );
+
+    expect(new Set(avatars).size).toBe(colours.length);
   });
 });

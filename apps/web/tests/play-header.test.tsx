@@ -26,17 +26,13 @@ describe("the header", () => {
     );
   });
 
-  it("turns the countdown urgent and tints the screen in the last five seconds", () => {
-    const calm = play("ana", room({}));
-    const urgent = play(
+  it("counts down the seconds left in the Frame Window", () => {
+    const html = play(
       "ana",
       room({ frame: { number: 3, open: true, remainingMs: 7_000 } }),
     );
 
-    expect(urgent).toMatch(/Quedan.*5.*s/s);
-    expect(urgent).toContain('class="play-edges"');
-    expect(urgent).toContain('class="play-header urgent"');
-    expect(calm).not.toContain("urgent");
+    expect(html).toMatch(/Quedan.*role="timer"[^>]*>.*5.*s/s);
   });
 
   it("maps the Pins left standing", () => {
@@ -44,6 +40,20 @@ describe("the header", () => {
       'aria-label="Bolos en pie: 3 de 10"',
     );
   });
+
+  it.each([[["X"]], [["7", "/"]]])(
+    "maps no Pin standing while the Lane plays out %j",
+    (rolls) => {
+      const strike = yourFrame(10, rolls);
+
+      expect(play("ana", strike, false, false, true, true)).toContain(
+        'aria-label="Bolos en pie: 0 de 10"',
+      );
+      expect(play("ana", strike)).toContain(
+        'aria-label="Bolos en pie: 10 de 10"',
+      );
+    },
+  );
 });
 
 describe("leaving the Room", () => {
@@ -52,6 +62,23 @@ describe("leaving the Room", () => {
 
     expect(html).toContain('aria-label="Salir de la sala"');
     expect(html).not.toContain('role="dialog"');
+  });
+
+  const reveal = room({
+    frame: { number: 2, open: false, remainingMs: 4_000 },
+  });
+
+  it("offers to leave during the reveal between Frames", () => {
+    const html = play("ana", reveal);
+
+    expect(html).toMatch(/Resultados.*Salir de la sala/s);
+    expect(html).not.toContain('role="dialog"');
+  });
+
+  it("asks before leaving during the reveal", () => {
+    expect(play("ana", reveal, false, true)).toMatch(
+      /role="dialog".*¿Salir de la sala\?.*Seguir jugando/s,
+    );
   });
 
   it("warns that the Game goes on without the Bowler for good", () => {

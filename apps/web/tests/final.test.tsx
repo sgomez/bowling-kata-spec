@@ -96,6 +96,19 @@ describe("final Scores screen", () => {
     );
   });
 
+  it("keeps everyone who shares third place on the podium", () => {
+    const html = finalWith([
+      bowler("Marta", 183),
+      bowler("Luis", 149),
+      bowler("Nuria", 139),
+      bowler("Carmen", 139),
+    ]);
+
+    expect(podium(html)).toMatch(
+      /Luis\s+149\s+2.*Marta\s+183\s+1.*Nuria\s+139\s+3.*Carmen\s+139\s+3/s,
+    );
+  });
+
   it("shows the full scorecard with its legend under the podium", () => {
     const html = text(
       finalWith([

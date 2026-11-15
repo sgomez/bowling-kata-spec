@@ -58,7 +58,10 @@ describe("home screen", () => {
     const html = render(
       <Home
         initialCode=""
-        error="La sala está completa: ya hay seis jugadores."
+        refusal={{
+          text: "La sala está completa: ya hay seis jugadores.",
+          tone: "error",
+        }}
         onCreate={noop}
         onJoin={noop}
       />,
