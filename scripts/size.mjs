@@ -1,14 +1,12 @@
 #!/usr/bin/env node
-// Usage: node scripts/size.mjs [--report-only] [file...]
+// Usage: node scripts/size.mjs [file...]
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const LIMIT = 5000;
 const ROOTS = ["src", "tests"];
 
-const args = process.argv.slice(2);
-const reportOnly = args.includes("--report-only");
-const files = args.filter((arg) => arg !== "--report-only");
+const files = process.argv.slice(2);
 
 const isChecked = (file) =>
   file.endsWith(".ts") &&
@@ -31,6 +29,6 @@ for (const { file, length } of offenders) {
   console.error(`${file}: ${length} characters (limit ${LIMIT})`);
 }
 
-if (offenders.length > 0 && !reportOnly) {
+if (offenders.length > 0) {
   process.exit(1);
 }
