@@ -17,6 +17,10 @@ describe("error messages", () => {
     "INVALID_MESSAGE",
     "ALREADY_IN_ROOM",
     "NOT_IN_ROOM",
+    "TOO_MANY_ROOMS",
+    "TOO_MANY_CONNECTIONS",
+    "MESSAGE_TOO_LARGE",
+    "TOO_MANY_MESSAGES",
   ] as const)("cover %s too", (code) => {
     expect(errorMessage(code)).not.toBe("");
   });

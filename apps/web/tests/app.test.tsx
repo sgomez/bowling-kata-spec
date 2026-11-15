@@ -34,6 +34,23 @@ describe("app", () => {
     expect(html).toContain("No existe ninguna sala con ese código.");
   });
 
+  it.each([
+    ["ROOM_CLOSED", "La sala se ha cerrado."],
+    ["SERVER_SHUTDOWN", "El servidor se está reiniciando."],
+  ] as const)(
+    "returns home explaining %s, without the old code",
+    (reason, text) => {
+      const s = session();
+      s.closed.value = reason;
+
+      const html = render(<App session={s} initialCode="K7MPQ" origin="" />);
+
+      expect(html).toContain(text);
+      expect(html).toContain("Crear sala");
+      expect(html).not.toContain('value="K7MPQ"');
+    },
+  );
+
   it("moves to the Lobby once in a Room", () => {
     const s = session();
     s.seat.value = { you: "ana", room: ROOM, receivedAt: 0 };

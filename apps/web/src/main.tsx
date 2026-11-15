@@ -25,6 +25,9 @@ if (root && desktop) {
     if (code && location.pathname !== `/${code}`) {
       history.replaceState(null, "", `/${code}`);
     }
+    if (session.closed.value) {
+      history.replaceState(null, "", "/");
+    }
   });
   render(
     <App

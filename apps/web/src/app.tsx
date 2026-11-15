@@ -3,7 +3,7 @@ import { Final } from "./final.js";
 import { Home } from "./home.js";
 import { inviteLink, type ShareOutcome, shareInvite } from "./invite.js";
 import { Lobby } from "./lobby.js";
-import { errorMessage } from "./messages.js";
+import { closedMessage, errorMessage } from "./messages.js";
 import { Play } from "./play.js";
 import type { Session } from "./session.js";
 
@@ -24,12 +24,13 @@ export const App = ({ session, initialCode, origin }: AppProps) => {
   const shareNotice = useSignal<string | undefined>(undefined);
   const seat = session.seat.value;
   const error = session.error.value;
+  const closed = session.closed.value;
 
   if (!seat) {
     return (
       <Home
-        initialCode={initialCode}
-        error={error && errorMessage(error)}
+        initialCode={closed ? "" : initialCode}
+        error={closed ? closedMessage(closed) : error && errorMessage(error)}
         onCreate={session.create}
         onJoin={session.join}
       />

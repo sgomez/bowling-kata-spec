@@ -1,6 +1,7 @@
 import type {
   BowlerId,
   ClientMessage,
+  CloseReason,
   ErrorCode,
   Pin,
   RoomSnapshot,
@@ -29,6 +30,7 @@ export const createSession = (
 ) => {
   const seat = signal<Seat | undefined>(undefined);
   const error = signal<ErrorCode | undefined>(undefined);
+  const closed = signal<CloseReason | undefined>(undefined);
   let socket: SessionSocket | undefined;
   let pending: ClientMessage[] = [];
 
@@ -49,8 +51,14 @@ export const createSession = (
           receivedAt: now(),
         };
         error.value = undefined;
+        closed.value = undefined;
+      } else if (message.type === "closed") {
+        seat.value = undefined;
+        error.value = undefined;
+        closed.value = message.reason;
       } else {
         error.value = message.error;
+        closed.value = undefined;
       }
     };
     next.onclose = () => {
@@ -71,6 +79,7 @@ export const createSession = (
   return {
     seat,
     error,
+    closed,
     create: (nickname: string) => send({ type: "create", nickname }),
     join: (code: string, nickname: string) =>
       send({ type: "join", code, nickname }),
