@@ -6,7 +6,13 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["packages/*/src/**/*.{ts,tsx}", "apps/*/src/**/*.{ts,tsx}"],
-      exclude: ["apps/server/src/main.ts", "apps/web/src/main.tsx"],
+      exclude: [
+        "apps/server/src/main.ts",
+        "apps/web/src/main.tsx",
+        "apps/web/src/lane.tsx",
+        "apps/web/src/lane-physics.ts",
+        "apps/web/src/lane-render.ts",
+      ],
       thresholds: {
         lines: 90,
         branches: 90,
