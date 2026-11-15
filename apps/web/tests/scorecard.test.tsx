@@ -80,7 +80,7 @@ describe("the scorecard sheet", () => {
 
   it("shows the Tenth Frame's three Rolls", () => {
     const frames = framesWith(
-      ...Array.from({ length: 9 }, (_, i) => ({ rolls: ["-", "-"], score: 0 })),
+      ...Array.from({ length: 9 }, () => ({ rolls: ["-", "-"], score: 0 })),
       { rolls: ["X", "X", "7"], score: 27 },
     );
 
