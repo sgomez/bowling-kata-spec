@@ -17,6 +17,7 @@ export const memoryStore = (token?: string) => {
 export const setup = (store: TokenStore, invitedTo = "") => {
   const sockets: FakeSocket[] = [];
   const retries: (() => void)[] = [];
+  const failures: number[] = [];
   const connection = createConnection(
     () => {
       const socket = new FakeSocket();
@@ -24,10 +25,17 @@ export const setup = (store: TokenStore, invitedTo = "") => {
       return socket;
     },
     () => 0,
-    { storage: () => store, retry: (run) => retries.push(run), invitedTo },
+    {
+      storage: () => store,
+      retry: (run, failed) => {
+        retries.push(run);
+        failures.push(failed);
+      },
+      invitedTo,
+    },
   );
   const seated = (token = "K7MPQ.t") => {
     sockets.at(-1)?.receive({ type: "room", you: "ana", token, room: ROOM });
   };
-  return { connection, sockets, retries, seated };
+  return { connection, sockets, retries, failures, seated };
 };

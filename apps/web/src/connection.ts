@@ -9,11 +9,11 @@ import type {
   ServerMessage,
 } from "@bowling/domain";
 import { signal } from "@preact/signals";
+import { reconnectDelay } from "./backoff.js";
 import { resumableToken } from "./invite.js";
 
 const OPEN = 1;
 const TOKEN_KEY = "token";
-const RETRY_MS = 1_000;
 
 export type ConnectionSocket = Pick<
   WebSocket,
@@ -30,7 +30,7 @@ export interface Seat {
 
 interface ConnectionOptions {
   storage?: () => TokenStore;
-  retry?: (run: () => void) => void;
+  retry?: (run: () => void, failures: number) => void;
   invitedTo?: string;
 }
 
@@ -49,7 +49,7 @@ export const createConnection = (
   now: () => number = Date.now,
   {
     storage = () => localStorage,
-    retry = (run) => setTimeout(run, RETRY_MS),
+    retry = (run, failures) => setTimeout(run, reconnectDelay(failures)),
     invitedTo = "",
   }: ConnectionOptions = {},
 ) => {
@@ -62,6 +62,7 @@ export const createConnection = (
   const closed = signal<CloseReason | undefined>(undefined);
   let socket: ConnectionSocket | undefined;
   let pending: ClientMessage[] = [];
+  let failures = 0;
 
   const keep = (next: string) => {
     token = next;
@@ -101,6 +102,7 @@ export const createConnection = (
   const open = () => {
     const next = connect();
     next.onopen = () => {
+      failures = 0;
       for (const message of pending) {
         next.send(JSON.stringify(message));
       }
@@ -111,7 +113,7 @@ export const createConnection = (
       socket = undefined;
       pending = [];
       if (token) {
-        retry(resume);
+        retry(resume, failures++);
       }
     };
     return next;

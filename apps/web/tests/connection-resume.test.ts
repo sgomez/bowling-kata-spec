@@ -69,6 +69,24 @@ describe("resume token", () => {
     expect(sockets[2].sent).toEqual([{ type: "resume", token: "K7MPQ.t" }]);
   });
 
+  it("backs off on each failed retry and starts over once connected", () => {
+    const { connection, sockets, retries, failures, seated } = setup(
+      memoryStore().store,
+    );
+    connection.create("Ana");
+    sockets[0].open();
+    seated();
+    sockets[0].drop();
+    retries[0]();
+    sockets[1].drop();
+    retries[1]();
+    sockets[2].open();
+
+    sockets[2].drop();
+
+    expect(failures).toEqual([0, 1, 0]);
+  });
+
   it("is forgotten when unknown", () => {
     const { items, store } = memoryStore("K7MPQ.old");
     const { connection, sockets } = setup(store);
