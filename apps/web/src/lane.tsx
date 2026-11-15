@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { rack } from "./knock.js";
 import { FOUL_LINE } from "./lane-geometry.js";
 import type { LaneRoll } from "./lane-physics.js";
@@ -11,10 +11,12 @@ const IDLE_BALL = { x: 0, y: FOUL_LINE / 2 };
 
 const physics = () => import("./lane-physics.js");
 
-export const Lane = ({ standing, onRoll }: RollInputProps) => {
+export const Lane = (input: RollInputProps) => {
+  const { standing } = input;
   const canvas = useRef<HTMLCanvasElement>(null);
-  const props = useRef({ standing, onRoll });
-  props.current = { standing, onRoll };
+  const props = useRef(input);
+  props.current = input;
+  const [timeUp, setTimeUp] = useState(false);
   const scene = useRef<LaneScene>({
     pins: rack(standing),
     ball: IDLE_BALL,
@@ -33,7 +35,21 @@ export const Lane = ({ standing, onRoll }: RollInputProps) => {
     let frame = 0;
     let last = performance.now();
     let settledAt: number | undefined;
+    const expire = () => {
+      setTimeUp(true);
+      if (!roll.current && !aiming.current) return;
+      roll.current = undefined;
+      aiming.current = false;
+      settledAt = undefined;
+      scene.current = {
+        pins: rack(props.current.standing),
+        ball: IDLE_BALL,
+        trail: [],
+      };
+      props.current.onMiss();
+    };
     const tick = (now: number) => {
+      if (props.current.now() >= props.current.endsAt) expire();
       const current = roll.current;
       if (current) {
         current.step(now - last);
@@ -61,13 +77,17 @@ export const Lane = ({ standing, onRoll }: RollInputProps) => {
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      if (roll.current) props.current.onMiss();
+    };
   }, []);
 
   const onPointerDown = (event: PointerEvent) => {
     const target = event.currentTarget as Element;
     const start = toLane(event, target.getBoundingClientRect());
-    if (roll.current || start.y > FOUL_LINE) return;
+    const late = props.current.now() >= props.current.endsAt;
+    if (late || roll.current || start.y > FOUL_LINE) return;
     target.setPointerCapture(event.pointerId);
     aiming.current = true;
     scene.current = { ...scene.current, ball: start, trail: [start] };
@@ -109,7 +129,11 @@ export const Lane = ({ standing, onRoll }: RollInputProps) => {
         onPointerUp={onPointerUp}
         onPointerCancel={cancel}
       />
-      <p>Desliza el dedo hacia los bolos. Curva el gesto para darle efecto.</p>
+      <p>
+        {timeUp
+          ? "Se acabó el tiempo."
+          : "Desliza el dedo hacia los bolos. Curva el gesto para darle efecto."}
+      </p>
     </div>
   );
 };

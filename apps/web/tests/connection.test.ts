@@ -70,6 +70,23 @@ describe("connection", () => {
     expect(connection.error.value).toBeUndefined();
   });
 
+  it("remembers the Frame whose Roll the Frame Window cut short", () => {
+    const { connection, sockets } = setup();
+    connection.create("Ana");
+    sockets[0].open();
+    const frame = { number: 3, open: true, remainingMs: 0 } as const;
+    const room = { ...ROOM, phase: "playing", frame } as RoomSnapshot;
+    sockets[0].receive({ type: "room", you: "ana", token: "t", room });
+
+    connection.miss();
+
+    expect(connection.missed.value).toBe(3);
+    expect(sockets[0].sent).toHaveLength(1);
+    const next = { ...room, frame: { ...frame, number: 4 } } as RoomSnapshot;
+    sockets[0].receive({ type: "room", you: "ana", token: "t", room: next });
+    expect(connection.missed.value).toBeUndefined();
+  });
+
   it("leaves the Room when the server closes it", () => {
     const { connection, sockets } = setup();
     connection.create("Ana");

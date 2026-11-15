@@ -4,6 +4,9 @@ import type { ComponentType } from "preact";
 export interface RollInputProps {
   standing: readonly Pin[];
   onRoll: (knocked: Pin[]) => void;
+  endsAt: number;
+  now: () => number;
+  onMiss: () => void;
 }
 
 export type RollInput = ComponentType<RollInputProps>;

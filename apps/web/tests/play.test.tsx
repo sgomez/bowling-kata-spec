@@ -34,16 +34,20 @@ const room = (extra: Partial<RoomSnapshot>): RoomSnapshot => ({
   ...extra,
 });
 
-const FakeInput = ({ standing }: RollInputProps) => (
-  <p>input:{standing.join(",")}</p>
+const FakeInput = ({ standing, endsAt }: RollInputProps) => (
+  <p>
+    input:{standing.join(",")} until:{endsAt}
+  </p>
 );
 
-const play = (you: string, snapshot: RoomSnapshot) =>
+const play = (you: string, snapshot: RoomSnapshot, missed = false) =>
   render(
     <Play
       seat={{ you, room: snapshot, receivedAt: 1_000 }}
       frame={snapshot.frame as NonNullable<RoomSnapshot["frame"]>}
       onRoll={() => {}}
+      missed={missed}
+      onMiss={() => {}}
       RollInput={FakeInput}
       now={() => 3_000}
     />,
@@ -56,6 +60,10 @@ describe("an open Frame Window", () => {
     expect(html).toContain("Frame 3");
     expect(html).toMatch(/Quedan.*11.*s/s);
     expect(html).toContain("input:3,5");
+  });
+
+  it("stops the Lane when the window runs out", () => {
+    expect(play("ana", room({}))).toContain("until:13300");
   });
 
   it("shows who has finished the Frame", () => {
@@ -92,6 +100,17 @@ describe("the reveal", () => {
     expect(html).toMatch(/ANA.*X.*7 \/.*20/s);
     expect(html).toMatch(/Siguiente frame en.*2.*s/s);
     expect(html).not.toContain("input:");
+  });
+});
+
+describe("a Roll the Frame Window cut short", () => {
+  it("tells the Bowler it did not count", () => {
+    const frame = { number: 2, open: false, remainingMs: 4_000 } as const;
+
+    expect(play("ana", room({ frame }), true)).toContain(
+      "Se acabó el tiempo: esa tirada no ha contado.",
+    );
+    expect(play("ana", room({ frame }))).not.toContain("Se acabó el tiempo");
   });
 });
 

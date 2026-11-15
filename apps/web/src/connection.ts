@@ -3,6 +3,7 @@ import type {
   ClientMessage,
   CloseReason,
   ErrorCode,
+  FrameNumber,
   Pin,
   RoomSnapshot,
   ServerMessage,
@@ -55,6 +56,7 @@ export const createConnection = (
   const seat = signal<Seat | undefined>(undefined);
   const error = signal<ErrorCode | undefined>(undefined);
   const removed = signal(false);
+  const missed = signal<FrameNumber | undefined>(undefined);
   const stored = attempt(() => storage().getItem(TOKEN_KEY)) ?? undefined;
   let token = resumableToken(stored, invitedTo);
   const closed = signal<CloseReason | undefined>(undefined);
@@ -79,6 +81,9 @@ export const createConnection = (
     if (message.type === "room") {
       keep(message.token);
       seat.value = { you: message.you, room: message.room, receivedAt: now() };
+      if (message.room.frame?.number !== missed.value) {
+        missed.value = undefined;
+      }
     } else if (message.type === "removed") {
       forget();
       removed.value = true;
@@ -137,6 +142,10 @@ export const createConnection = (
     error,
     removed,
     closed,
+    missed,
+    miss: () => {
+      missed.value = seat.value?.room.frame?.number;
+    },
     create: (nickname: string) => send({ type: "create", nickname }),
     join: (code: string, nickname: string) =>
       send({ type: "join", code, nickname }),

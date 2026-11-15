@@ -50,7 +50,13 @@ export const App = ({ connection, initialCode, origin }: AppProps) => {
   if (seat.room.frame) {
     return (
       <>
-        <Play seat={seat} frame={seat.room.frame} onRoll={connection.roll} />
+        <Play
+          seat={seat}
+          frame={seat.room.frame}
+          onRoll={connection.roll}
+          missed={connection.missed.value === seat.room.frame.number}
+          onMiss={connection.miss}
+        />
         {notice && <p role="alert">{notice}</p>}
         <button type="button" onClick={connection.leave}>
           Salir de la sala

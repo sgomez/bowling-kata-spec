@@ -9,6 +9,8 @@ interface PlayProps {
   seat: Seat;
   frame: NonNullable<RoomSnapshot["frame"]>;
   onRoll: (knocked: Pin[]) => void;
+  missed: boolean;
+  onMiss: () => void;
   RollInput?: RollInput;
   now?: () => number;
 }
@@ -17,17 +19,22 @@ export const Play = ({
   seat: { you, room, receivedAt },
   frame,
   onRoll,
+  missed,
+  onMiss,
   RollInput = Lane,
   now = Date.now,
 }: PlayProps) => {
-  const countdown = (
-    <Countdown endsAt={receivedAt + frame.remainingMs} now={now} />
+  const endsAt = receivedAt + frame.remainingMs;
+  const countdown = <Countdown endsAt={endsAt} now={now} />;
+  const notice = missed && (
+    <p role="status">Se acabó el tiempo: esa tirada no ha contado.</p>
   );
 
   if (!frame.open) {
     return (
       <main class="play">
         <h1>Frame {frame.number}</h1>
+        {notice}
         <Scorecard bowlers={room.bowlers} />
         <p>Siguiente frame en {countdown}</p>
       </main>
@@ -39,6 +46,7 @@ export const Play = ({
     <main class="play">
       <h1>Frame {frame.number}</h1>
       <p>Quedan {countdown}</p>
+      {notice}
       {finished ? (
         <p>Has terminado este frame. Esperando al resto…</p>
       ) : (
@@ -46,6 +54,9 @@ export const Play = ({
           key={frame.number}
           standing={room.standing}
           onRoll={onRoll}
+          endsAt={endsAt}
+          now={now}
+          onMiss={onMiss}
         />
       )}
       <ul class="progress">
