@@ -9,9 +9,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "tsx": "^4.23.15"
+    "@bowling/domain": "workspace:*",
+    "tsx": "^4.23.15",
+    "ws": "^8.23.0"
   },
   "devDependencies": {
-    "@types/node": "^22.20.5"
+    "@types/node": "^22.20.5",
+    "@types/ws": "^8.18.2"
   }
 }

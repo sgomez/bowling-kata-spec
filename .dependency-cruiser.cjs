@@ -4,10 +4,10 @@ module.exports = {
     {
       name: "domain-imports-only-domain",
       comment:
-        "The domain stays portable: no apps, node: modules or external packages (the schema library will be allowed).",
+        "The domain stays portable: no apps, node: modules or external packages except the schema library.",
       severity: "error",
       from: { path: "^packages/domain/" },
-      to: { pathNot: "^packages/domain/" },
+      to: { pathNot: ["^packages/domain/", "node_modules/valibot/"] },
     },
     {
       name: "server-never-imports-web",

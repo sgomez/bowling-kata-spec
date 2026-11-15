@@ -9,7 +9,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "preact": "^11.2.0"
+    "@bowling/domain": "workspace:*",
+    "@preact/signals": "^2.11.4",
+    "preact": "^11.2.0",
+    "uqr": "^0.1.3"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.6",
