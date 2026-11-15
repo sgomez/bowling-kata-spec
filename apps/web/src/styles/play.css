@@ -408,3 +408,36 @@
   margin-top: 6px;
   font-size: 14px;
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .outcome.strike .outcome-symbol,
+  .outcome.spare .outcome-symbol {
+    animation: outcome-pop 420ms var(--ease-bounce) both;
+  }
+
+  .outcome.zero,
+  .outcome.count {
+    animation: outcome-fade 200ms var(--ease-exit) both;
+  }
+}
+
+@keyframes outcome-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes outcome-fade {
+  from {
+    opacity: 0;
+  }
+}

@@ -8,6 +8,9 @@ export interface RollInputProps {
   endsAt: number;
   now: () => number;
   onMiss: () => void;
+  // Finished the Frame: the Lane only plays out the last Roll.
+  finished: boolean;
+  onPlayed: () => void;
 }
 
 export type RollInput = ComponentType<RollInputProps>;

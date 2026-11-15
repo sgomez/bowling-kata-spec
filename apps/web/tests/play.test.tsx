@@ -39,6 +39,20 @@ describe("an open Frame Window", () => {
     );
   });
 
+  it("keeps the Lane playing out the Roll that finished the Frame", () => {
+    const strike = yourFrame(3, ["X"], { finishedFrame: true });
+    const html = play("ana", strike, false, false, true, true);
+
+    expect(html).toContain("input:");
+    expect(html).toContain("finished:true");
+    expect(html).not.toContain("Has terminado este frame.");
+    expect(html).toMatch(/role="status".*X.*¡Pleno!/s);
+  });
+
+  it("lets an unfinished Bowler roll on the Lane", () => {
+    expect(play("ana", room({}))).toContain("finished:false");
+  });
+
   it("announces the Tenth Frame's bonus Roll", () => {
     expect(play("ana", yourFrame(10, ["X", "8"]))).toContain(
       "Tirada de bonificación",

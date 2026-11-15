@@ -39,7 +39,7 @@ describe("playing a Roll on the Lane", () => {
 
     expect(advance(play, 16, rolling).knocked).toBeUndefined();
     advance(play, 16, knockingHeadPin());
-    const after = advance(play, 2000, undefined);
+    const after = advance(play, 2600, undefined);
 
     expect(after.knocked).toBeUndefined();
     expect(after.staging.pins.get(1)?.state).toBe("removed");

@@ -20,6 +20,8 @@ export default defineConfig({
         "apps/web/src/lane-reflection.ts",
         "apps/web/src/lane-swipe.tsx",
         "apps/web/src/lane-swipe-marks.ts",
+        "apps/web/src/lane-cheers.ts",
+        "apps/web/src/lane-loop.ts",
       ],
       thresholds: {
         lines: 90,

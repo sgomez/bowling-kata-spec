@@ -98,12 +98,12 @@ describe("telling when the choreography is over", () => {
     expect(stage(track, 5000).done).toBe(false);
   });
 
-  it("is over once the Roll settled and every Pin stands or is removed", () => {
+  it("is over once the Roll settled, every Pin stands or is removed and the camera is back", () => {
     const settled = settle(track, [1]);
 
     expect(stage(settled, 1100).done).toBe(false);
-    expect(stage(settled, 1769).done).toBe(false);
-    expect(stage(settled, 1770).done).toBe(true);
+    expect(stage(settled, 2369).done).toBe(false);
+    expect(stage(settled, 2370).done).toBe(true);
   });
 
   it("stands the remaining Pins on their spots, ball at rest, between Rolls", () => {

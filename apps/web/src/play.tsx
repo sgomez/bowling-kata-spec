@@ -22,6 +22,9 @@ interface PlayProps {
   onLeave: () => void;
   RollInput?: RollInput;
   webgl: boolean;
+  // The Lane is still playing out this Frame's last Roll.
+  playing: boolean;
+  onPlayed: () => void;
   now?: () => number;
 }
 
@@ -37,6 +40,8 @@ export const Play = ({
   onLeave,
   RollInput = Lane,
   webgl,
+  playing,
+  onPlayed,
   now = Date.now,
 }: PlayProps) => {
   const endsAt = receivedAt + frame.remainingMs;
@@ -61,6 +66,7 @@ export const Play = ({
   const own = room.bowlers.find((b) => b.id === you);
   const finished = own?.finishedFrame ?? false;
   const rolls = own?.frames[frame.number - 1]?.rolls ?? [];
+  const onLane = !finished || playing;
   const bonus = !finished && frame.number === 10 && rolls.length === 2;
   return (
     <main class="play">
@@ -79,7 +85,7 @@ export const Play = ({
           <Chip tone="warning">Tirada de bonificación</Chip>
         </p>
       )}
-      {finished ? (
+      {!onLane ? (
         <section class="play-finished">
           <RollOutcome rolls={rolls} />
           <p class="play-finished-title">Has terminado este frame.</p>
@@ -99,9 +105,11 @@ export const Play = ({
           endsAt={endsAt}
           now={now}
           onMiss={onMiss}
+          finished={finished}
+          onPlayed={onPlayed}
         />
       )}
-      {!finished && <RollOutcome rolls={rolls} />}
+      {onLane && <RollOutcome rolls={rolls} />}
       <RivalStrip rivals={room.bowlers.filter((b) => b.id !== you)} />
       {leaving && (
         <Dialog title="¿Salir de la sala?">
