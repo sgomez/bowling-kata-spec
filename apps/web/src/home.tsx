@@ -1,4 +1,4 @@
-import { MAX_NICKNAME_LENGTH } from "@bowling/domain";
+import { MAX_NICKNAME_LENGTH, ROOM_CODE_LENGTH } from "@bowling/domain";
 import { useState } from "preact/hooks";
 
 interface HomeProps {
@@ -41,7 +41,7 @@ export const Home = ({ initialCode, error, onCreate, onJoin }: HomeProps) => {
           <input
             name="code"
             value={code}
-            maxLength={5}
+            maxLength={ROOM_CODE_LENGTH}
             autoCapitalize="characters"
             autoComplete="off"
             onInput={(event) => setCode(event.currentTarget.value)}

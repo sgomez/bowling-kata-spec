@@ -17,6 +17,11 @@ export {
   roomOfResumeToken,
 } from "./resume-token.js";
 export { Room } from "./room.js";
-export { generateRoomCode, parseRoomCode, type RoomCode } from "./room-code.js";
+export {
+  generateRoomCode,
+  parseRoomCode,
+  ROOM_CODE_LENGTH,
+  type RoomCode,
+} from "./room-code.js";
 export type { RoomFailure, RoomResult } from "./room-failure.js";
 export type { RoomSnapshot } from "./room-snapshot.js";

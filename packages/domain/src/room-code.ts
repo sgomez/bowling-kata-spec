@@ -1,8 +1,8 @@
 export type RoomCode = string & { readonly __brand: "RoomCode" };
 
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-const LENGTH = 5;
-const PATTERN = new RegExp(`^[${ALPHABET}]{${LENGTH}}$`);
+export const ROOM_CODE_LENGTH = 5;
+const PATTERN = new RegExp(`^[${ALPHABET}]{${ROOM_CODE_LENGTH}}$`);
 
 export const generateRoomCode = (
   isTaken: (code: RoomCode) => boolean,
@@ -10,7 +10,7 @@ export const generateRoomCode = (
 ): RoomCode => {
   for (;;) {
     const code = Array.from(
-      { length: LENGTH },
+      { length: ROOM_CODE_LENGTH },
       () => ALPHABET[Math.floor(random() * ALPHABET.length)],
     ).join("") as RoomCode;
     if (!isTaken(code)) {
