@@ -1,3 +1,5 @@
+import { CYAN, PINK } from "./palette.js";
+
 const PIN =
   "M-7.5,0 C-10,-8 -16,-18 -16,-32 C-16,-48 -8,-56 -6.5,-68 C-6,-74 -8.5,-78 -8.5,-86 C-8.5,-95 -4,-100 0,-100 C4,-100 8.5,-95 8.5,-86 C8.5,-78 6,-74 6.5,-68 C8,-56 16,-48 16,-32 C16,-18 10,-8 7.5,0 Z";
 
@@ -28,12 +30,12 @@ export const HomeHero = ({
   >
     <defs>
       <radialGradient id="hero-pink">
-        <stop offset="0" stop-color="#ff3d8b" stop-opacity="0.5" />
-        <stop offset="1" stop-color="#ff3d8b" stop-opacity="0" />
+        <stop offset="0" stop-color={PINK} stop-opacity="0.5" />
+        <stop offset="1" stop-color={PINK} stop-opacity="0" />
       </radialGradient>
       <radialGradient id="hero-cyan">
-        <stop offset="0" stop-color="#3de8ff" stop-opacity="0.4" />
-        <stop offset="1" stop-color="#3de8ff" stop-opacity="0" />
+        <stop offset="0" stop-color={CYAN} stop-opacity="0.4" />
+        <stop offset="1" stop-color={CYAN} stop-opacity="0" />
       </radialGradient>
       <linearGradient id="hero-lane" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#b98a5a" />
@@ -63,7 +65,7 @@ export const HomeHero = ({
       y1="128.5"
       x2="400"
       y2="128.5"
-      stroke="#3de8ff"
+      stroke={CYAN}
       stroke-width="3"
     />
     <line
@@ -72,7 +74,7 @@ export const HomeHero = ({
       y1="203.4"
       x2="400"
       y2="203.4"
-      stroke="#ff3d8b"
+      stroke={PINK}
       stroke-width="3.5"
     />
     <rect x="123.9" y="203.4" width="142.1" height="47.9" fill="#040309" />

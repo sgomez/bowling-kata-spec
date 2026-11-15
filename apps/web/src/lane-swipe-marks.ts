@@ -9,6 +9,7 @@ import {
   Vector3,
 } from "three";
 import type { Spot } from "./knock.js";
+import { CYAN, PINK } from "./palette.js";
 
 // Lane metres; width and opacity come from swipe-trail.
 export interface SwipeMarks {
@@ -25,8 +26,8 @@ export const NO_MARKS: SwipeMarks = {
   aim: [],
 };
 
-const TRAIL = "#FF3D8B";
-const AIM = "#3DE8FF";
+const TRAIL = PINK;
+const AIM = CYAN;
 const GLOW = 2.2;
 const LIFT = 0.003;
 

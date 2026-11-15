@@ -1,6 +1,7 @@
 import "./styles/celebration.css";
+import { AMBER, CYAN, GREEN, PINK, VIOLET } from "./palette.js";
 
-const COLOURS = ["#FF3D8B", "#3DE8FF", "#FFC53D", "#5BE38B", "#A78BFF"];
+const COLOURS = [PINK, CYAN, AMBER, GREEN, VIOLET];
 const PIECES = 18;
 
 // Spread evenly across the Lane, staggered so they don't fall in a line.

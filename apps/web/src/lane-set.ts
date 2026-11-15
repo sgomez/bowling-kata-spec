@@ -11,6 +11,7 @@ import {
 import { FOUL_LINE, LANE_LENGTH, LANE_WIDTH } from "./lane-geometry.js";
 import { glow } from "./lane-glow.js";
 import { laneTexture } from "./lane-texture.js";
+import { AMBER, CYAN, PINK } from "./palette.js";
 
 // Lane metres: x across, y along the Lane, h up.
 type Corner = [x: number, y: number, h: number];
@@ -123,7 +124,7 @@ const zigzag = () => {
     const up = Math.round(x / step) % 2 === 0;
     const [h0, h1] = up ? [NEON_H, NEON_H + rise] : [NEON_H + rise, NEON_H];
     q.add(
-      "#FFC53D",
+      AMBER,
       [x, y, h0 - thick],
       [x + step, y, h1 - thick],
       [x + step, y, h1 + thick],
@@ -132,7 +133,7 @@ const zigzag = () => {
   }
   return new Mesh(
     q.geometry(),
-    new MeshBasicMaterial({ color: "#FFC53D", toneMapped: false }),
+    new MeshBasicMaterial({ color: AMBER, toneMapped: false }),
   );
 };
 
@@ -155,9 +156,9 @@ const lane = () => {
 const lights = () =>
   (
     [
-      ["#FFC53D", 0.45, 0, 2.6, 0.35],
-      ["#FF3D8B", 0.5, -1, 2.5, 1],
-      ["#3DE8FF", 0.4, 1, 2.5, 0.9],
+      [AMBER, 0.45, 0, 2.6, 0.35],
+      [PINK, 0.5, -1, 2.5, 1],
+      [CYAN, 0.4, 1, 2.5, 0.9],
     ] as const
   ).map(([colour, opacity, x, w, h]) => {
     const sprite = glow(colour, opacity);
