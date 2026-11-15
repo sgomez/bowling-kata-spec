@@ -8,7 +8,12 @@ import {
   PlaneGeometry,
   type Scene,
 } from "three";
-import { FOUL_LINE, LANE_LENGTH, LANE_WIDTH } from "./lane-geometry.js";
+import {
+  FOUL_LINE,
+  GUTTER_WIDTH,
+  LANE_LENGTH,
+  LANE_WIDTH,
+} from "./lane-geometry.js";
 import { glow } from "./lane-glow.js";
 import { laneTexture } from "./lane-texture.js";
 import { AMBER, CYAN, PINK } from "./palette.js";
@@ -23,9 +28,8 @@ interface Area {
   h?: number;
 }
 
-const GUTTER = 0.12;
 const GUTTER_DEPTH = 0.05;
-const EDGE = LANE_WIDTH / 2 + GUTTER;
+const EDGE = LANE_WIDTH / 2 + GUTTER_WIDTH;
 const SIDE = 2.5;
 const BEHIND = -1.5;
 const PIT = LANE_LENGTH + 0.45;

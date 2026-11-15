@@ -9,3 +9,5 @@ export const PIN_HEIGHT = 0.381;
 export const HEAD_PIN = 1.4;
 export const PIN_SPACING = 0.305;
 export const GUTTER_WIDTH = 0.12;
+// Sideways pull per unit of spin, shared with the aim so it tells the truth.
+export const HOOK = 2.5;

@@ -4,12 +4,12 @@ import { hasSettled, knockedPins, type Pose, rack } from "./knock.js";
 import {
   BALL_RADIUS,
   FOUL_LINE,
+  HOOK,
   LANE_LENGTH,
   LANE_WIDTH,
   PIN_RADIUS,
 } from "./lane-geometry.js";
 import type { Swipe } from "./swipe.js";
-import { HOOK } from "./swipe-aim.js";
 
 // Every constant here is hand-tuned on a phone, not physically measured.
 const STEP = 1 / 120;
