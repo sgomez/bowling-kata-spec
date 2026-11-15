@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --parallel --filter @bowling/server --filter @bowling/web dev",
+    "dev": "PORT=${PORT:-8787} pnpm --parallel --filter @bowling/server --filter @bowling/web dev",
     "build": "pnpm --filter @bowling/web build",
     "start": "pnpm --filter @bowling/server start",
     "test": "vitest run --coverage",
