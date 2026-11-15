@@ -21,12 +21,30 @@ interface Seat {
   bowlerId: BowlerId;
 }
 
-type SeatedMessage = Extract<ClientMessage, { type: "start" | "roll" }>;
+type SeatedMessage = Extract<
+  ClientMessage,
+  { type: "start" | "roll" | "rematch" }
+>;
 
-const act = ({ entry, bowlerId }: Seat, message: SeatedMessage, now: number) =>
-  message.type === "start"
-    ? entry.room.start(bowlerId, now)
-    : entry.room.roll(bowlerId, message.pins, now);
+const isSeated = (message: ClientMessage): message is SeatedMessage =>
+  message.type === "start" ||
+  message.type === "roll" ||
+  message.type === "rematch";
+
+const act = (
+  { entry, bowlerId }: Seat,
+  message: SeatedMessage,
+  now: number,
+) => {
+  switch (message.type) {
+    case "start":
+      return entry.room.start(bowlerId, now);
+    case "rematch":
+      return entry.room.rematch(bowlerId, now);
+    case "roll":
+      return entry.room.roll(bowlerId, message.pins, now);
+  }
+};
 
 export const attachRoomSocket = (
   server: Server,
@@ -66,7 +84,7 @@ export const attachRoomSocket = (
     };
 
     const handle = (message: ClientMessage) => {
-      if (message.type === "start" || message.type === "roll") {
+      if (isSeated(message)) {
         if (!seat) {
           return fail("NOT_IN_ROOM");
         }

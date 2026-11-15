@@ -39,7 +39,7 @@ export const App = ({ session, initialCode, origin }: AppProps) => {
 
   const notice = error && errorMessage(error);
   if (seat.room.phase === "finished") {
-    return <Final room={seat.room} />;
+    return <Final seat={seat} onRematch={session.rematch} />;
   }
   if (seat.room.frame) {
     return (

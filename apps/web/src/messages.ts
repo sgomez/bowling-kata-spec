@@ -6,6 +6,7 @@ const MESSAGES: Record<ErrorCode, string> = {
   NICKNAME_TAKEN: "Ese apodo ya está cogido en la sala. Elige otro.",
   NICKNAME_INVALID: "El apodo debe tener entre 1 y 16 caracteres.",
   GAMES_STARTED: "La partida ya ha empezado; no se puede entrar.",
+  GAMES_NOT_FINISHED: "La partida todavía no ha terminado.",
   NOT_HOST: "Solo el anfitrión puede hacer eso.",
   INVALID_MESSAGE: "Algo ha fallado. Recarga la página.",
   ALREADY_IN_ROOM: "Ya estás en una sala.",

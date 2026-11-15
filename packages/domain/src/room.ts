@@ -6,6 +6,7 @@ import {
   hasFinished,
   knock,
   newBowler,
+  resetGame,
 } from "./bowler.js";
 import { type FrameNumber, TENTH_FRAME } from "./frame.js";
 import {
@@ -15,6 +16,7 @@ import {
   openWindow,
   revealWindow,
 } from "./frame-window.js";
+import { parseNickname } from "./nickname.js";
 import type { Pin } from "./pins.js";
 import type { RoomCode } from "./room-code.js";
 import {
@@ -28,6 +30,7 @@ export type RoomFailure =
   | { type: "NICKNAME_TAKEN" }
   | { type: "ROOM_FULL" }
   | { type: "GAMES_STARTED" }
+  | { type: "GAMES_NOT_FINISHED" }
   | { type: "NOT_HOST" }
   | { type: "NOT_IN_ROOM" }
   | { type: "WINDOW_CLOSED" }
@@ -42,15 +45,11 @@ interface Newcomer {
 }
 
 export const MAX_BOWLERS = 6;
-export const MAX_NICKNAME_LENGTH = 16;
 
 const OK = { ok: true } as const;
 
 const refuse = (type: RoomFailure["type"]) =>
   ({ ok: false, failure: { type } }) as const;
-
-const isValidNickname = (nickname: string) =>
-  nickname.length > 0 && [...nickname].length <= MAX_NICKNAME_LENGTH;
 
 export class Room {
   private readonly bowlers: Bowler[] = [];
@@ -78,15 +77,15 @@ export class Room {
     if (this.bowlers.length >= MAX_BOWLERS) {
       return refuse("ROOM_FULL");
     }
-    const trimmed = nickname.trim();
-    if (!isValidNickname(trimmed)) {
+    const name = parseNickname(nickname);
+    if (name === undefined) {
       return refuse("NICKNAME_INVALID");
     }
-    const key = trimmed.toLocaleLowerCase();
+    const key = name.toLocaleLowerCase();
     if (this.bowlers.some((b) => b.nickname.toLocaleLowerCase() === key)) {
       return refuse("NICKNAME_TAKEN");
     }
-    this.bowlers.push(newBowler(id, trimmed));
+    this.bowlers.push(newBowler(id, name));
     return OK;
   }
 
@@ -97,9 +96,17 @@ export class Room {
     if (bowlerId !== this.hostId) {
       return refuse("NOT_HOST");
     }
-    this.phase = "playing";
-    this.window = openWindow(1, now);
-    return OK;
+    return this.play(now);
+  }
+
+  rematch(bowlerId: BowlerId, now: number): RoomResult {
+    if (bowlerId !== this.hostId) {
+      return refuse("NOT_HOST");
+    }
+    if (this.phase !== "finished") {
+      return refuse("GAMES_NOT_FINISHED");
+    }
+    return this.play(now);
   }
 
   roll(bowlerId: BowlerId, pins: readonly Pin[], now: number): RoomResult {
@@ -160,6 +167,13 @@ export class Room {
       viewer,
       now,
     });
+  }
+
+  private play(now: number) {
+    this.bowlers.forEach(resetGame);
+    this.phase = "playing";
+    this.window = openWindow(1, now);
+    return OK;
   }
 
   private find(bowlerId: BowlerId) {

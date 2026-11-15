@@ -85,5 +85,6 @@ export const createSession = (
       send({ type: "join", code, nickname }),
     start: () => send({ type: "start" }),
     roll: (pins: Pin[]) => send({ type: "roll", pins }),
+    rematch: () => send({ type: "rematch" }),
   };
 };

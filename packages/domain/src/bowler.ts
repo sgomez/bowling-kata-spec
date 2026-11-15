@@ -38,6 +38,11 @@ export const newBowler = (id: BowlerId, nickname: string): Bowler => ({
   standing: fullRack(),
 });
 
+export const resetGame = (bowler: Bowler) => {
+  bowler.game = new Game();
+  bowler.standing = fullRack();
+};
+
 export const hasFinished = (bowler: Bowler, frame: FrameNumber) =>
   bowler.game.isComplete() || bowler.game.currentFrame > frame;
 
