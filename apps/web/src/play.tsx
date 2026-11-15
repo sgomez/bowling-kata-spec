@@ -49,6 +49,7 @@ export const Play = ({
           <li key={bowler.id}>
             {bowler.nickname}:{" "}
             {bowler.finishedFrame ? "ha terminado" : "jugando…"}
+            {!bowler.connected && " (desconectado)"}
           </li>
         ))}
       </ul>

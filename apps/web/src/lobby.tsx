@@ -1,4 +1,4 @@
-import { MAX_BOWLERS } from "@bowling/domain";
+import { type BowlerId, MAX_BOWLERS } from "@bowling/domain";
 import type { Seat } from "./session.js";
 
 interface LobbyProps {
@@ -7,6 +7,8 @@ interface LobbyProps {
   shareNotice?: string;
   onShare: () => void;
   onStart: () => void;
+  onLeave: () => void;
+  onRemove: (bowlerId: BowlerId) => void;
 }
 
 export const Lobby = ({
@@ -15,6 +17,8 @@ export const Lobby = ({
   shareNotice,
   onShare,
   onStart,
+  onLeave,
+  onRemove,
 }: LobbyProps) => {
   const isHost = room.hostId === you;
 
@@ -35,6 +39,16 @@ export const Lobby = ({
             {bowler.nickname}
             {bowler.id === room.hostId && " (anfitrión)"}
             {bowler.id === you && " (tú)"}
+            {!bowler.connected && " (desconectado)"}
+            {isHost && bowler.id !== you && (
+              <button
+                type="button"
+                aria-label={`Quitar a ${bowler.nickname}`}
+                onClick={() => onRemove(bowler.id)}
+              >
+                Quitar
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -45,6 +59,9 @@ export const Lobby = ({
       ) : (
         <p>Esperando a que el anfitrión empiece…</p>
       )}
+      <button type="button" onClick={onLeave}>
+        Salir de la sala
+      </button>
     </main>
   );
 };

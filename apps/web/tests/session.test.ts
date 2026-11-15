@@ -1,32 +1,7 @@
-import type { RoomSnapshot, ServerMessage } from "@bowling/domain";
+import type { RoomSnapshot } from "@bowling/domain";
 import { describe, expect, it } from "vitest";
-import { createSession, type SessionSocket } from "../src/session.js";
-
-class FakeSocket implements SessionSocket {
-  readyState: SessionSocket["readyState"] = 0;
-  sent: unknown[] = [];
-  onopen: SessionSocket["onopen"] = null;
-  onmessage: SessionSocket["onmessage"] = null;
-  onclose: SessionSocket["onclose"] = null;
-
-  send(data: string) {
-    this.sent.push(JSON.parse(data));
-  }
-
-  open() {
-    this.readyState = 1;
-    this.onopen?.call(this as never, new Event("open"));
-  }
-
-  receive(message: ServerMessage) {
-    const event = { data: JSON.stringify(message) } as MessageEvent;
-    this.onmessage?.call(this as never, event);
-  }
-
-  drop() {
-    this.onclose?.call(this as never, {} as CloseEvent);
-  }
-}
+import { createSession } from "../src/session.js";
+import { FakeSocket } from "./fake-socket.js";
 
 const ROOM = {
   code: "K7MPQ",
@@ -84,7 +59,7 @@ describe("session", () => {
     sockets[0].receive({ type: "error", error: "NICKNAME_INVALID" });
     expect(session.error.value).toBe("NICKNAME_INVALID");
 
-    sockets[0].receive({ type: "room", you: "ana", room: ROOM });
+    sockets[0].receive({ type: "room", you: "ana", token: "t", room: ROOM });
     expect(session.seat.value).toEqual({
       you: "ana",
       room: ROOM,

@@ -3,6 +3,7 @@ import type { ErrorCode } from "@bowling/domain";
 const MESSAGES: Record<ErrorCode, string> = {
   ROOM_FULL: "La sala está completa: ya hay seis jugadores.",
   UNKNOWN_ROOM: "No existe ninguna sala con ese código.",
+  UNKNOWN_SESSION: "Ya no estás en esa sala o la sala ya no existe.",
   NICKNAME_TAKEN: "Ese apodo ya está cogido en la sala. Elige otro.",
   NICKNAME_INVALID: "El apodo debe tener entre 1 y 16 caracteres.",
   GAMES_STARTED: "La partida ya ha empezado; no se puede entrar.",

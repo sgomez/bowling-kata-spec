@@ -62,6 +62,12 @@ describe("an open Frame Window", () => {
     expect(play("ana", room({}))).toMatch(/ANA.*jugando.*BEA.*ha terminado/s);
   });
 
+  it("shows who is disconnected", () => {
+    const bowlers = [bowler("ana"), bowler("bea", { connected: false })];
+
+    expect(play("ana", room({ bowlers }))).toMatch(/BEA.*desconectado/s);
+  });
+
   it("makes a finished Bowler wait for the rest", () => {
     const html = play("bea", room({}));
 

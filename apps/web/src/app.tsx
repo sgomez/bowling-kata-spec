@@ -29,7 +29,11 @@ export const App = ({ session, initialCode, origin }: AppProps) => {
     return (
       <Home
         initialCode={initialCode}
-        error={error && errorMessage(error)}
+        error={
+          session.removed.value
+            ? "El anfitrión te ha sacado de la sala."
+            : error && errorMessage(error)
+        }
         onCreate={session.create}
         onJoin={session.join}
       />
@@ -45,6 +49,9 @@ export const App = ({ session, initialCode, origin }: AppProps) => {
       <>
         <Play seat={seat} frame={seat.room.frame} onRoll={session.roll} />
         {notice && <p role="alert">{notice}</p>}
+        <button type="button" onClick={session.leave}>
+          Salir de la sala
+        </button>
       </>
     );
   }
@@ -59,6 +66,8 @@ export const App = ({ session, initialCode, origin }: AppProps) => {
         shareNotice.value = SHARE_NOTICES[await shareInvite(link, navigator)];
       }}
       onStart={session.start}
+      onLeave={session.leave}
+      onRemove={session.remove}
     />
   );
 };

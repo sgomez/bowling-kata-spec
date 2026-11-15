@@ -74,4 +74,27 @@ describe("app", () => {
 
     expect(html).toContain("¡Gana Ana!");
   });
+
+  it("tells a removed Bowler at home", () => {
+    const s = session();
+    s.removed.value = true;
+
+    const html = render(<App session={s} initialCode="" origin="" />);
+
+    expect(html).toContain("El anfitrión te ha sacado de la sala.");
+  });
+
+  it("lets a Bowler leave while playing", () => {
+    const s = session();
+    const frame = { number: 1, open: true, remainingMs: 30_000 } as const;
+    s.seat.value = {
+      you: "ana",
+      room: { ...ROOM, phase: "playing", frame },
+      receivedAt: 0,
+    };
+
+    const html = render(<App session={s} initialCode="" origin="" />);
+
+    expect(html).toContain("Salir de la sala");
+  });
 });
