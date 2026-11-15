@@ -1,120 +1,115 @@
-import type { Frame, FrameNumber, PinCount } from "./frame.js";
+import {
+  type Frame,
+  type FrameNumber,
+  PINS_PER_RACK,
+  type PinCount,
+  TENTH_FRAME,
+} from "./frame.js";
 
-interface FrameData {
+interface GroupedFrame {
   frameNumber: FrameNumber;
   rolls: PinCount[];
   isComplete: boolean;
-  startIndex: number;
+  firstRollIndex: number;
 }
 
-const groupIntoFrames = (rolls: readonly PinCount[]): FrameData[] => {
-  const frameData: FrameData[] = [];
+const takeRegularFrameRolls = (
+  rolls: readonly PinCount[],
+  start: number,
+): PinCount[] => {
+  if (start >= rolls.length) {
+    return [];
+  }
+  const first = rolls[start];
+  if (first === PINS_PER_RACK || start + 1 >= rolls.length) {
+    return [first];
+  }
+  return [first, rolls[start + 1]];
+};
+
+const takeTenthFrameRolls = (
+  rolls: readonly PinCount[],
+  start: number,
+): PinCount[] => {
+  const [first, second, third] = rolls.slice(start, start + 3);
+  if (second === undefined) {
+    return first === undefined ? [] : [first];
+  }
+  const earnsBonusRoll =
+    first === PINS_PER_RACK || first + second === PINS_PER_RACK;
+  return earnsBonusRoll && third !== undefined
+    ? [first, second, third]
+    : [first, second];
+};
+
+const isRegularFrameComplete = (frameRolls: readonly PinCount[]): boolean =>
+  frameRolls[0] === PINS_PER_RACK || frameRolls.length === 2;
+
+const isTenthFrameComplete = (frameRolls: readonly PinCount[]): boolean =>
+  frameRolls.length === 3 ||
+  (frameRolls.length === 2 && frameRolls[0] + frameRolls[1] < PINS_PER_RACK);
+
+const groupIntoFrames = (rolls: readonly PinCount[]): GroupedFrame[] => {
+  const frames: GroupedFrame[] = [];
   let rollIndex = 0;
 
-  for (let frameIndex = 1; frameIndex <= 10; frameIndex++) {
-    const startIndex = rollIndex;
-    const frameRolls: PinCount[] = [];
+  for (let frameNumber = 1; frameNumber <= TENTH_FRAME; frameNumber++) {
+    const isTenth = frameNumber === TENTH_FRAME;
+    const frameRolls = isTenth
+      ? takeTenthFrameRolls(rolls, rollIndex)
+      : takeRegularFrameRolls(rolls, rollIndex);
 
-    if (frameIndex < 10) {
-      if (rollIndex < rolls.length) {
-        const first = rolls[rollIndex++];
-        frameRolls.push(first);
-        if (first < 10 && rollIndex < rolls.length) {
-          frameRolls.push(rolls[rollIndex++]);
-        }
-      }
-
-      const isComplete =
-        frameRolls.length === 1 && frameRolls[0] === 10
-          ? true
-          : frameRolls.length === 2;
-
-      frameData.push({
-        frameNumber: frameIndex as FrameNumber,
-        rolls: frameRolls,
-        isComplete,
-        startIndex,
-      });
-    } else {
-      if (rollIndex < rolls.length) {
-        const first = rolls[rollIndex++];
-        frameRolls.push(first);
-
-        if (rollIndex < rolls.length) {
-          const second = rolls[rollIndex++];
-          frameRolls.push(second);
-
-          const earnsThirdRoll = first === 10 || first + second === 10;
-          if (earnsThirdRoll && rollIndex < rolls.length) {
-            frameRolls.push(rolls[rollIndex++]);
-          }
-        }
-      }
-
-      const isComplete =
-        frameRolls.length === 3 ||
-        (frameRolls.length === 2 && frameRolls[0] + frameRolls[1] < 10);
-
-      frameData.push({
-        frameNumber: frameIndex as FrameNumber,
-        rolls: frameRolls,
-        isComplete,
-        startIndex,
-      });
-    }
+    frames.push({
+      frameNumber: frameNumber as FrameNumber,
+      rolls: frameRolls,
+      isComplete: isTenth
+        ? isTenthFrameComplete(frameRolls)
+        : isRegularFrameComplete(frameRolls),
+      firstRollIndex: rollIndex,
+    });
+    rollIndex += frameRolls.length;
   }
 
-  return frameData;
+  return frames;
 };
 
 const frameScore = (
-  f: FrameData,
-  i: number,
-  rolls: readonly PinCount[],
+  frame: GroupedFrame,
+  allRolls: readonly PinCount[],
 ): number | null => {
-  if (!f.isComplete) {
+  if (!frame.isComplete) {
     return null;
   }
 
-  if (i < 9) {
-    // Strike
-    if (f.rolls.length === 1 && f.rolls[0] === 10) {
-      if (rolls.length >= f.startIndex + 3) {
-        return 10 + rolls[f.startIndex + 1] + rolls[f.startIndex + 2];
-      }
-      return null;
-    }
-
-    // Spare
-    if (f.rolls.length === 2 && f.rolls[0] + f.rolls[1] === 10) {
-      if (rolls.length >= f.startIndex + 3) {
-        return 10 + rolls[f.startIndex + 2];
-      }
-      return null;
-    }
-
-    // Open frame
-    return f.rolls[0] + f.rolls[1];
+  const pinsInFrame = frame.rolls.reduce<number>((sum, r) => sum + r, 0);
+  const isTenthFrame = frame.frameNumber === TENTH_FRAME;
+  if (isTenthFrame || pinsInFrame < PINS_PER_RACK) {
+    return pinsInFrame;
   }
 
-  // 10th frame
-  return f.rolls.reduce<number>((sum, r) => sum + r, 0);
+  const isStrike = frame.rolls.length === 1;
+  const bonusRollCount = isStrike ? 2 : 1;
+  const bonusStart = frame.firstRollIndex + frame.rolls.length;
+  const bonusRolls = allRolls.slice(bonusStart, bonusStart + bonusRollCount);
+  if (bonusRolls.length < bonusRollCount) {
+    return null;
+  }
+  return PINS_PER_RACK + bonusRolls.reduce<number>((sum, r) => sum + r, 0);
 };
 
 export const buildFrames = (rolls: readonly PinCount[]): Frame[] => {
-  const frameData = groupIntoFrames(rolls);
-  const frameScores = frameData.map((f, i) => frameScore(f, i, rolls));
+  const groupedFrames = groupIntoFrames(rolls);
+  const frameScores = groupedFrames.map((f) => frameScore(f, rolls));
 
   let runningTotal = 0;
   let unresolved = false;
 
-  return frameData.map((f, i) => {
+  return groupedFrames.map((f, i) => {
     const score = frameScores[i];
     let cumulativeScore: number | null = null;
 
     if (unresolved || score === null) {
       unresolved = true;
-      cumulativeScore = null;
     } else {
       runningTotal += score;
       cumulativeScore = runningTotal;
