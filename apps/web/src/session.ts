@@ -2,6 +2,7 @@ import type {
   BowlerId,
   ClientMessage,
   ErrorCode,
+  Pin,
   RoomSnapshot,
   ServerMessage,
 } from "@bowling/domain";
@@ -17,11 +18,15 @@ export type SessionSocket = Pick<
 export interface Seat {
   you: BowlerId;
   room: RoomSnapshot;
+  receivedAt: number;
 }
 
 export type Session = ReturnType<typeof createSession>;
 
-export const createSession = (connect: () => SessionSocket) => {
+export const createSession = (
+  connect: () => SessionSocket,
+  now: () => number = Date.now,
+) => {
   const seat = signal<Seat | undefined>(undefined);
   const error = signal<ErrorCode | undefined>(undefined);
   let socket: SessionSocket | undefined;
@@ -38,7 +43,11 @@ export const createSession = (connect: () => SessionSocket) => {
     next.onmessage = ({ data }) => {
       const message = JSON.parse(String(data)) as ServerMessage;
       if (message.type === "room") {
-        seat.value = { you: message.you, room: message.room };
+        seat.value = {
+          you: message.you,
+          room: message.room,
+          receivedAt: now(),
+        };
         error.value = undefined;
       } else {
         error.value = message.error;
@@ -66,5 +75,6 @@ export const createSession = (connect: () => SessionSocket) => {
     join: (code: string, nickname: string) =>
       send({ type: "join", code, nickname }),
     start: () => send({ type: "start" }),
+    roll: (pins: Pin[]) => send({ type: "roll", pins }),
   };
 };

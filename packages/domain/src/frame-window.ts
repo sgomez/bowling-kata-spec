@@ -1,9 +1,9 @@
 import { type FrameNumber, TENTH_FRAME } from "./frame.js";
 
-export const FRAME_WINDOW_MS = 30_000;
-export const TENTH_FRAME_WINDOW_MS = 45_000;
-export const LATE_ROLL_GRACE_MS = 500;
-export const REVEAL_MS = 5_000;
+const FRAME_WINDOW_MS = 30_000;
+const TENTH_FRAME_WINDOW_MS = 45_000;
+const LATE_ROLL_GRACE_MS = 500;
+const REVEAL_MS = 5_000;
 
 export type FrameWindow =
   | { frame: FrameNumber; open: true; deadline: number }

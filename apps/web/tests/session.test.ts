@@ -37,11 +37,14 @@ const ROOM = {
 
 const setup = () => {
   const sockets: FakeSocket[] = [];
-  const session = createSession(() => {
-    const socket = new FakeSocket();
-    sockets.push(socket);
-    return socket;
-  });
+  const session = createSession(
+    () => {
+      const socket = new FakeSocket();
+      sockets.push(socket);
+      return socket;
+    },
+    () => 42,
+  );
   return { session, sockets };
 };
 
@@ -63,11 +66,13 @@ describe("session", () => {
     sockets[0].open();
 
     session.start();
+    session.roll([1, 5]);
 
     expect(sockets).toHaveLength(1);
     expect(sockets[0].sent).toEqual([
       { type: "join", code: "k7mpq", nickname: "Bea" },
       { type: "start" },
+      { type: "roll", pins: [1, 5] },
     ]);
   });
 
@@ -80,7 +85,11 @@ describe("session", () => {
     expect(session.error.value).toBe("NICKNAME_INVALID");
 
     sockets[0].receive({ type: "room", you: "ana", room: ROOM });
-    expect(session.seat.value).toEqual({ you: "ana", room: ROOM });
+    expect(session.seat.value).toEqual({
+      you: "ana",
+      room: ROOM,
+      receivedAt: 42,
+    });
     expect(session.error.value).toBeUndefined();
   });
 

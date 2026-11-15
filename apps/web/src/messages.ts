@@ -10,6 +10,9 @@ const MESSAGES: Record<ErrorCode, string> = {
   INVALID_MESSAGE: "Algo ha fallado. Recarga la página.",
   ALREADY_IN_ROOM: "Ya estás en una sala.",
   NOT_IN_ROOM: "No estás en ninguna sala.",
+  WINDOW_CLOSED: "Se ha acabado el tiempo de este frame.",
+  FRAME_FINISHED: "Ya has terminado este frame.",
+  PIN_NOT_STANDING: "Ese bolo ya no está en pie.",
 };
 
 export const errorMessage = (code: ErrorCode) => MESSAGES[code];

@@ -38,9 +38,7 @@ export const Lobby = ({
           </li>
         ))}
       </ul>
-      {room.phase === "playing" ? (
-        <p>¡La partida ha empezado!</p>
-      ) : isHost ? (
+      {isHost ? (
         <button type="button" onClick={onStart}>
           Empezar partida
         </button>

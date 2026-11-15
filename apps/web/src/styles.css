@@ -55,3 +55,55 @@ ul {
   background: white;
   padding: 16px;
 }
+
+.pin-tapper {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.pin-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pin {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  padding: 0;
+}
+
+.pin[aria-pressed="true"] {
+  background: #d33;
+  color: white;
+}
+
+.pin:disabled {
+  opacity: 0.2;
+}
+
+.scorecard {
+  overflow-x: auto;
+}
+
+.scorecard table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.scorecard th,
+.scorecard td {
+  border: 1px solid currentColor;
+  padding: 4px;
+  min-width: 2.2em;
+}
+
+.scorecard td span {
+  display: block;
+}
+
+.winner {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
