@@ -1,11 +1,11 @@
-import * as readline from "node:readline/promises";
 import { stdin as defaultStdin, stdout as defaultStdout } from "node:process";
+import * as readline from "node:readline/promises";
 import { Game } from "./domain/game.js";
 import { formatScorecard } from "./presentation/scorecard.js";
 
 export async function runCli(
   input: NodeJS.ReadableStream = defaultStdin,
-  output: NodeJS.WritableStream = defaultStdout
+  output: NodeJS.WritableStream = defaultStdout,
 ): Promise<void> {
   const rl = readline.createInterface({
     input,
@@ -29,7 +29,7 @@ export async function runCli(
 
     while (playAgain) {
       const game = new Game();
-      output.write("\n" + formatScorecard(game) + "\n\n");
+      output.write(`\n${formatScorecard(game)}\n\n`);
 
       while (!game.isComplete()) {
         const prompt = `Marco ${game.currentFrame}, Lanzamiento ${game.currentRoll}: `;
@@ -47,7 +47,7 @@ export async function runCli(
             continue;
           }
           game.undo();
-          output.write("\n" + formatScorecard(game) + "\n\n");
+          output.write(`\n${formatScorecard(game)}\n\n`);
           continue;
         }
 
@@ -55,36 +55,46 @@ export async function runCli(
         if (!validation.valid) {
           switch (validation.failure.type) {
             case "STRIKE_ON_SECOND_ROLL":
-              output.write("No se puede registrar un strike ('X') en el segundo lanzamiento.\n");
+              output.write(
+                "No se puede registrar un strike ('X') en el segundo lanzamiento.\n",
+              );
               break;
             case "STRIKE_FEWER_PINS":
-              output.write("No se puede registrar un strike ('X') cuando quedan menos de 10 bolos.\n");
+              output.write(
+                "No se puede registrar un strike ('X') cuando quedan menos de 10 bolos.\n",
+              );
               break;
             case "SPARE_ON_FIRST_ROLL":
-              output.write("No se puede registrar un spare ('/') en el primer lanzamiento.\n");
+              output.write(
+                "No se puede registrar un spare ('/') en el primer lanzamiento.\n",
+              );
               break;
             case "SPARE_ON_FRESH_RACK":
-              output.write("No se puede registrar un spare ('/') con todos los bolos en pie.\n");
+              output.write(
+                "No se puede registrar un spare ('/') con todos los bolos en pie.\n",
+              );
               break;
             case "EXCEEDS_REMAINING_PINS":
               output.write(
-                `El total de bolos en el marco no puede superar 10 (bolos restantes: ${validation.failure.remainingPins}).\n`
+                `El total de bolos en el marco no puede superar 10 (bolos restantes: ${validation.failure.remainingPins}).\n`,
               );
               break;
-            case "INVALID_FORMAT":
-            case "PINS_OUT_OF_RANGE":
             default:
-              output.write("Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n");
+              output.write(
+                "Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n",
+              );
               break;
           }
           continue;
         }
 
         game.roll(validation.pins);
-        output.write("\n" + formatScorecard(game) + "\n\n");
+        output.write(`\n${formatScorecard(game)}\n\n`);
       }
 
-      output.write(`¡Partida finalizada! Puntuación final: ${game.score()}\n\n`);
+      output.write(
+        `¡Partida finalizada! Puntuación final: ${game.score()}\n\n`,
+      );
       const answer = await ask("¿Deseas jugar otra partida? (s/n): ");
       if (answer === null) {
         return;

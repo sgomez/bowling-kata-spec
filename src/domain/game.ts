@@ -1,6 +1,6 @@
-import { Frame } from "./frame.js";
+import type { Frame } from "./frame.js";
 
-export type RollValidationFailure =
+type RollValidationFailure =
   | { type: "GAME_COMPLETE" }
   | { type: "INVALID_FORMAT"; input: unknown }
   | { type: "PINS_OUT_OF_RANGE"; pinCount: number }
@@ -34,10 +34,8 @@ export class Game {
     if (rolls.length === 1) {
       return rolls[0] === 10;
     }
-    if (rolls.length === 2) {
-      return rolls[0] === 10 ? rolls[1] === 10 : rolls[0] + rolls[1] === 10;
-    }
-    return false;
+    // An active Tenth Frame never holds three rolls.
+    return rolls[0] === 10 ? rolls[1] === 10 : rolls[0] + rolls[1] === 10;
   }
 
   validateRoll(pins: number | string): RollValidationResult {
@@ -73,13 +71,19 @@ export class Game {
         pinCount = 0;
       } else {
         if (!/^\d+$/.test(trimmed)) {
-          return { valid: false, failure: { type: "INVALID_FORMAT", input: pins } };
+          return {
+            valid: false,
+            failure: { type: "INVALID_FORMAT", input: pins },
+          };
         }
         pinCount = parseInt(trimmed, 10);
       }
     } else {
       if (!Number.isInteger(pins)) {
-        return { valid: false, failure: { type: "INVALID_FORMAT", input: pins } };
+        return {
+          valid: false,
+          failure: { type: "INVALID_FORMAT", input: pins },
+        };
       }
       pinCount = pins;
     }
@@ -113,17 +117,19 @@ export class Game {
           throw new Error(
             this.currentFrame < 10
               ? "Cannot roll a strike on the second roll of frames 1-9"
-              : "Cannot roll a strike on the second roll of a frame"
+              : "Cannot roll a strike on the second roll of a frame",
           );
         case "STRIKE_FEWER_PINS":
-          throw new Error("Cannot roll a strike when fewer than 10 pins are standing");
+          throw new Error(
+            "Cannot roll a strike when fewer than 10 pins are standing",
+          );
         case "SPARE_ON_FIRST_ROLL":
           throw new Error("Cannot roll a spare on the first roll");
         case "SPARE_ON_FRESH_RACK":
           throw new Error("Cannot roll a spare when all pins are reset");
         case "EXCEEDS_REMAINING_PINS":
           throw new Error(
-            `Pin count exceeds remaining pins: ${pins} > ${f.remainingPins}`
+            `Pin count exceeds remaining pins: ${pins} > ${f.remainingPins}`,
           );
       }
     }
@@ -164,14 +170,11 @@ export class Game {
     if (rolls.length === 1) {
       return rolls[0] === 10 ? 10 : 10 - rolls[0];
     }
-    if (rolls.length === 2) {
-      if (rolls[0] === 10) {
-        return rolls[1] === 10 ? 10 : 10 - rolls[1];
-      }
-      // Spare on first two rolls
-      return 10;
+    if (rolls[0] === 10) {
+      return rolls[1] === 10 ? 10 : 10 - rolls[1];
     }
-    return 0;
+    // Spare on first two rolls
+    return 10;
   }
 
   get currentFrame(): number {
@@ -193,8 +196,9 @@ export class Game {
   score(): number {
     const scores = this.cumulativeScores();
     for (let i = scores.length - 1; i >= 0; i--) {
-      if (scores[i] !== null) {
-        return scores[i]!;
+      const score = scores[i];
+      if (score !== null) {
+        return score;
       }
     }
     return 0;
@@ -276,7 +280,9 @@ export class Game {
         // Strike
         if (f.rolls.length === 1 && f.rolls[0] === 10) {
           if (this.rolls.length >= f.startIndex + 3) {
-            return 10 + this.rolls[f.startIndex + 1] + this.rolls[f.startIndex + 2];
+            return (
+              10 + this.rolls[f.startIndex + 1] + this.rolls[f.startIndex + 2]
+            );
           }
           return null;
         }
@@ -290,18 +296,11 @@ export class Game {
         }
 
         // Open frame
-        if (f.rolls.length === 2) {
-          return f.rolls[0] + f.rolls[1];
-        }
-
-        return null;
-      } else {
-        // 10th frame
-        if (!f.isComplete) {
-          return null;
-        }
-        return f.rolls.reduce((sum, r) => sum + r, 0);
+        return f.rolls[0] + f.rolls[1];
       }
+
+      // 10th frame
+      return f.rolls.reduce((sum, r) => sum + r, 0);
     });
 
     // Calculate cumulative scores

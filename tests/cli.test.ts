@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
 import { Readable, Writable } from "node:stream";
+import { describe, expect, it } from "vitest";
 import { runCli } from "../src/cli.js";
 
 describe("runCli", () => {
@@ -21,7 +21,9 @@ describe("runCli", () => {
     expect(outputText).toContain("Marco 1, Lanzamiento 1");
     expect(outputText).toContain("Marco 1, Lanzamiento 2");
     expect(outputText).toContain("Marco 10, Lanzamiento 2");
-    expect(outputText).toContain("+-----+-----+-----+-----+-----+-----+-----+-----+-----+--------+");
+    expect(outputText).toContain(
+      "+-----+-----+-----+-----+-----+-----+-----+-----+-----+--------+",
+    );
     expect(outputText).toContain("¡Partida finalizada! Puntuación final: 20");
     expect(outputText).toContain("¿Deseas jugar otra partida?");
     expect(outputText).toContain("¡Gracias por jugar!");
@@ -31,11 +33,11 @@ describe("runCli", () => {
     // Attempt invalid string, then out of range, then valid rolls
     const inputs = [
       "abc\n", // invalid non-number
-      "-1\n",  // out of range
-      "11\n",  // > 10 out of range
-      "4\n",   // valid roll 1
-      "7\n",   // sum 4 + 7 = 11 > 10 invalid
-      "5\n",   // valid roll 2 (sum 4+5 = 9)
+      "-1\n", // out of range
+      "11\n", // > 10 out of range
+      "4\n", // valid roll 1
+      "7\n", // sum 4 + 7 = 11 > 10 invalid
+      "5\n", // valid roll 2 (sum 4+5 = 9)
       ...Array(18).fill("0\n"), // remaining 18 rolls as gutters
       "n\n",
     ];
@@ -51,8 +53,12 @@ describe("runCli", () => {
 
     await runCli(inStream, outStream);
 
-    expect(outputText).toContain("Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.");
-    expect(outputText).toContain("El total de bolos en el marco no puede superar 10");
+    expect(outputText).toContain(
+      "Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.",
+    );
+    expect(outputText).toContain(
+      "El total de bolos en el marco no puede superar 10",
+    );
     expect(outputText).toContain("¡Partida finalizada! Puntuación final: 9");
   });
 
@@ -142,20 +148,18 @@ describe("runCli", () => {
       expect(outputText).toContain("Marco 10, Lanzamiento 1: ");
       expect(outputText).toContain("Marco 10, Lanzamiento 2: ");
       expect(outputText).toContain("Marco 10, Lanzamiento 3: ");
-      expect(outputText).toContain("|  | X|  | X|  | X|  | X|  | X|  | X|  | X|  | X|  | X| X| X| X|");
-      expect(outputText).toContain("¡Partida finalizada! Puntuación final: 300");
+      expect(outputText).toContain(
+        "|  | X|  | X|  | X|  | X|  | X|  | X|  | X|  | X|  | X| X| X| X|",
+      );
+      expect(outputText).toContain(
+        "¡Partida finalizada! Puntuación final: 300",
+      );
       expect(outputText).toContain("¿Deseas jugar otra partida? (s/n): ");
       expect(outputText).toContain("¡Gracias por jugar!");
     });
 
     it("plays a game ending with spare and bonus strike in tenth frame", async () => {
-      const inputs = [
-        ...Array(18).fill("0\n"),
-        "7\n",
-        "/\n",
-        "X\n",
-        "n\n",
-      ];
+      const inputs = [...Array(18).fill("0\n"), "7\n", "/\n", "X\n", "n\n"];
       const inStream = Readable.from(inputs);
 
       let outputText = "";
@@ -175,12 +179,7 @@ describe("runCli", () => {
     });
 
     it("ends tenth frame strictly after 2 rolls on an open frame", async () => {
-      const inputs = [
-        ...Array(18).fill("0\n"),
-        "7\n",
-        "2\n",
-        "n\n",
-      ];
+      const inputs = [...Array(18).fill("0\n"), "7\n", "2\n", "n\n"];
       const inStream = Readable.from(inputs);
 
       let outputText = "";
@@ -202,12 +201,12 @@ describe("runCli", () => {
     it("handles tenth frame validation rules in CLI loop", async () => {
       const inputs = [
         ...Array(18).fill("0\n"),
-        "X\n",  // Frame 10, roll 1: Strike
-        "/\n",  // Invalid spare when rack was reset
-        "9\n",  // Roll 2: 9 pins (1 pin remaining)
-        "X\n",  // Invalid strike on roll 3 (only 1 pin standing)
-        "5\n",  // Invalid pin count (5 > 1)
-        "/\n",  // Valid spare on roll 3
+        "X\n", // Frame 10, roll 1: Strike
+        "/\n", // Invalid spare when rack was reset
+        "9\n", // Roll 2: 9 pins (1 pin remaining)
+        "X\n", // Invalid strike on roll 3 (only 1 pin standing)
+        "5\n", // Invalid pin count (5 > 1)
+        "/\n", // Valid spare on roll 3
         "n\n",
       ];
       const inStream = Readable.from(inputs);
@@ -222,9 +221,15 @@ describe("runCli", () => {
 
       await runCli(inStream, outStream);
 
-      expect(outputText).toContain("No se puede registrar un spare ('/') con todos los bolos en pie.");
-      expect(outputText).toContain("No se puede registrar un strike ('X') cuando quedan menos de 10 bolos.");
-      expect(outputText).toContain("El total de bolos en el marco no puede superar 10 (bolos restantes: 1).");
+      expect(outputText).toContain(
+        "No se puede registrar un spare ('/') con todos los bolos en pie.",
+      );
+      expect(outputText).toContain(
+        "No se puede registrar un strike ('X') cuando quedan menos de 10 bolos.",
+      );
+      expect(outputText).toContain(
+        "El total de bolos en el marco no puede superar 10 (bolos restantes: 1).",
+      );
       expect(outputText).toContain("¡Partida finalizada! Puntuación final: 20");
     });
 
@@ -260,7 +265,9 @@ describe("runCli", () => {
 
       await runCli(inStream, outStream);
 
-      expect(outputText).toContain("¡Partida finalizada! Puntuación final: 200");
+      expect(outputText).toContain(
+        "¡Partida finalizada! Puntuación final: 200",
+      );
     });
   });
 
@@ -269,12 +276,7 @@ describe("runCli", () => {
       // Frame 1: "-" (0 pins), "7" (7 pins) -> Marco 2
       // Frame 2-10: 18 rolls of "-"
       // 'n' to exit
-      const inputs = [
-        "-\n",
-        "7\n",
-        ...Array(18).fill("-\n"),
-        "n\n",
-      ];
+      const inputs = ["-\n", "7\n", ...Array(18).fill("-\n"), "n\n"];
       const inStream = Readable.from(inputs);
 
       let outputText = "";
@@ -289,14 +291,16 @@ describe("runCli", () => {
 
       expect(outputText).toContain("Marco 1, Lanzamiento 1: ");
       expect(outputText).toContain("Marco 1, Lanzamiento 2: ");
-      expect(outputText).toContain("| -| 7| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -|  |");
+      expect(outputText).toContain(
+        "| -| 7| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -| -|  |",
+      );
       expect(outputText).toContain("¡Partida finalizada! Puntuación final: 7");
     });
 
     it("displays polite message when undo is attempted on empty history", async () => {
       const inputs = [
         "undo\n", // no rolls yet
-        "u\n",    // shorthand u on empty history
+        "u\n", // shorthand u on empty history
         ...Array(20).fill("1\n"),
         "n\n",
       ];
@@ -449,13 +453,7 @@ describe("runCli", () => {
       // Frame 1, roll 2: X (invalid, should reject with Spanish message using 'strike')
       // Frame 1, roll 2 re-prompt: 5
       // Remaining 18 rolls as gutters
-      const inputs = [
-        "0\n",
-        "X\n",
-        "5\n",
-        ...Array(18).fill("0\n"),
-        "n\n",
-      ];
+      const inputs = ["0\n", "X\n", "5\n", ...Array(18).fill("0\n"), "n\n"];
       const inStream = Readable.from(inputs);
 
       let outputText = "";
@@ -468,19 +466,15 @@ describe("runCli", () => {
 
       await runCli(inStream, outStream);
 
-      expect(outputText).toContain("No se puede registrar un strike ('X') en el segundo lanzamiento.");
+      expect(outputText).toContain(
+        "No se puede registrar un strike ('X') en el segundo lanzamiento.",
+      );
       expect(outputText.toLowerCase()).not.toContain("pleno");
       expect(outputText).toContain("¡Partida finalizada! Puntuación final: 5");
     });
 
     it("rejects '/' on roll 1 and uses 'spare' terminology", async () => {
-      const inputs = [
-        "/\n",
-        "4\n",
-        "5\n",
-        ...Array(18).fill("0\n"),
-        "n\n",
-      ];
+      const inputs = ["/\n", "4\n", "5\n", ...Array(18).fill("0\n"), "n\n"];
       const inStream = Readable.from(inputs);
 
       let outputText = "";
@@ -493,16 +487,15 @@ describe("runCli", () => {
 
       await runCli(inStream, outStream);
 
-      expect(outputText).toContain("No se puede registrar un spare ('/') en el primer lanzamiento.");
+      expect(outputText).toContain(
+        "No se puede registrar un spare ('/') en el primer lanzamiento.",
+      );
       expect(outputText.toLowerCase()).not.toContain("semipleno");
       expect(outputText).toContain("¡Partida finalizada! Puntuación final: 9");
     });
 
     it("displays Spanish scorecard header 'MARCO' in CLI loop output without forbidden synonyms", async () => {
-      const inputs = [
-        ...Array(20).fill("1\n"),
-        "n\n",
-      ];
+      const inputs = [...Array(20).fill("1\n"), "n\n"];
       const inStream = Readable.from(inputs);
 
       let outputText = "";
@@ -515,7 +508,9 @@ describe("runCli", () => {
 
       await runCli(inStream, outStream);
 
-      expect(outputText).toContain("|                            MARCO                             |");
+      expect(outputText).toContain(
+        "|                            MARCO                             |",
+      );
       expect(outputText.toLowerCase()).not.toContain("pleno");
       expect(outputText.toLowerCase()).not.toContain("semipleno");
       expect(outputText.toLowerCase()).not.toContain("tiro extra");

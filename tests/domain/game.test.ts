@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Game } from "../../src/domain/game.js";
 
 describe("Game", () => {
@@ -220,16 +220,7 @@ describe("Game", () => {
 
     expect(game.isComplete()).toBe(true);
     expect(game.cumulativeScores()).toEqual([
-      20,
-      40,
-      64,
-      80,
-      86,
-      99,
-      105,
-      124,
-      133,
-      138,
+      20, 40, 64, 80, 86, 99, 105, 124, 133, 138,
     ]);
     expect(game.score()).toBe(138);
   });
@@ -253,12 +244,14 @@ describe("Game", () => {
     expect(game.frames[2].isComplete).toBe(true);
 
     // Invalid '/' on roll 1
-    expect(() => game.roll("/")).toThrow("Cannot roll a spare on the first roll");
+    expect(() => game.roll("/")).toThrow(
+      "Cannot roll a spare on the first roll",
+    );
 
     // Invalid 'X' on roll 2 of frame 4
     game.roll(3);
     expect(() => game.roll("X")).toThrow(
-      "Cannot roll a strike on the second roll of frames 1-9"
+      "Cannot roll a strike on the second roll of frames 1-9",
     );
   });
 
@@ -474,16 +467,7 @@ describe("Game", () => {
       expect(game.isComplete()).toBe(true);
       expect(game.frames[9].rolls).toEqual([10, 10, 10]);
       expect(game.cumulativeScores()).toEqual([
-        30,
-        60,
-        90,
-        120,
-        150,
-        180,
-        210,
-        240,
-        270,
-        300,
+        30, 60, 90, 120, 150, 180, 210, 240, 270, 300,
       ]);
       expect(game.score()).toBe(300);
     });
@@ -519,16 +503,7 @@ describe("Game", () => {
 
       expect(game.isComplete()).toBe(true);
       expect(game.cumulativeScores()).toEqual([
-        20,
-        40,
-        60,
-        80,
-        100,
-        120,
-        140,
-        160,
-        180,
-        200,
+        20, 40, 60, 80, 100, 120, 140, 160, 180, 200,
       ]);
       expect(game.score()).toBe(200);
     });
@@ -697,10 +672,10 @@ describe("Game", () => {
       expect(game.remainingPins).toBe(10);
 
       expect(() => game.roll("X")).toThrow(
-        "Cannot roll a strike on the second roll of frames 1-9"
+        "Cannot roll a strike on the second roll of frames 1-9",
       );
       expect(() => game.roll("x")).toThrow(
-        "Cannot roll a strike on the second roll of frames 1-9"
+        "Cannot roll a strike on the second roll of frames 1-9",
       );
     });
 
@@ -708,7 +683,7 @@ describe("Game", () => {
       const game = new Game();
       game.roll("-");
       expect(() => game.roll("X")).toThrow(
-        "Cannot roll a strike on the second roll of frames 1-9"
+        "Cannot roll a strike on the second roll of frames 1-9",
       );
     });
 
@@ -743,7 +718,7 @@ describe("Game", () => {
         game.roll(0);
       }
       game.roll("X"); // Roll 1: Strike
-      game.roll(0);   // Roll 2: 0 pins
+      game.roll(0); // Roll 2: 0 pins
       expect(game.currentRoll).toBe(3);
       expect(game.remainingPins).toBe(10);
 
@@ -761,7 +736,7 @@ describe("Game", () => {
       }
       game.roll(0);
       expect(() => game.roll("X")).toThrow(
-        "Cannot roll a strike on the second roll of a frame"
+        "Cannot roll a strike on the second roll of a frame",
       );
     });
   });
@@ -876,8 +851,8 @@ describe("Game", () => {
     it("reverts resolved deferred bonuses when subsequent bonus rolls are undone", () => {
       const game = new Game();
       game.roll(10); // Frame 1: strike
-      game.roll(4);  // Frame 2, roll 1 (bonus 1)
-      game.roll(3);  // Frame 2, roll 2 (bonus 2)
+      game.roll(4); // Frame 2, roll 1 (bonus 1)
+      game.roll(3); // Frame 2, roll 2 (bonus 2)
 
       // Frame 1 resolved: 10 + 4 + 3 = 17. Frame 2: 7 -> 24
       expect(game.cumulativeScores()[0]).toBe(17);
@@ -941,9 +916,9 @@ describe("Game", () => {
     it("supports multiple consecutive undos back to the start of the game", () => {
       const game = new Game();
       game.roll(10); // Frame 1
-      game.roll(5);  // Frame 2, roll 1
-      game.roll(5);  // Frame 2, roll 2 (spare)
-      game.roll(3);  // Frame 3, roll 1
+      game.roll(5); // Frame 2, roll 1
+      game.roll(5); // Frame 2, roll 2 (spare)
+      game.roll(3); // Frame 3, roll 1
 
       expect(game.currentFrame).toBe(3);
       expect(game.currentRoll).toBe(2);

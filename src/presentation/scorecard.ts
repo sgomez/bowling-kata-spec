@@ -1,4 +1,4 @@
-import { Game } from "../domain/game.js";
+import type { Game } from "../domain/game.js";
 
 function centerText(text: string, width: number): string {
   if (text.length >= width) {
@@ -20,7 +20,7 @@ function formatRoll(pins: number | undefined): string {
 
 function formatTenthFrameRoll(
   rollIndex: number,
-  rolls: readonly number[]
+  rolls: readonly number[],
 ): string {
   const pins = rolls[rollIndex];
   if (pins === undefined) {
@@ -69,7 +69,8 @@ export function formatScorecard(game: Game): string {
 
   const titleDivider = `+${"-".repeat(62)}+`;
   const titleRow = `|${centerText("MARCO", 62)}|`;
-  const topDivider = "+-----+-----+-----+-----+-----+-----+-----+-----+-----+--------+";
+  const topDivider =
+    "+-----+-----+-----+-----+-----+-----+-----+-----+-----+--------+";
 
   const headerCells = frames.map((f) => {
     if (f.frameNumber === 10) {
