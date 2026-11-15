@@ -14,6 +14,7 @@ const ClientMessageSchema = v.variant("type", [
     nickname,
   }),
   v.object({ type: v.literal("start") }),
+  v.object({ type: v.literal("rematch") }),
   v.object({
     type: v.literal("roll"),
     pins: v.pipe(v.array(v.picklist(PINS)), v.maxLength(PINS.length)),
