@@ -16,6 +16,7 @@ const emptyFrames = (): FrameView[] =>
 const bowler = (id: string, extra: Partial<BowlerView> = {}): BowlerView => ({
   id,
   nickname: id.toUpperCase(),
+  colour: 0,
   connected: true,
   finishedFrame: false,
   frames: emptyFrames(),

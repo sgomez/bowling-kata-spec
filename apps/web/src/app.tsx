@@ -1,3 +1,4 @@
+import type { BowlerId } from "@bowling/domain";
 import { useSignal } from "@preact/signals";
 import type { Connection } from "./connection.js";
 import { Final } from "./final.js";
@@ -7,13 +8,6 @@ import { Lobby } from "./lobby.js";
 import { closedMessage, errorMessage } from "./messages.js";
 import { Play } from "./play.js";
 
-const SHARE_NOTICES: Record<ShareOutcome, string | undefined> = {
-  shared: undefined,
-  dismissed: undefined,
-  copied: "Enlace copiado.",
-  failed: "No se ha podido compartir; copia el enlace a mano.",
-};
-
 interface AppProps {
   connection: Connection;
   initialCode: string;
@@ -21,7 +15,8 @@ interface AppProps {
 }
 
 export const App = ({ connection, initialCode, origin }: AppProps) => {
-  const shareNotice = useSignal<string | undefined>(undefined);
+  const shared = useSignal<ShareOutcome | undefined>(undefined);
+  const removing = useSignal<BowlerId | undefined>(undefined);
   const seat = connection.seat.value;
   const error = connection.error.value;
   const closed = connection.closed.value;
@@ -77,13 +72,24 @@ export const App = ({ connection, initialCode, origin }: AppProps) => {
     <Lobby
       seat={seat}
       link={link}
-      shareNotice={shareNotice.value ?? notice}
+      shared={shared.value}
+      error={notice}
+      removing={removing.value}
       onShare={async () => {
-        shareNotice.value = SHARE_NOTICES[await shareInvite(link, navigator)];
+        shared.value = await shareInvite(link, navigator);
       }}
       onStart={connection.start}
       onLeave={connection.leave}
-      onRemove={connection.remove}
+      onAskRemove={(bowlerId) => {
+        removing.value = bowlerId;
+      }}
+      onCancelRemove={() => {
+        removing.value = undefined;
+      }}
+      onRemove={(bowlerId) => {
+        removing.value = undefined;
+        connection.remove(bowlerId);
+      }}
     />
   );
 };

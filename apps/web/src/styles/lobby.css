@@ -1,0 +1,241 @@
+.lobby {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 390px;
+  min-height: calc(
+    100dvh -
+    max(env(safe-area-inset-top), var(--space-4)) -
+    max(env(safe-area-inset-bottom), var(--space-4))
+  );
+  margin: 0 auto;
+  padding: 0 var(--space-2);
+  text-align: start;
+}
+
+.lobby-leave {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  margin-left: calc(-1 * var(--space-3));
+  padding: 0 var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.lobby-room {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lobby-label {
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.lobby-code {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 42px;
+  line-height: 1.05;
+  letter-spacing: 0.08em;
+  color: var(--accent-2);
+  text-shadow: 0 0 14px rgb(61 232 255 / 65%);
+}
+
+.lobby-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lobby-link svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.lobby-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 28px;
+  margin-bottom: 6px;
+}
+
+.lobby-heading h2 {
+  margin: 0;
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lobby-bowlers ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lobby-bowler,
+.lobby-free {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  border-radius: var(--radius-button);
+}
+
+.lobby-bowler {
+  padding: 0 6px 0 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+}
+
+.lobby-bowler.you {
+  border: 2px solid var(--accent);
+}
+
+.lobby-name {
+  font-weight: 700;
+  font-size: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lobby-bowler.away .lobby-name {
+  color: var(--text-soft);
+}
+
+.lobby-chips {
+  display: flex;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chip-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.lobby-remove {
+  flex: none;
+  min-height: var(--touch);
+  padding: 0 var(--space-3);
+  border-radius: 10px;
+  border: 1.5px solid rgb(255 107 94 / 60%);
+  background: transparent;
+  color: var(--error);
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.lobby-free {
+  padding: 0 10px;
+  border: 1.5px dashed var(--border);
+  color: var(--text-soft);
+}
+
+.lobby-free-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--border);
+}
+
+.lobby-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-4);
+}
+
+.lobby-footer .toast {
+  position: fixed;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: calc(max(env(safe-area-inset-bottom), var(--space-4)) + 88px);
+  z-index: 10;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.lobby-waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: var(--button-height);
+  margin: 0;
+  border-radius: var(--radius-button);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  font-weight: 600;
+}
+
+.lobby-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.lobby-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lobby-dots span {
+    animation: dots 1.2s ease-in-out infinite;
+  }
+
+  .lobby-dots span:nth-child(2) {
+    animation-delay: 200ms;
+  }
+
+  .lobby-dots span:nth-child(3) {
+    animation-delay: 400ms;
+  }
+}
+
+@keyframes dots {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}

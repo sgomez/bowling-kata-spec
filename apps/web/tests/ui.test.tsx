@@ -1,6 +1,6 @@
 import { render } from "preact-render-to-string";
 import { describe, expect, it } from "vitest";
-import { Button, Chip, Field, Notice, Toast } from "../src/ui.js";
+import { Avatar, Button, Chip, Field, Notice, Toast } from "../src/ui.js";
 
 describe("base components", () => {
   it("shows a busy button as waiting, not pressable", () => {
@@ -43,5 +43,21 @@ describe("base components", () => {
 
     expect(html).toContain('role="status"');
     expect(html).toContain("Enlace copiado.");
+  });
+
+  it("draws an avatar as the nickname's first two letters, upper-cased", () => {
+    expect(render(<Avatar nickname="marta" colour={0} />)).toMatch(/>MA</);
+    expect(render(<Avatar nickname="Ñu" colour={0} />)).toMatch(/>ÑU</);
+  });
+
+  it.each([
+    [0, "#FF3D8B"],
+    [1, "#3DE8FF"],
+    [2, "#FFC53D"],
+    [3, "#5BE38B"],
+    [4, "#A78BFF"],
+    [5, "#FF8A3D"],
+  ] as const)("paints Bowler Colour %i as %s", (colour, hex) => {
+    expect(render(<Avatar nickname="Ana" colour={colour} />)).toContain(hex);
   });
 });

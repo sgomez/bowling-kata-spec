@@ -1,15 +1,19 @@
+import type { BowlerColour } from "@bowling/domain";
 import type {
   ButtonHTMLAttributes,
   ComponentChildren,
   InputHTMLAttributes,
 } from "preact";
+import { bowlerColour } from "./bowler-colour.js";
 import "./styles/button.css";
 import "./styles/field.css";
 import "./styles/chip.css";
 import "./styles/notice.css";
+import "./styles/avatar.css";
+import "./styles/dialog.css";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant: "primary" | "secondary";
+  variant: "primary" | "secondary" | "danger" | "plain";
   busy?: string;
 };
 
@@ -71,7 +75,7 @@ const ICONS: Record<Tone, string> = {
   warning: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2",
 };
 
-const Icon = ({ d, class: name }: { d: string; class?: string }) => (
+export const Icon = ({ d, class: name }: { d: string; class?: string }) => (
   <svg
     aria-hidden="true"
     class={name}
@@ -104,5 +108,40 @@ export const Toast = ({ tone, children }: NoticeProps) => (
   <div role="status" class={`notice toast ${tone}`}>
     <Icon d={ICONS[tone]} />
     <span>{children}</span>
+  </div>
+);
+
+interface AvatarProps {
+  nickname: string;
+  colour: BowlerColour;
+  away?: boolean;
+}
+
+export const Avatar = ({ nickname, colour, away }: AvatarProps) => (
+  <span
+    aria-hidden="true"
+    class={away ? "avatar away" : "avatar"}
+    style={{ background: bowlerColour(colour) }}
+  >
+    {[...nickname].slice(0, 2).join("").toLocaleUpperCase()}
+  </span>
+);
+
+interface DialogProps {
+  title: string;
+  children: ComponentChildren;
+}
+
+export const Dialog = ({ title, children }: DialogProps) => (
+  <div class="scrim">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dialog-title"
+      class="dialog"
+    >
+      <h2 id="dialog-title">{title}</h2>
+      {children}
+    </div>
   </div>
 );

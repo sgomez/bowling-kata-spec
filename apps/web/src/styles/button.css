@@ -38,6 +38,26 @@
   box-shadow: var(--glow-accent-2);
 }
 
+.button-danger {
+  background: var(--error);
+  color: var(--ink);
+  border: 0;
+}
+
+.button-plain {
+  min-height: 48px;
+  background: transparent;
+  color: var(--text-soft);
+  border: 0;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .button:disabled {
   cursor: default;
 }
