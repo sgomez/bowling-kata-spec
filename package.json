@@ -12,7 +12,8 @@
     "arch": "depcruise src tests",
     "knip": "knip",
     "size": "node scripts/size.mjs --report-only",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "check": "pnpm lint && pnpm typecheck && pnpm size && pnpm arch && pnpm knip && pnpm test"
   },
   "keywords": [
     "bowling",
