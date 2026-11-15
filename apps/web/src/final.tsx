@@ -13,11 +13,12 @@ import { CROWN, RETRY } from "./icons.js";
 const names = new Intl.ListFormat("es-ES", { type: "conjunction" });
 
 // A single winner stands in the middle; tied winners stand side by side.
-const podiumOrder = <T,>([first, second, third]: Standing<T>[]) =>
-  (second?.position === 1
-    ? [first, second, third]
-    : [second, first, third]
+const podiumOrder = <T,>(ranked: Standing<T>[]) => {
+  const [first, second, ...rest] = ranked.filter((s) => s.position <= 3);
+  return (
+    second?.position === 1 ? [first, second, ...rest] : [second, first, ...rest]
   ).filter(Boolean);
+};
 
 const Step = ({ position, bowler }: Standing<BowlerView>) => (
   <li class={`podium-step podium-${position}`}>
