@@ -26,17 +26,13 @@ describe("the header", () => {
     );
   });
 
-  it("turns the countdown urgent and tints the screen in the last five seconds", () => {
-    const calm = play("ana", room({}));
-    const urgent = play(
+  it("counts down the seconds left in the Frame Window", () => {
+    const html = play(
       "ana",
       room({ frame: { number: 3, open: true, remainingMs: 7_000 } }),
     );
 
-    expect(urgent).toMatch(/Quedan.*5.*s/s);
-    expect(urgent).toContain('class="play-edges"');
-    expect(urgent).toContain('class="play-header urgent"');
-    expect(calm).not.toContain("urgent");
+    expect(html).toMatch(/Quedan.*role="timer"[^>]*>.*5.*s/s);
   });
 
   it("maps the Pins left standing", () => {

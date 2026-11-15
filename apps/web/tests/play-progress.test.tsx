@@ -33,7 +33,7 @@ describe("the rival strip", () => {
 
 describe("the outcome of a Roll", () => {
   const outcome = (html: string) =>
-    html.match(/<div class="outcome[^"]*".*?<\/div>/s)?.[0] ?? "";
+    html.match(/<div[^>]*role="status"[^>]*>.*?<\/div>/s)?.[0] ?? "";
 
   it("shows nothing before the first Roll of the Frame", () => {
     expect(outcome(play("ana", yourFrame(3, [])))).toBe("");
