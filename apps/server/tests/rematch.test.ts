@@ -7,7 +7,7 @@ const { createRoom, joinRoom, time } = useServer();
 const snapshot = async (client: Client): Promise<RoomSnapshot> => {
   const message = await client.next();
   if (message.type !== "room") {
-    throw new Error(message.error);
+    throw new Error(JSON.stringify(message));
   }
   return message.room;
 };

@@ -20,24 +20,16 @@ import { parseNickname } from "./nickname.js";
 import type { Pin } from "./pins.js";
 import type { RoomCode } from "./room-code.js";
 import {
+  OK,
+  type RoomFailure,
+  type RoomResult,
+  refuse,
+} from "./room-failure.js";
+import {
   type Phase,
   type RoomSnapshot,
   roomSnapshot,
 } from "./room-snapshot.js";
-
-export type RoomFailure =
-  | { type: "NICKNAME_INVALID" }
-  | { type: "NICKNAME_TAKEN" }
-  | { type: "ROOM_FULL" }
-  | { type: "GAMES_STARTED" }
-  | { type: "GAMES_NOT_FINISHED" }
-  | { type: "NOT_HOST" }
-  | { type: "NOT_IN_ROOM" }
-  | { type: "WINDOW_CLOSED" }
-  | { type: "FRAME_FINISHED" }
-  | { type: "PIN_NOT_STANDING" };
-
-export type RoomResult = { ok: true } | { ok: false; failure: RoomFailure };
 
 interface Newcomer {
   id: BowlerId;
@@ -45,11 +37,6 @@ interface Newcomer {
 }
 
 export const MAX_BOWLERS = 6;
-
-const OK = { ok: true } as const;
-
-const refuse = (type: RoomFailure["type"]) =>
-  ({ ok: false, failure: { type } }) as const;
 
 export class Room {
   private readonly bowlers: Bowler[] = [];

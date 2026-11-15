@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import type { BowlerId } from "./bowler.js";
 import { PINS } from "./pins.js";
-import type { RoomFailure } from "./room.js";
+import type { RoomFailure } from "./room-failure.js";
 import type { RoomSnapshot } from "./room-snapshot.js";
 
 const nickname = v.pipe(v.string(), v.maxLength(64));

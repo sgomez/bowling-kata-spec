@@ -10,6 +10,7 @@ export {
   parseClientMessage,
   type ServerMessage,
 } from "./protocol.js";
-export { MAX_BOWLERS, Room, type RoomFailure } from "./room.js";
+export { MAX_BOWLERS, Room } from "./room.js";
 export { generateRoomCode, parseRoomCode, type RoomCode } from "./room-code.js";
+export type { RoomFailure } from "./room-failure.js";
 export type { RoomSnapshot } from "./room-snapshot.js";
