@@ -45,7 +45,7 @@ An additional roll earned in the tenth frame as a result of achieving a strike o
 _Avoid_: Extra shot, fill ball, free roll
 
 **Notation**:
-The symbolic way of recording a roll on a scoresheet: `X` for a strike, `/` for a spare, `-` for zero pins, digits otherwise.
+The symbolic way of recording a roll on a scoresheet: `X` for a strike, `/` for a spare, `-` for zero pins, `F` for a Foul, digits otherwise.
 _Avoid_: Shorthand, symbols, codes
 
 ## Online play
@@ -97,6 +97,10 @@ _Avoid_: Top player, first
 **Swipe**:
 The finger gesture on the Lane that makes a Roll, read as release position, direction, speed and spin.
 _Avoid_: Throw, flick, drag
+
+**Foul**:
+A Swipe whose finger crosses the dashed line two fifths of the way up the screen; the Roll counts as zero Pins.
+_Avoid_: Fault, overstep
 
 **Lane**:
 The surface on screen where the ball travels and the Pins stand.

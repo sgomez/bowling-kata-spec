@@ -173,7 +173,7 @@ export const createConnection = (
       send({ type: "join", code, nickname });
     },
     start: () => send({ type: "start" }),
-    roll: (pins: Pin[]) => send({ type: "roll", pins }),
+    roll: (pins: Pin[], foul?: boolean) => send({ type: "roll", pins, foul }),
     remove: (bowlerId: BowlerId) => send({ type: "remove", bowlerId }),
     leave: () => {
       send({ type: "leave" });

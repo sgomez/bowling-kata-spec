@@ -25,7 +25,7 @@ export const act = (
     case "rematch":
       return entry.room.rematch(bowlerId, now);
     case "roll":
-      return entry.room.roll(bowlerId, message.pins, now);
+      return entry.room.roll(bowlerId, message.pins, now, message.foul);
     case "leave":
       return entry.room.leave(bowlerId, now);
     case "remove":

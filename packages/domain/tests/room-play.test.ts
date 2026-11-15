@@ -51,6 +51,18 @@ describe("a Roll", () => {
     expect(room.snapshot("ana", T0).bowlers[0].frames[0].rolls).toEqual(["-"]);
   });
 
+  it("counts no Pins on a Foul and marks it F", () => {
+    const room = startedRoom("bea");
+    expect(room.roll("ana", [1, 2], T0, true)).toEqual({ ok: true });
+    expect(room.snapshot("ana", T0).standing).toEqual(STRIKE);
+
+    room.roll("ana", [1, 2], T0);
+    expect(room.snapshot("ana", T0).bowlers[0].frames[0]).toEqual({
+      rolls: ["F", "2"],
+      score: 2,
+    });
+  });
+
   it("is refused for a Pin already knocked", () => {
     const room = startedRoom("bea");
     room.roll("ana", [1, 2], T0);

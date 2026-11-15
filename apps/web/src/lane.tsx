@@ -6,12 +6,11 @@ import { FOUL_LINE } from "./lane-geometry.js";
 import { runLane } from "./lane-loop.js";
 import type { LaneRoll } from "./lane-physics.js";
 import { advance, type LanePlay, playRoll } from "./lane-play.js";
-import { REST_CAMERA } from "./lane-projection.js";
 import type { LaneView } from "./lane-scene.js";
 import { useSwipe } from "./lane-swipe.js";
 import { NO_MARKS } from "./lane-swipe-marks.js";
 import type { RollInputProps } from "./roll-input.js";
-import { toLane } from "./swipe.js";
+import { samplesOf } from "./swipe.js";
 
 const IDLE_BALL = { x: 0, y: FOUL_LINE - 0.2 };
 const manner = () => ({
@@ -20,14 +19,6 @@ const manner = () => ({
 
 const physics = () => import("./lane-physics.js");
 
-const samplesOf = (event: PointerEvent) => {
-  const samples = event.getCoalescedEvents?.() ?? [];
-  const rect = (event.currentTarget as Element).getBoundingClientRect();
-  return (samples.length > 0 ? samples : [event]).flatMap(
-    (e) => toLane(e, rect, REST_CAMERA) ?? [],
-  );
-};
-
 export const Lane = (input: RollInputProps) => {
   const { standing } = input;
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -35,7 +26,7 @@ export const Lane = (input: RollInputProps) => {
   props.current = input;
   const [timeUp, setTimeUp] = useState(false);
   const [party, setParty] = useState(false);
-  const swipe = useSwipe();
+  const swipe = useSwipe(() => props.current.onPlayed());
   const view = useRef<LaneView>({
     ...atRest(standing, IDLE_BALL),
     marks: NO_MARKS,
@@ -50,7 +41,7 @@ export const Lane = (input: RollInputProps) => {
     endsAt: props.current.endsAt,
   });
   const rest = () => {
-    if (play.current) props.current.onPlayed();
+    if (play.current) swipe.played();
     play.current = undefined;
     setParty(false);
     view.current = { ...view.current, ...atRest(resting.current, IDLE_BALL) };
@@ -118,8 +109,15 @@ export const Lane = (input: RollInputProps) => {
     view.current.ball = { ...view.current.ball, ...start };
   };
 
+  const crossed = (event: PointerEvent) => {
+    if (!swipe.overstepped(event)) return false;
+    rest();
+    props.current.onRoll([], true);
+    return true;
+  };
+
   const onPointerMove = (event: PointerEvent) => {
-    if (!swipe.aiming()) return;
+    if (!swipe.aiming() || crossed(event)) return;
     const ball = swipe.extend(samplesOf(event));
     view.current.ball = { ...view.current.ball, ...ball };
   };
@@ -129,8 +127,8 @@ export const Lane = (input: RollInputProps) => {
     rest();
   };
 
-  const onPointerUp = async () => {
-    if (!swipe.aiming()) return;
+  const onPointerUp = async (event: PointerEvent) => {
+    if (!swipe.aiming() || crossed(event)) return;
     const reading = swipe.release();
     rest();
     if (!reading) return;
@@ -149,7 +147,7 @@ export const Lane = (input: RollInputProps) => {
         onPointerUp={onPointerUp}
         onPointerCancel={cancel}
       />
-      {swipe.overlay(timeUp)}
+      {swipe.overlay(timeUp, input.finished)}
       {party && <CelebrationOverlay />}
       {timeUp && <p>Se acabó el tiempo.</p>}
     </div>

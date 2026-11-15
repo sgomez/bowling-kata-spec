@@ -3,6 +3,9 @@ import { kindOfMark, standingAfter } from "./roll-kind.js";
 const describe = (rolls: readonly string[]) => {
   const last = rolls.at(-1) ?? "";
   const kind = kindOfMark(last);
+  if (kind === "foul") {
+    return { kind, symbol: "F", label: "Falta", detail: "Has pasado la línea" };
+  }
   if (kind === "strike") return { kind, symbol: "X", label: "¡Pleno!" };
   if (kind === "spare") return { kind, symbol: "/", label: "¡Semipleno!" };
   if (kind === "zero") {

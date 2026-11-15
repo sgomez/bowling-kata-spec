@@ -1,11 +1,11 @@
 import { render } from "preact-render-to-string";
-import { describe, expect, it } from "vitest";
-import { useSwipe } from "../src/lane-swipe.js";
+import { describe, expect, it, vi } from "vitest";
+import { FOUL_PAUSE_MS, useSwipe } from "../src/lane-swipe.js";
 
-const swipeOnLane = () => {
+const swipeOnLane = (onPlayed = () => {}) => {
   let swipe: ReturnType<typeof useSwipe> | undefined;
   const Probe = () => {
-    swipe = useSwipe();
+    swipe = useSwipe(onPlayed);
     return null;
   };
   render(<Probe />);
@@ -49,7 +49,66 @@ describe("a Swipe on the Lane", () => {
   it("shows the hint until the first Swipe, but not once time is up", () => {
     const swipe = swipeOnLane();
 
-    expect(render(swipe.overlay(false))).not.toBe("");
-    expect(render(swipe.overlay(true))).toBe("");
+    expect(render(swipe.overlay(false, true))).not.toBe("");
+    expect(render(swipe.overlay(true, true))).toBe("");
+  });
+
+  it("draws the Swipe limit while the Frame is still to play", () => {
+    const swipe = swipeOnLane();
+
+    expect(render(swipe.overlay(false, false))).toContain("swipe-limit");
+    expect(render(swipe.overlay(false, true))).not.toContain("swipe-limit");
+  });
+
+  it("calls a Foul when the finger goes past the Swipe limit", () => {
+    const swipe = swipeOnLane();
+    const screen = {
+      getBoundingClientRect: () => ({
+        left: 0,
+        top: 0,
+        width: 300,
+        height: 900,
+      }),
+    };
+    swipe.start(gesture[0]);
+
+    expect(
+      swipe.overstepped({ clientY: 700, currentTarget: screen as never }),
+    ).toBe(false);
+    expect(swipe.aiming()).toBe(true);
+    expect(
+      swipe.overstepped({ clientY: 500, currentTarget: screen as never }),
+    ).toBe(true);
+    expect(swipe.aiming()).toBe(false);
+  });
+
+  it("holds the Lane on a Foul until it has been read", () => {
+    vi.useFakeTimers();
+    const shown = vi.fn();
+    const swipe = swipeOnLane(shown);
+    const screen = { getBoundingClientRect: () => ({ top: 0, height: 900 }) };
+    swipe.start(gesture[0]);
+    swipe.overstepped({ clientY: 0, currentTarget: screen as never });
+
+    vi.advanceTimersByTime(FOUL_PAUSE_MS - 1);
+    expect(shown).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(shown).toHaveBeenCalledOnce();
+    vi.useRealTimers();
+  });
+
+  it("lets the next Swipe cut the Foul's pause short", () => {
+    vi.useFakeTimers();
+    const shown = vi.fn();
+    const swipe = swipeOnLane(shown);
+    const screen = { getBoundingClientRect: () => ({ top: 0, height: 900 }) };
+    swipe.start(gesture[0]);
+    swipe.overstepped({ clientY: 0, currentTarget: screen as never });
+    swipe.start(gesture[0]);
+
+    expect(shown).toHaveBeenCalledOnce();
+    vi.advanceTimersByTime(FOUL_PAUSE_MS);
+    expect(shown).toHaveBeenCalledOnce();
+    vi.useRealTimers();
   });
 });
