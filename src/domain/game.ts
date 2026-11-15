@@ -1,4 +1,10 @@
-import type { Frame, FrameNumber, PinCount } from "./frame.js";
+import {
+  type Frame,
+  type FrameNumber,
+  PINS_PER_RACK,
+  type PinCount,
+  TENTH_FRAME,
+} from "./frame.js";
 import { buildFrames } from "./frames.js";
 
 type RollValidationFailure =
@@ -9,30 +15,36 @@ export type RollValidationResult =
   | { valid: true; pins: PinCount }
   | { valid: false; failure: RollValidationFailure };
 
-const standing = (knocked: PinCount): PinCount => (10 - knocked) as PinCount;
+const standing = (knocked: PinCount): PinCount =>
+  (PINS_PER_RACK - knocked) as PinCount;
 
 export class Game {
   private rolls: PinCount[] = [];
 
+  private get activeFrame(): Frame | undefined {
+    return this.frames.find((f) => !f.isComplete);
+  }
+
   get isFreshRack(): boolean {
-    const activeFrame = this.frames.find((f) => !f.isComplete);
+    const activeFrame = this.activeFrame;
     if (!activeFrame) {
       return false;
     }
-    if (activeFrame.frameNumber < 10) {
+    if (activeFrame.frameNumber < TENTH_FRAME) {
       return activeFrame.rolls.length === 0;
     }
 
-    // Tenth Frame
     const rolls = activeFrame.rolls;
     if (rolls.length === 0) {
       return true;
     }
     if (rolls.length === 1) {
-      return rolls[0] === 10;
+      return rolls[0] === PINS_PER_RACK;
     }
     // An active Tenth Frame never holds three rolls.
-    return rolls[0] === 10 ? rolls[1] === 10 : rolls[0] + rolls[1] === 10;
+    return rolls[0] === PINS_PER_RACK
+      ? rolls[1] === PINS_PER_RACK
+      : rolls[0] + rolls[1] === PINS_PER_RACK;
   }
 
   validateRoll(pins: PinCount): RollValidationResult {
@@ -81,43 +93,41 @@ export class Game {
   }
 
   get remainingPins(): PinCount {
-    const activeFrame = this.frames.find((f) => !f.isComplete);
+    const activeFrame = this.activeFrame;
     if (!activeFrame) {
       return 0;
     }
 
-    if (activeFrame.frameNumber < 10) {
+    if (activeFrame.frameNumber < TENTH_FRAME) {
       if (activeFrame.rolls.length === 0) {
-        return 10;
+        return PINS_PER_RACK;
       }
       return standing(activeFrame.rolls[0]);
     }
 
-    // Tenth Frame
     const rolls = activeFrame.rolls;
     if (rolls.length === 0) {
-      return 10;
+      return PINS_PER_RACK;
     }
     if (rolls.length === 1) {
-      return rolls[0] === 10 ? 10 : standing(rolls[0]);
+      return rolls[0] === PINS_PER_RACK ? PINS_PER_RACK : standing(rolls[0]);
     }
-    if (rolls[0] === 10) {
-      return rolls[1] === 10 ? 10 : standing(rolls[1]);
+    if (rolls[0] === PINS_PER_RACK) {
+      return rolls[1] === PINS_PER_RACK ? PINS_PER_RACK : standing(rolls[1]);
     }
-    // Spare on first two rolls
-    return 10;
+    return PINS_PER_RACK;
   }
 
   get currentFrame(): FrameNumber {
-    const activeFrame = this.frames.find((f) => !f.isComplete);
+    const activeFrame = this.activeFrame;
     if (!activeFrame) {
-      return 10;
+      return TENTH_FRAME;
     }
     return activeFrame.frameNumber;
   }
 
   get currentRoll(): number {
-    const activeFrame = this.frames.find((f) => !f.isComplete);
+    const activeFrame = this.activeFrame;
     if (!activeFrame) {
       return 2;
     }
