@@ -7,13 +7,12 @@ export interface Seat {
   bowlerId: BowlerId;
 }
 
-export type SeatedMessage = Extract<
-  ClientMessage,
-  { type: "start" | "roll" | "rematch" | "leave" | "remove" }
->;
+const SEATED = ["start", "roll", "rematch", "leave", "remove"] as const;
+
+type SeatedMessage = Extract<ClientMessage, { type: (typeof SEATED)[number] }>;
 
 export const isSeated = (message: ClientMessage): message is SeatedMessage =>
-  ["start", "roll", "rematch", "leave", "remove"].includes(message.type);
+  (SEATED as readonly string[]).includes(message.type);
 
 export const act = (
   { entry, bowlerId }: Seat,
@@ -38,12 +37,10 @@ export const createSeats = () => {
   const seats = new WeakMap<WebSocket, Seat>();
 
   const unseat = (entry: RoomEntry, bowlerId: BowlerId) => {
-    const socket = entry.sockets.get(bowlerId);
+    const socket = entry.unseat(bowlerId);
     if (socket) {
       seats.delete(socket);
     }
-    entry.sockets.delete(bowlerId);
-    entry.tokens.delete(bowlerId);
     return socket;
   };
 
@@ -51,13 +48,12 @@ export const createSeats = () => {
     get: (socket: WebSocket) => seats.get(socket),
     release: (socket: WebSocket) => seats.delete(socket),
     sit: (socket: WebSocket, entry: RoomEntry, bowlerId: BowlerId) => {
-      const previous = entry.sockets.get(bowlerId);
+      const previous = entry.seat(bowlerId, socket);
       if (previous) {
         seats.delete(previous);
         previous.close();
       }
       seats.set(socket, { entry, bowlerId });
-      entry.sockets.set(bowlerId, socket);
       entry.changed();
     },
     afterSeated: (seat: Seat, message: SeatedMessage) => {

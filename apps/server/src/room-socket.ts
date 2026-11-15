@@ -1,11 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { Server } from "node:http";
 import {
-  type BowlerId,
   type ClientMessage,
   type ErrorCode,
   generateRoomCode,
-  issueResumeToken,
   parseClientMessage,
   parseRoomCode,
   Room,
@@ -57,14 +55,6 @@ export const attachRoomSocket = (
       return !result.ok;
     };
 
-    const seatNew = (entry: RoomEntry, bowlerId: BowlerId) => {
-      entry.tokens.set(
-        bowlerId,
-        issueResumeToken(entry.room.code, randomUUID()),
-      );
-      seats.sit(socket, entry, bowlerId);
-    };
-
     const resume = (token: string) => {
       const code = roomOfResumeToken(token);
       const entry = code ? rooms.get(code) : undefined;
@@ -107,14 +97,16 @@ export const attachRoomSocket = (
           rooms.delete(code),
         );
         rooms.set(code, entry);
-        return seatNew(entry, bowler.id);
+        return seats.sit(socket, entry, bowler.id);
       }
       const code = parseRoomCode(message.code);
       const entry = code && rooms.get(code);
       if (!entry) {
         return fail("UNKNOWN_ROOM");
       }
-      return failed(entry.room.join(bowler)) || seatNew(entry, bowler.id);
+      return (
+        failed(entry.room.join(bowler)) || seats.sit(socket, entry, bowler.id)
+      );
     };
 
     socket.on("message", (data) => {
@@ -133,9 +125,7 @@ export const attachRoomSocket = (
       addresses.release(address);
       if (seat) {
         seats.release(socket);
-        seat.entry.sockets.delete(seat.bowlerId);
-        seat.entry.room.disconnect(seat.bowlerId, clock.now());
-        seat.entry.changed();
+        seat.entry.disconnect(seat.bowlerId, clock.now());
       }
     });
   });

@@ -1,8 +1,11 @@
-import type {
-  BowlerId,
-  CloseReason,
-  Room,
-  ServerMessage,
+import { randomUUID } from "node:crypto";
+import {
+  type BowlerId,
+  type CloseReason,
+  issueResumeToken,
+  type ResumeToken,
+  type Room,
+  type ServerMessage,
 } from "@bowling/domain";
 import type { WebSocket } from "ws";
 import type { Clock } from "./clock.js";
@@ -17,8 +20,8 @@ export const sendClosed = (socket: WebSocket, reason: CloseReason) => {
 };
 
 export class RoomEntry {
-  readonly sockets = new Map<BowlerId, WebSocket>();
-  readonly tokens = new Map<BowlerId, string>();
+  private readonly sockets = new Map<BowlerId, WebSocket>();
+  private readonly tokens = new Map<BowlerId, ResumeToken>();
   private cancelTimer: (() => void) | undefined;
   private cancelExpiry: (() => void) | undefined;
   private disposed = false;
@@ -64,6 +67,28 @@ export class RoomEntry {
     }
     this.sockets.clear();
     this.onClosed(this);
+  }
+
+  seat(bowlerId: BowlerId, socket: WebSocket) {
+    const previous = this.sockets.get(bowlerId);
+    this.sockets.set(bowlerId, socket);
+    if (!this.tokens.has(bowlerId)) {
+      this.tokens.set(bowlerId, issueResumeToken(this.room.code, randomUUID()));
+    }
+    return previous;
+  }
+
+  unseat(bowlerId: BowlerId) {
+    const socket = this.sockets.get(bowlerId);
+    this.sockets.delete(bowlerId);
+    this.tokens.delete(bowlerId);
+    return socket;
+  }
+
+  disconnect(bowlerId: BowlerId, now: number) {
+    this.sockets.delete(bowlerId);
+    this.room.disconnect(bowlerId, now);
+    this.changed();
   }
 
   bowlerWith(token: string) {
