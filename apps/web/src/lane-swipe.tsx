@@ -68,7 +68,7 @@ export const useSwipe = () => {
     overlay: (timeUp: boolean) => (
       <>
         {hint && !swiping && !timeUp && <SwipeHint />}
-        {swiping && <SwipeGauge swipe={reading} />}
+        {reading && <SwipeGauge swipe={reading} />}
       </>
     ),
   };
