@@ -1,4 +1,5 @@
-import { FOUL_LINE } from "./lane-geometry.js";
+import type { Spot } from "./knock.js";
+import { FOUL_LINE, LANE_WIDTH } from "./lane-geometry.js";
 
 export type LaneActivity = "idle" | "aiming" | "rolling";
 
@@ -20,8 +21,12 @@ export const checkTime = (
 export const canStartSwipe = (
   activity: LaneActivity,
   time: FrameTime,
-  startY: number,
+  start: Spot | undefined,
 ): boolean =>
   checkTime(activity, time) === "running" &&
   activity !== "rolling" &&
-  startY <= FOUL_LINE;
+  start !== undefined &&
+  onApproach(start);
+
+const onApproach = ({ x, y }: Spot) =>
+  Math.abs(x) <= LANE_WIDTH / 2 && y >= 0 && y <= FOUL_LINE;

@@ -1,16 +1,32 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { rack } from "./knock.js";
+import { CelebrationOverlay } from "./celebration-overlay.js";
+import { atRest } from "./lane-choreography.js";
 import { canStartSwipe, checkTime, type LaneActivity } from "./lane-gate.js";
 import { FOUL_LINE } from "./lane-geometry.js";
+import { runLane } from "./lane-loop.js";
 import type { LaneRoll } from "./lane-physics.js";
-import { drawLane, type LaneScene } from "./lane-render.js";
+import { advance, type LanePlay, playRoll } from "./lane-play.js";
+import { REST_CAMERA } from "./lane-projection.js";
+import type { LaneView } from "./lane-scene.js";
+import { useSwipe } from "./lane-swipe.js";
+import { NO_MARKS } from "./lane-swipe-marks.js";
 import type { RollInputProps } from "./roll-input.js";
-import { readSwipe, type SwipeSample, toLane } from "./swipe.js";
+import { toLane } from "./swipe.js";
 
-const RESULT_PAUSE_MS = 800;
-const IDLE_BALL = { x: 0, y: FOUL_LINE / 2 };
+const IDLE_BALL = { x: 0, y: FOUL_LINE - 0.2 };
+const manner = () => ({
+  reducedMotion: matchMedia("(prefers-reduced-motion: reduce)").matches,
+});
 
 const physics = () => import("./lane-physics.js");
+
+const samplesOf = (event: PointerEvent) => {
+  const samples = event.getCoalescedEvents?.() ?? [];
+  const rect = (event.currentTarget as Element).getBoundingClientRect();
+  return (samples.length > 0 ? samples : [event]).flatMap(
+    (e) => toLane(e, rect, REST_CAMERA) ?? [],
+  );
+};
 
 export const Lane = (input: RollInputProps) => {
   const { standing } = input;
@@ -18,113 +34,109 @@ export const Lane = (input: RollInputProps) => {
   const props = useRef(input);
   props.current = input;
   const [timeUp, setTimeUp] = useState(false);
-  const scene = useRef<LaneScene>({
-    pins: rack(standing),
-    ball: IDLE_BALL,
-    trail: [],
+  const [party, setParty] = useState(false);
+  const swipe = useSwipe();
+  const view = useRef<LaneView>({
+    ...atRest(standing, IDLE_BALL),
+    marks: NO_MARKS,
   });
   const roll = useRef<LaneRoll | undefined>(undefined);
-  const aiming = useRef(false);
+  const play = useRef<LanePlay | undefined>(undefined);
+  const resting = useRef(standing);
   const activity = (): LaneActivity =>
-    roll.current ? "rolling" : aiming.current ? "aiming" : "idle";
+    roll.current ? "rolling" : swipe.aiming() ? "aiming" : "idle";
   const frameTime = () => ({
     now: props.current.now(),
     endsAt: props.current.endsAt,
   });
+  const rest = () => {
+    if (play.current) props.current.onPlayed();
+    play.current = undefined;
+    setParty(false);
+    view.current = { ...view.current, ...atRest(resting.current, IDLE_BALL) };
+  };
 
   useEffect(() => {
-    if (activity() !== "idle") return;
-    scene.current = { pins: rack(standing), ball: IDLE_BALL, trail: [] };
+    resting.current = standing;
+    if (activity() === "idle" && !play.current) rest();
   }, [standing]);
 
   useEffect(() => {
     physics();
-    let frame = 0;
     let last = performance.now();
-    let settledAt: number | undefined;
     const expire = () => {
       const time = checkTime(activity(), frameTime());
       if (time === "running") return;
       setTimeUp(true);
       if (time === "over") return;
       roll.current = undefined;
-      aiming.current = false;
-      settledAt = undefined;
-      scene.current = {
-        pins: rack(props.current.standing),
-        ball: IDLE_BALL,
-        trail: [],
-      };
+      cancel();
       props.current.onMiss();
     };
-    const tick = (now: number) => {
+    const frame = (now: number) => {
       expire();
-      const current = roll.current;
-      if (current) {
-        current.step(now - last);
-        scene.current = {
-          pins: current.pins(),
-          ball: current.ball(),
-          trail: [],
-        };
-        if (current.settled) {
-          settledAt ??= now;
-          if (now - settledAt > RESULT_PAUSE_MS) {
-            const knocked = current.knocked();
-            const left = props.current.standing.filter(
-              (pin) => !knocked.includes(pin),
-            );
-            roll.current = undefined;
-            settledAt = undefined;
-            scene.current = { pins: rack(left), ball: IDLE_BALL, trail: [] };
-            props.current.onRoll(knocked);
-          }
+      if (play.current) {
+        const { staging, knocked } = advance(
+          play.current,
+          now - last,
+          roll.current,
+          manner(),
+        );
+        view.current = { ...view.current, ...staging };
+        setParty(staging.celebration?.confetti ?? false);
+        if (knocked) {
+          roll.current = undefined;
+          resting.current = resting.current.filter((p) => !knocked.includes(p));
+          props.current.onRoll(knocked);
         }
+        if (staging.done) rest();
       }
       last = now;
-      if (canvas.current) drawLane(canvas.current, scene.current);
-      frame = requestAnimationFrame(tick);
+      view.current.marks = swipe.marks(now);
+      return view.current;
     };
-    frame = requestAnimationFrame(tick);
+    const stop = runLane(
+      canvas.current as HTMLCanvasElement,
+      props.current.ball,
+      frame,
+    );
     return () => {
-      cancelAnimationFrame(frame);
+      stop();
+      if (play.current) props.current.onPlayed();
       if (roll.current) props.current.onMiss();
     };
   }, []);
 
   const onPointerDown = (event: PointerEvent) => {
     const target = event.currentTarget as Element;
-    const start = toLane(event, target.getBoundingClientRect());
-    if (!canStartSwipe(activity(), frameTime(), start.y)) return;
+    const [start] = samplesOf(event);
+    if (props.current.finished) return;
+    if (!start || !canStartSwipe(activity(), frameTime(), start)) return;
     target.setPointerCapture(event.pointerId);
-    aiming.current = true;
-    scene.current = { ...scene.current, ball: start, trail: [start] };
+    swipe.start(start);
+    rest();
+    view.current.ball = { ...view.current.ball, ...start };
   };
 
   const onPointerMove = (event: PointerEvent) => {
-    if (!aiming.current) return;
-    const samples = event.getCoalescedEvents?.() ?? [];
-    const rect = (event.currentTarget as Element).getBoundingClientRect();
-    const moves = (samples.length > 0 ? samples : [event]).map((e) =>
-      toLane(e, rect),
-    );
-    const trail = [...scene.current.trail, ...moves];
-    const ball = trail.at(-1) as SwipeSample;
-    scene.current = { ...scene.current, ball, trail };
+    if (!swipe.aiming()) return;
+    const ball = swipe.extend(samplesOf(event));
+    view.current.ball = { ...view.current.ball, ...ball };
   };
 
   const cancel = () => {
-    aiming.current = false;
-    scene.current = { ...scene.current, ball: IDLE_BALL, trail: [] };
+    swipe.drop();
+    rest();
   };
 
   const onPointerUp = async () => {
-    if (!aiming.current) return;
-    const swipe = readSwipe(scene.current.trail);
-    cancel();
-    if (!swipe) return;
+    if (!swipe.aiming()) return;
+    const reading = swipe.release();
+    rest();
+    if (!reading) return;
     const { startRoll } = await physics();
-    roll.current = startRoll(props.current.standing, swipe);
+    roll.current = startRoll(props.current.standing, reading);
+    play.current = playRoll(props.current.standing, reading);
   };
 
   return (
@@ -137,11 +149,9 @@ export const Lane = (input: RollInputProps) => {
         onPointerUp={onPointerUp}
         onPointerCancel={cancel}
       />
-      <p>
-        {timeUp
-          ? "Se acabó el tiempo."
-          : "Desliza el dedo hacia los bolos. Curva el gesto para darle efecto."}
-      </p>
+      {swipe.overlay(timeUp)}
+      {party && <CelebrationOverlay />}
+      {timeUp && <p>Se acabó el tiempo.</p>}
     </div>
   );
 };

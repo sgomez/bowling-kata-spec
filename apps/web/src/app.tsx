@@ -1,42 +1,59 @@
+import type { BowlerId } from "@bowling/domain";
 import { useSignal } from "@preact/signals";
 import type { Connection } from "./connection.js";
 import { Final } from "./final.js";
 import { Home } from "./home.js";
 import { inviteLink, type ShareOutcome, shareInvite } from "./invite.js";
 import { Lobby } from "./lobby.js";
-import { closedMessage, errorMessage } from "./messages.js";
+import { closedMessage, errorMessage, refusal } from "./messages.js";
+import { Reconnecting, ServerRestart } from "./notices.js";
 import { Play } from "./play.js";
-
-const SHARE_NOTICES: Record<ShareOutcome, string | undefined> = {
-  shared: undefined,
-  dismissed: undefined,
-  copied: "Enlace copiado.",
-  failed: "No se ha podido compartir; copia el enlace a mano.",
-};
+import { Notice } from "./ui.js";
 
 interface AppProps {
   connection: Connection;
   initialCode: string;
   origin: string;
+  webgl: boolean;
 }
 
-export const App = ({ connection, initialCode, origin }: AppProps) => {
-  const shareNotice = useSignal<string | undefined>(undefined);
+export const App = (props: AppProps) => {
+  const reconnecting = props.connection.reconnecting.value;
+  return (
+    <>
+      <Screen {...props} />
+      {reconnecting && <Reconnecting {...reconnecting} now={Date.now} />}
+    </>
+  );
+};
+
+const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
+  const shared = useSignal<{ outcome: ShareOutcome; at: number } | undefined>(
+    undefined,
+  );
+  const missedAt = useSignal(0);
+  const removing = useSignal<BowlerId | undefined>(undefined);
+  const leaving = useSignal(false);
+  const playing = useSignal<number | undefined>(undefined);
   const seat = connection.seat.value;
   const error = connection.error.value;
   const closed = connection.closed.value;
 
+  if (closed === "SERVER_SHUTDOWN") {
+    return <ServerRestart />;
+  }
   if (!seat) {
     return (
       <Home
         initialCode={closed ? "" : initialCode}
-        error={
+        refusal={
           closed
-            ? closedMessage(closed)
+            ? { text: closedMessage(closed), tone: "error" }
             : connection.removed.value
-              ? "El anfitrión te ha sacado de la sala."
-              : error && errorMessage(error)
+              ? { text: "El anfitrión te ha sacado de la sala.", tone: "error" }
+              : error && refusal(error)
         }
+        entering={connection.entering.value}
         onCreate={connection.create}
         onJoin={connection.join}
       />
@@ -54,19 +71,41 @@ export const App = ({ connection, initialCode, origin }: AppProps) => {
     );
   }
   if (seat.room.frame) {
+    const { number } = seat.room.frame;
     return (
       <>
         <Play
           seat={seat}
           frame={seat.room.frame}
-          onRoll={connection.roll}
-          missed={connection.missed.value === seat.room.frame.number}
-          onMiss={connection.miss}
+          onRoll={(knocked) => {
+            playing.value = number;
+            connection.roll(knocked);
+          }}
+          playing={playing.value === number}
+          onPlayed={() => {
+            playing.value = undefined;
+          }}
+          webgl={webgl}
+          missedAt={
+            connection.missed.value === number ? missedAt.value : undefined
+          }
+          onMiss={() => {
+            missedAt.value = Date.now();
+            connection.miss();
+          }}
+          leaving={leaving.value}
+          onAskLeave={() => {
+            leaving.value = true;
+          }}
+          onCancelLeave={() => {
+            leaving.value = false;
+          }}
+          onLeave={() => {
+            leaving.value = false;
+            connection.leave();
+          }}
         />
-        {notice && <p role="alert">{notice}</p>}
-        <button type="button" onClick={connection.leave}>
-          Salir de la sala
-        </button>
+        {notice && <Notice tone="error">{notice}</Notice>}
       </>
     );
   }
@@ -76,13 +115,27 @@ export const App = ({ connection, initialCode, origin }: AppProps) => {
     <Lobby
       seat={seat}
       link={link}
-      shareNotice={shareNotice.value ?? notice}
+      shared={shared.value}
+      error={notice}
+      removing={removing.value}
       onShare={async () => {
-        shareNotice.value = SHARE_NOTICES[await shareInvite(link, navigator)];
+        shared.value = {
+          outcome: await shareInvite(link, navigator),
+          at: Date.now(),
+        };
       }}
       onStart={connection.start}
       onLeave={connection.leave}
-      onRemove={connection.remove}
+      onAskRemove={(bowlerId) => {
+        removing.value = bowlerId;
+      }}
+      onCancelRemove={() => {
+        removing.value = undefined;
+      }}
+      onRemove={(bowlerId) => {
+        removing.value = undefined;
+        connection.remove(bowlerId);
+      }}
     />
   );
 };

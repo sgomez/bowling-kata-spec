@@ -13,11 +13,26 @@ describe("mobile gate", () => {
     expect(isDesktop(viewport)).toBe(expected);
   });
 
-  it("shows a QR code of the current URL to continue on a phone", () => {
+  it("shows the logo and a QR code of the current URL to continue on a phone", () => {
     const html = render(<DesktopGate url="https://bolos.example/K7MPQ" />);
 
+    expect(html).toContain("Bolos</h1>");
     expect(html).toContain("<svg");
-    expect(html).toContain("Abre esta página en tu móvil");
-    expect(html).toContain("https://bolos.example/K7MPQ");
+    expect(html).toContain("Abre esta página en tu móvil para jugar.");
+    expect(html).toContain("Escanea el código o escribe");
+    expect(html).toContain("Solo para móvil, en vertical");
+  });
+
+  it("writes the address without the scheme", () => {
+    const html = render(<DesktopGate url="https://bolos.example/K7MPQ" />);
+
+    expect(html).toContain(">bolos.example/K7MPQ<");
+    expect(html).not.toContain("https://bolos.example");
+  });
+
+  it("drops the trailing slash of a bare address", () => {
+    const html = render(<DesktopGate url="https://bolos.example/" />);
+
+    expect(html).toContain(">bolos.example<");
   });
 });

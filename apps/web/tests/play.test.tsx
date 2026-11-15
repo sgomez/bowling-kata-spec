@@ -1,57 +1,5 @@
-import type {
-  BowlerView,
-  FrameView,
-  RoomCode,
-  RoomSnapshot,
-} from "@bowling/domain";
-import { render } from "preact-render-to-string";
 import { describe, expect, it } from "vitest";
-import { Final } from "../src/final.js";
-import { Play } from "../src/play.js";
-import type { RollInputProps } from "../src/roll-input.js";
-
-const emptyFrames = (): FrameView[] =>
-  Array.from({ length: 10 }, () => ({ rolls: [], score: null }));
-
-const bowler = (id: string, extra: Partial<BowlerView> = {}): BowlerView => ({
-  id,
-  nickname: id.toUpperCase(),
-  connected: true,
-  finishedFrame: false,
-  frames: emptyFrames(),
-  total: 0,
-  ...extra,
-});
-
-const room = (extra: Partial<RoomSnapshot>): RoomSnapshot => ({
-  code: "K7MPQ" as RoomCode,
-  phase: "playing",
-  hostId: "ana",
-  bowlers: [bowler("ana"), bowler("bea", { finishedFrame: true })],
-  frame: { number: 3, open: true, remainingMs: 12_300 },
-  standing: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-  winners: [],
-  ...extra,
-});
-
-const FakeInput = ({ standing, endsAt }: RollInputProps) => (
-  <p>
-    input:{standing.join(",")} until:{endsAt}
-  </p>
-);
-
-const play = (you: string, snapshot: RoomSnapshot, missed = false) =>
-  render(
-    <Play
-      seat={{ you, room: snapshot, receivedAt: 1_000 }}
-      frame={snapshot.frame as NonNullable<RoomSnapshot["frame"]>}
-      onRoll={() => {}}
-      missed={missed}
-      onMiss={() => {}}
-      RollInput={FakeInput}
-      now={() => 3_000}
-    />,
-  );
+import { bowler, emptyFrames, play, room, yourFrame } from "./play-setup.js";
 
 describe("an open Frame Window", () => {
   it("counts down and lets an unfinished Bowler Roll at the standing Pins", () => {
@@ -62,30 +10,71 @@ describe("an open Frame Window", () => {
     expect(html).toContain("input:3,5");
   });
 
+  it("rolls the Bowler's ball in their Bowler Colour", () => {
+    const html = play(
+      "ana",
+      room({ bowlers: [bowler("ana", { colour: 2 }), bowler("bea")] }),
+    );
+
+    expect(html).toContain("ball:#FFC53D");
+  });
+
   it("stops the Lane when the window runs out", () => {
     expect(play("ana", room({}))).toContain("until:13300");
   });
 
-  it("shows who has finished the Frame", () => {
-    expect(play("ana", room({}))).toMatch(/ANA.*jugando.*BEA.*ha terminado/s);
+  it("tells a Bowler whose phone has no WebGL that it can't show the Lane", () => {
+    const html = play("ana", room({}), false, false, false);
+
+    expect(html).toContain("Tu móvil no puede mostrar la pista");
+    expect(html).not.toContain("input:");
   });
 
-  it("shows who is disconnected", () => {
-    const bowlers = [bowler("ana"), bowler("bea", { connected: false })];
-
-    expect(play("ana", room({ bowlers }))).toMatch(/BEA.*desconectado/s);
-  });
-
-  it("makes a finished Bowler wait for the rest", () => {
-    const html = play("bea", room({}));
+  it("makes a finished Bowler wait for the reveal with their own result", () => {
+    const html = play("ana", yourFrame(3, ["X"], { finishedFrame: true }));
 
     expect(html).not.toContain("input:");
-    expect(html).toContain("Esperando al resto");
+    expect(html).toMatch(
+      /X.*Has terminado este frame\..*Esperando al resto….*Los resultados se revelan al cerrarse el frame\./s,
+    );
+  });
+
+  it("keeps the Lane playing out the Roll that finished the Frame", () => {
+    const strike = yourFrame(3, ["X"], { finishedFrame: true });
+    const html = play("ana", strike, false, false, true, true);
+
+    expect(html).toContain("input:");
+    expect(html).toContain("finished:true");
+    expect(html).not.toContain("Has terminado este frame.");
+    expect(html).toMatch(/role="status".*X.*¡Pleno!/s);
+  });
+
+  it("lets an unfinished Bowler roll on the Lane", () => {
+    expect(play("ana", room({}))).toContain("finished:false");
+  });
+
+  it("announces the Tenth Frame's bonus Roll", () => {
+    expect(play("ana", yourFrame(10, ["X", "8"]))).toContain(
+      "Tirada de bonificación",
+    );
+    expect(play("ana", yourFrame(10, ["X"]))).not.toContain(
+      "Tirada de bonificación",
+    );
+    expect(
+      play("ana", yourFrame(10, ["X", "8", "1"], { finishedFrame: true })),
+    ).not.toContain("Tirada de bonificación");
+  });
+
+  it("tells the Bowler a Roll cut short by the window did not count", () => {
+    expect(play("ana", room({}), true)).toMatch(
+      /role="status".*Se acabó el tiempo: esa tirada no ha contado\./s,
+    );
+    expect(play("ana", room({}))).not.toContain("Se acabó el tiempo");
   });
 });
 
 describe("the reveal", () => {
-  it("shows everyone's scorecard until the next window", () => {
+  it("reveals everyone's results until the next window", () => {
     const frames = emptyFrames();
     frames[0] = { rolls: ["X"], score: null };
     frames[1] = { rolls: ["7", "/"], score: 20 };
@@ -97,8 +86,9 @@ describe("the reveal", () => {
       }),
     );
 
-    expect(html).toMatch(/ANA.*X.*7 \/.*20/s);
-    expect(html).toMatch(/Siguiente frame en.*2.*s/s);
+    expect(html).toMatch(/Resultados.*Frame 2/s);
+    expect(html).toMatch(/ANA.*7.*\/.*20/s);
+    expect(html).toMatch(/Siguiente frame en 2 s/);
     expect(html).not.toContain("input:");
   });
 });
@@ -111,36 +101,5 @@ describe("a Roll the Frame Window cut short", () => {
       "Se acabó el tiempo: esa tirada no ha contado.",
     );
     expect(play("ana", room({ frame }))).not.toContain("Se acabó el tiempo");
-  });
-});
-
-describe("the final Scores", () => {
-  const final = (winners: string[]) =>
-    render(
-      <Final
-        seat={{
-          you: "ana",
-          receivedAt: 0,
-          room: room({
-            phase: "finished",
-            winners,
-            bowlers: [
-              bowler("ana", { total: 87 }),
-              bowler("bea", { total: 87 }),
-            ],
-          }),
-        }}
-        onRematch={() => {}}
-        onLeave={() => {}}
-      />,
-    );
-
-  it("names the winner", () => {
-    expect(final(["ana"])).toContain("¡Gana ANA!");
-    expect(final(["ana"])).toContain("87");
-  });
-
-  it("names a tie", () => {
-    expect(final(["ana", "bea"])).toContain("Empate entre ANA y BEA");
   });
 });

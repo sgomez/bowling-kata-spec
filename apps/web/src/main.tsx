@@ -4,7 +4,26 @@ import { App } from "./app.js";
 import { createConnection } from "./connection.js";
 import { DesktopGate, isDesktop } from "./desktop-gate.js";
 import { codeFromPath } from "./invite.js";
-import "./styles.css";
+import "@fontsource/barlow/latin-400.css";
+import "@fontsource/barlow/latin-500.css";
+import "@fontsource/barlow/latin-600.css";
+import "@fontsource/barlow/latin-700.css";
+import "@fontsource/barlow-condensed/latin-500.css";
+import "@fontsource/barlow-condensed/latin-600.css";
+import "@fontsource/barlow-condensed/latin-700.css";
+import "@fontsource/bowlby-one/latin-400.css";
+import "./styles/tokens.css";
+import "./styles/base.css";
+import "./styles/screens.css";
+
+// Only WebGL2 counts: three.js no longer renders with WebGL1.
+const hasWebGL = () => {
+  try {
+    return document.createElement("canvas").getContext("webgl2") !== null;
+  } catch {
+    return false;
+  }
+};
 
 const root = document.getElementById("app");
 const desktop = isDesktop({
@@ -37,6 +56,7 @@ if (root && desktop) {
       connection={connection}
       initialCode={initialCode}
       origin={location.origin}
+      webgl={hasWebGL()}
     />,
     root,
   );

@@ -119,17 +119,23 @@ describe("reading a Swipe", () => {
 });
 
 describe("placing a touch on the Lane", () => {
-  const rect = { left: 10, top: 20, width: 210, height: 460 };
+  const rect = { left: 10, top: 20, width: 358, height: 560 };
+  const camera = { x: 0, y: -0.6, height: 1.2, tilt: 40, fov: 56 };
 
-  it("maps the screen's bottom-left corner to the near left edge", () => {
-    const sample = toLane({ clientX: 10, clientY: 480, timeStamp: 7 }, rect);
+  it("casts the touch onto the Lane, in Lane metres, keeping its time", () => {
+    const touch = { clientX: 189, clientY: 300, timeStamp: 7 };
 
-    expect(sample).toEqual({ x: expect.closeTo(-0.525), y: 0, t: 7 });
+    expect(toLane(touch, rect, camera)).toEqual({
+      x: expect.closeTo(0),
+      y: expect.closeTo(0.8301, 3),
+      t: 7,
+    });
   });
 
-  it("maps the top centre to the far end, behind the Pins", () => {
-    const sample = toLane({ clientX: 115, clientY: 20, timeStamp: 0 }, rect);
+  it("drops a touch above the horizon", () => {
+    const level = { ...camera, tilt: 10 };
+    const touch = { clientX: 189, clientY: 20, timeStamp: 0 };
 
-    expect(sample).toEqual({ x: 0, y: expect.closeTo(2.3), t: 0 });
+    expect(toLane(touch, rect, level)).toBeUndefined();
   });
 });

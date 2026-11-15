@@ -72,7 +72,7 @@ _Avoid_: Share URL, invitation
 
 **Host**:
 The Bowler who starts the Room's Games and may remove other Bowlers.
-_Avoid_: Owner, admin, leader
+_Avoid_: Owner, admin
 
 **Lobby**:
 The phase of a Room before its Games start, the only time Bowlers can join.
@@ -85,6 +85,14 @@ _Avoid_: Turn, round, timer
 **Rematch**:
 A fresh set of Games in the same Room for the Bowlers still present.
 _Avoid_: Replay, new game, restart
+
+**Standings**:
+The Bowlers of a Room ranked by total Score, where tied Bowlers share a position and the next one skips (1, 2, 3, 3, 5).
+_Avoid_: Ranking, leaderboard, classification
+
+**Leader**:
+A Bowler in position 1 of the Standings; at the end of the Games, the leaders are the winners.
+_Avoid_: Top player, first
 
 **Swipe**:
 The finger gesture on the Lane that makes a Roll, read as release position, direction, speed and spin.

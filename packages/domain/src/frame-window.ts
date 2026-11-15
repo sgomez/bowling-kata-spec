@@ -9,11 +9,13 @@ export type FrameWindow =
   | { frame: FrameNumber; open: true; deadline: number }
   | { frame: FrameNumber; open: false; opensNextAt: number };
 
+export const frameWindowMs = (frame: FrameNumber) =>
+  frame === TENTH_FRAME ? TENTH_FRAME_WINDOW_MS : FRAME_WINDOW_MS;
+
 export const openWindow = (frame: FrameNumber, now: number): FrameWindow => ({
   frame,
   open: true,
-  deadline:
-    now + (frame === TENTH_FRAME ? TENTH_FRAME_WINDOW_MS : FRAME_WINDOW_MS),
+  deadline: now + frameWindowMs(frame),
 });
 
 export const revealWindow = (frame: FrameNumber, now: number): FrameWindow => ({

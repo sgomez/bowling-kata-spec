@@ -1,0 +1,79 @@
+.celebration {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.celebration-beam {
+  position: absolute;
+  top: -10%;
+  width: 28%;
+  height: 120%;
+  background: linear-gradient(
+    to bottom,
+    rgb(255 61 139 / 55%),
+    rgb(61 232 255 / 0%)
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: beam 1200ms var(--ease-exit) both;
+}
+
+.celebration-beam.left {
+  left: 6%;
+  transform-origin: top left;
+}
+
+.celebration-beam.right {
+  right: 6%;
+  transform-origin: top right;
+  animation-name: beam-mirrored;
+}
+
+.celebration-confetti {
+  position: absolute;
+  top: -12px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation: confetti 1200ms var(--ease-entry) both;
+}
+
+@keyframes beam {
+  0% {
+    opacity: 0;
+    transform: rotate(-18deg);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(14deg);
+  }
+}
+
+@keyframes beam-mirrored {
+  0% {
+    opacity: 0;
+    transform: rotate(18deg);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-14deg);
+  }
+}
+
+@keyframes confetti {
+  from {
+    transform: translateY(0) rotate(0);
+  }
+  to {
+    transform: translateY(110vh) rotate(540deg);
+  }
+}

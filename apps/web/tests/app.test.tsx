@@ -19,6 +19,7 @@ describe("app", () => {
   it("starts at home with the Invite Link's code", () => {
     const html = render(
       <App
+        webgl
         connection={connection()}
         initialCode="K7MPQ"
         origin="https://b.es"
@@ -26,41 +27,79 @@ describe("app", () => {
     );
 
     expect(html).toContain("Crear sala");
-    expect(html).toContain('value="K7MPQ"');
+    expect(html).toContain("Te han invitado a la sala <strong>K7MPQ</strong>");
   });
 
   it("shows the last refusal in Spanish", () => {
     const s = connection();
     s.error.value = "UNKNOWN_ROOM";
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("No existe ninguna sala con ese código.");
   });
 
-  it.each([
-    ["ROOM_CLOSED", "La sala se ha cerrado."],
-    ["SERVER_SHUTDOWN", "El servidor se está reiniciando."],
-  ] as const)(
-    "returns home explaining %s, without the old code",
-    (reason, text) => {
-      const s = connection();
-      s.closed.value = reason;
+  it("waits on the Room the Bowler is entering", () => {
+    const s = connection();
+    s.create("Ana");
 
-      const html = render(<App connection={s} initialCode="K7MPQ" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
-      expect(html).toContain(text);
-      expect(html).toContain("Crear sala");
-      expect(html).not.toContain('value="K7MPQ"');
-    },
-  );
+    expect(html).toContain("Conectando…");
+  });
+
+  it("returns home explaining the Room closed, without the old code", () => {
+    const s = connection();
+    s.closed.value = "ROOM_CLOSED";
+
+    const html = render(
+      <App webgl connection={s} initialCode="K7MPQ" origin="" />,
+    );
+
+    expect(html).toContain("La sala se ha cerrado.");
+    expect(html).toContain("Crear sala");
+    expect(html).not.toContain("K7MPQ");
+  });
+
+  it("tells the server is restarting instead of the Home", () => {
+    const s = connection();
+    s.closed.value = "SERVER_SHUTDOWN";
+
+    const html = render(
+      <App webgl connection={s} initialCode="K7MPQ" origin="" />,
+    );
+
+    expect(html).toContain("El servidor se está reiniciando.");
+    expect(html).toContain("Volver al inicio");
+    expect(html).not.toContain("Crear sala");
+  });
+
+  it("lays the reconnecting notice over the current screen", () => {
+    const s = connection();
+    s.seat.value = { you: "ana", room: ROOM, receivedAt: 0 };
+    s.reconnecting.value = { attempt: 2, nextAt: Date.now() + 3_000 };
+
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
+
+    expect(html).toContain("Empezar partida");
+    expect(html).toContain("Intento 2 · siguiente en 3 s");
+  });
+
+  it("drops the reconnecting notice once reconnected", () => {
+    const s = connection();
+    s.seat.value = { you: "ana", room: ROOM, receivedAt: 0 };
+
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
+
+    expect(html).not.toContain("Reconectando…");
+  });
 
   it("moves to the Lobby once in a Room", () => {
     const s = connection();
     s.seat.value = { you: "ana", room: ROOM, receivedAt: 0 };
 
     const html = render(
-      <App connection={s} initialCode="" origin="https://b.es" />,
+      <App webgl connection={s} initialCode="" origin="https://b.es" />,
     );
 
     expect(html).toContain("https://b.es/K7MPQ");
@@ -77,7 +116,7 @@ describe("app", () => {
     };
     s.error.value = "PIN_NOT_STANDING";
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("Frame 1");
     expect(html).toContain("Ese bolo ya no está en pie.");
@@ -91,7 +130,7 @@ describe("app", () => {
       receivedAt: 0,
     };
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("¡Gana Ana!");
   });
@@ -100,7 +139,7 @@ describe("app", () => {
     const s = connection();
     s.removed.value = true;
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("El anfitrión te ha sacado de la sala.");
   });
@@ -114,7 +153,7 @@ describe("app", () => {
       receivedAt: 0,
     };
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("Salir de la sala");
   });

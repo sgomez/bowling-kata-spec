@@ -1,0 +1,51 @@
+:root {
+  --bg: #0e0b1a;
+  --surface: #1a1530;
+  --surface-raised: #251e42;
+  --field: #120e22;
+  --border: #3a3160;
+  --text: #f6f1e7;
+  --text-soft: #b9b0d6;
+  --placeholder: #8d84ad;
+  --accent: #ff3d8b;
+  --accent-2: #3de8ff;
+  --success: #5be38b;
+  --warning: #ffc53d;
+  --error: #ff6b5e;
+  --ink: #1a0a14;
+  --title: #ffe3ef;
+
+  --wood-light: #efcf96;
+  --wood-mid: #d9b274;
+  --wood-back: #b98a5a;
+  --arrow: #8a3f1c;
+  --gutter: #090712;
+
+  --glow-accent:
+    0 0 0 1px rgb(255 61 139 / 60%), 0 0 26px rgb(255 61 139 / 50%);
+  --glow-accent-2: 0 0 18px rgb(61 232 255 / 22%);
+  --focus-ring: 0 0 0 4px rgb(61 232 255 / 18%);
+
+  --radius-chip: 6px;
+  --radius-field: 12px;
+  --radius-button: 14px;
+  --radius-panel: 22px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+
+  --touch: 44px;
+  --button-height: 56px;
+
+  --font-display: "Bowlby One", "Arial Black", Impact, sans-serif;
+  --font-body: Barlow, "Helvetica Neue", Arial, sans-serif;
+  --font-label: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+
+  --ease-exit: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-entry: cubic-bezier(0.5, 0, 0.9, 0.3);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-pulse: cubic-bezier(0.4, 0, 0.6, 1);
+}

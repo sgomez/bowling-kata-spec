@@ -1,0 +1,19 @@
+.avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--ink);
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+}
+
+.avatar.away {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}

@@ -1,6 +1,18 @@
 export { MAX_BOWLERS } from "./admission.js";
-export type { BowlerId, BowlerView, FrameView } from "./bowler.js";
-export type { Frame, FrameNumber, PinCount } from "./frame.js";
+export type {
+  BowlerColour,
+  BowlerId,
+  BowlerView,
+  FrameView,
+} from "./bowler.js";
+export {
+  type Frame,
+  type FrameNumber,
+  PINS_PER_RACK,
+  type PinCount,
+  TENTH_FRAME,
+} from "./frame.js";
+export { frameWindowMs } from "./frame-window.js";
 export { Game, type RollValidationResult } from "./game.js";
 export { MAX_NICKNAME_LENGTH } from "./nickname.js";
 export { PINS, type Pin } from "./pins.js";
@@ -25,3 +37,4 @@ export {
 } from "./room-code.js";
 export type { RoomFailure, RoomResult } from "./room-failure.js";
 export type { RoomSnapshot } from "./room-snapshot.js";
+export { leaders, type Standing, standings } from "./standings.js";

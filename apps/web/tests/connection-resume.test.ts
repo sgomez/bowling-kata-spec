@@ -127,3 +127,43 @@ describe("resume token", () => {
     expect(sockets[1].sent).toEqual([{ type: "resume", token: "K7MPQ.t" }]);
   });
 });
+
+describe("reconnecting", () => {
+  it("tells the attempt number and when it fires, until reconnected", () => {
+    const { connection, sockets, retries, clock, seated } = setup(
+      memoryStore().store,
+    );
+    connection.create("Ana");
+    sockets[0].open();
+    seated();
+    expect(connection.reconnecting.value).toBeUndefined();
+
+    clock.now = 10_000;
+    sockets[0].drop();
+    expect(connection.reconnecting.value).toEqual({
+      attempt: 1,
+      nextAt: 11_000,
+    });
+
+    clock.now = 11_000;
+    retries[0]();
+    sockets[1].drop();
+    expect(connection.reconnecting.value).toEqual({
+      attempt: 2,
+      nextAt: 13_000,
+    });
+
+    retries[1]();
+    sockets[2].open();
+    expect(connection.reconnecting.value).toBeUndefined();
+  });
+
+  it("is not shown when there is nothing to resume", () => {
+    const { connection, sockets } = setup(memoryStore().store);
+    connection.create("Ana");
+
+    sockets[0].drop();
+
+    expect(connection.reconnecting.value).toBeUndefined();
+  });
+});
