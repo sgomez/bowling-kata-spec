@@ -202,9 +202,6 @@ importers:
       '@bowling/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      tsx:
-        specifier: ^4.23.15
-        version: 4.23.15
       ws:
         specifier: ^8.23.0
         version: 8.23.0
@@ -215,6 +212,12 @@ importers:
       '@types/ws':
         specifier: ^8.18.2
         version: 8.18.2
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
 
   apps/web:
     dependencies:

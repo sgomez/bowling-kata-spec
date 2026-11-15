@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "PORT=${PORT:-8787} pnpm --parallel --filter @bowling/server --filter @bowling/web dev",
-    "build": "pnpm --filter @bowling/web build",
+    "build": "pnpm --filter @bowling/web --filter @bowling/server build",
     "start": "pnpm --filter @bowling/server start",
     "test": "vitest run --coverage",
     "lint": "biome check .",
