@@ -2,8 +2,8 @@ import type { Pin, RoomSnapshot } from "@bowling/domain";
 import type { Seat } from "./connection.js";
 import { Countdown } from "./countdown.js";
 import { Lane } from "./lane.js";
+import { Reveal } from "./reveal.js";
 import type { RollInput } from "./roll-input.js";
-import { Scorecard } from "./scorecard.js";
 
 interface PlayProps {
   seat: Seat;
@@ -32,12 +32,15 @@ export const Play = ({
 
   if (!frame.open) {
     return (
-      <main class="play">
-        <h1>Frame {frame.number}</h1>
+      <Reveal
+        you={you}
+        bowlers={room.bowlers}
+        frame={frame.number}
+        endsAt={endsAt}
+        now={now}
+      >
         {notice}
-        <Scorecard bowlers={room.bowlers} />
-        <p>Siguiente frame en {countdown}</p>
-      </main>
+      </Reveal>
     );
   }
 
