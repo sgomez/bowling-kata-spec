@@ -14,6 +14,7 @@ interface AppProps {
   connection: Connection;
   initialCode: string;
   origin: string;
+  webgl: boolean;
 }
 
 export const App = (props: AppProps) => {
@@ -26,7 +27,7 @@ export const App = (props: AppProps) => {
   );
 };
 
-const Screen = ({ connection, initialCode, origin }: AppProps) => {
+const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
   const shared = useSignal<ShareOutcome | undefined>(undefined);
   const removing = useSignal<BowlerId | undefined>(undefined);
   const leaving = useSignal(false);
@@ -72,6 +73,7 @@ const Screen = ({ connection, initialCode, origin }: AppProps) => {
           seat={seat}
           frame={seat.room.frame}
           onRoll={connection.roll}
+          webgl={webgl}
           missed={connection.missed.value === seat.room.frame.number}
           onMiss={connection.miss}
           leaving={leaving.value}

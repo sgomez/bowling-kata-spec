@@ -19,6 +19,7 @@ describe("app", () => {
   it("starts at home with the Invite Link's code", () => {
     const html = render(
       <App
+        webgl
         connection={connection()}
         initialCode="K7MPQ"
         origin="https://b.es"
@@ -33,7 +34,7 @@ describe("app", () => {
     const s = connection();
     s.error.value = "UNKNOWN_ROOM";
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("No existe ninguna sala con ese código.");
   });
@@ -42,7 +43,7 @@ describe("app", () => {
     const s = connection();
     s.create("Ana");
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("Conectando…");
   });
@@ -51,7 +52,9 @@ describe("app", () => {
     const s = connection();
     s.closed.value = "ROOM_CLOSED";
 
-    const html = render(<App connection={s} initialCode="K7MPQ" origin="" />);
+    const html = render(
+      <App webgl connection={s} initialCode="K7MPQ" origin="" />,
+    );
 
     expect(html).toContain("La sala se ha cerrado.");
     expect(html).toContain("Crear sala");
@@ -62,7 +65,9 @@ describe("app", () => {
     const s = connection();
     s.closed.value = "SERVER_SHUTDOWN";
 
-    const html = render(<App connection={s} initialCode="K7MPQ" origin="" />);
+    const html = render(
+      <App webgl connection={s} initialCode="K7MPQ" origin="" />,
+    );
 
     expect(html).toContain("El servidor se está reiniciando.");
     expect(html).toContain("Volver al inicio");
@@ -74,7 +79,7 @@ describe("app", () => {
     s.seat.value = { you: "ana", room: ROOM, receivedAt: 0 };
     s.reconnecting.value = { attempt: 2, nextAt: Date.now() + 3_000 };
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("Empezar partida");
     expect(html).toContain("Intento 2 · siguiente en 3 s");
@@ -84,7 +89,7 @@ describe("app", () => {
     const s = connection();
     s.seat.value = { you: "ana", room: ROOM, receivedAt: 0 };
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).not.toContain("Reconectando…");
   });
@@ -94,7 +99,7 @@ describe("app", () => {
     s.seat.value = { you: "ana", room: ROOM, receivedAt: 0 };
 
     const html = render(
-      <App connection={s} initialCode="" origin="https://b.es" />,
+      <App webgl connection={s} initialCode="" origin="https://b.es" />,
     );
 
     expect(html).toContain("https://b.es/K7MPQ");
@@ -111,7 +116,7 @@ describe("app", () => {
     };
     s.error.value = "PIN_NOT_STANDING";
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("Frame 1");
     expect(html).toContain("Ese bolo ya no está en pie.");
@@ -125,7 +130,7 @@ describe("app", () => {
       receivedAt: 0,
     };
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("¡Gana Ana!");
   });
@@ -134,7 +139,7 @@ describe("app", () => {
     const s = connection();
     s.removed.value = true;
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("El anfitrión te ha sacado de la sala.");
   });
@@ -148,7 +153,7 @@ describe("app", () => {
       receivedAt: 0,
     };
 
-    const html = render(<App connection={s} initialCode="" origin="" />);
+    const html = render(<App webgl connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("Salir de la sala");
   });

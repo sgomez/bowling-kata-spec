@@ -39,8 +39,8 @@ ul {
 .lane canvas {
   display: block;
   margin: 0 auto;
-  width: min(100%, calc((100dvh - 220px) * 1.05 / 2.3));
-  aspect-ratio: 1.05 / 2.3;
+  width: 100%;
+  height: max(320px, calc(100dvh - 300px));
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;

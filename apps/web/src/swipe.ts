@@ -1,4 +1,9 @@
-import { BALL_RADIUS, LANE_LENGTH, LANE_WIDTH } from "./lane-geometry.js";
+import { BALL_RADIUS, LANE_WIDTH } from "./lane-geometry.js";
+import {
+  type LaneCamera,
+  toLanePoint,
+  type Viewport,
+} from "./lane-projection.js";
 
 export interface SwipeSample {
   x: number;
@@ -75,15 +80,12 @@ interface Touch {
   timeStamp: number;
 }
 
-interface Rect {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-export const toLane = (touch: Touch, rect: Rect): SwipeSample => ({
-  x: ((touch.clientX - rect.left) / rect.width - 0.5) * LANE_WIDTH,
-  y: ((rect.top + rect.height - touch.clientY) / rect.height) * LANE_LENGTH,
-  t: touch.timeStamp,
-});
+export const toLane = (
+  touch: Touch,
+  viewport: Viewport,
+  camera: LaneCamera,
+): SwipeSample | undefined => {
+  const point = { x: touch.clientX, y: touch.clientY };
+  const spot = toLanePoint(point, viewport, camera);
+  return spot && { ...spot, t: touch.timeStamp };
+};

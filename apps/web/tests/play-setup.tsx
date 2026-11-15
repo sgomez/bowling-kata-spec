@@ -45,9 +45,9 @@ export const yourFrame = (number: number, rolls: string[], extra = {}) => {
   });
 };
 
-const FakeInput = ({ standing, endsAt }: RollInputProps) => (
+const FakeInput = ({ standing, endsAt, ball }: RollInputProps) => (
   <p>
-    input:{standing.join(",")} until:{endsAt}
+    input:{standing.join(",")} until:{endsAt} ball:{ball}
   </p>
 );
 
@@ -56,6 +56,7 @@ export const play = (
   snapshot: RoomSnapshot,
   missed = false,
   leaving = false,
+  webgl = true,
 ) =>
   render(
     <Play
@@ -69,6 +70,7 @@ export const play = (
       onCancelLeave={() => {}}
       onLeave={() => {}}
       RollInput={FakeInput}
+      webgl={webgl}
       now={() => 3_000}
     />,
   );

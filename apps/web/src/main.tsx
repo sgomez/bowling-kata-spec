@@ -16,6 +16,14 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/screens.css";
 
+const hasWebGL = () => {
+  try {
+    return document.createElement("canvas").getContext("webgl2") !== null;
+  } catch {
+    return false;
+  }
+};
+
 const root = document.getElementById("app");
 const desktop = isDesktop({
   touch:
@@ -47,6 +55,7 @@ if (root && desktop) {
       connection={connection}
       initialCode={initialCode}
       origin={location.origin}
+      webgl={hasWebGL()}
     />,
     root,
   );
