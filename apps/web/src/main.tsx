@@ -4,7 +4,17 @@ import { App } from "./app.js";
 import { createConnection } from "./connection.js";
 import { DesktopGate, isDesktop } from "./desktop-gate.js";
 import { codeFromPath } from "./invite.js";
-import "./styles.css";
+import "@fontsource/barlow/latin-400.css";
+import "@fontsource/barlow/latin-500.css";
+import "@fontsource/barlow/latin-600.css";
+import "@fontsource/barlow/latin-700.css";
+import "@fontsource/barlow-condensed/latin-500.css";
+import "@fontsource/barlow-condensed/latin-600.css";
+import "@fontsource/barlow-condensed/latin-700.css";
+import "@fontsource/bowlby-one/latin-400.css";
+import "./styles/tokens.css";
+import "./styles/base.css";
+import "./styles/screens.css";
 
 const root = document.getElementById("app");
 const desktop = isDesktop({

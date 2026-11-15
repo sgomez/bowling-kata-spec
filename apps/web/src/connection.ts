@@ -57,6 +57,7 @@ export const createConnection = (
   const error = signal<ErrorCode | undefined>(undefined);
   const removed = signal(false);
   const missed = signal<FrameNumber | undefined>(undefined);
+  const entering = signal<"create" | "join" | undefined>(undefined);
   const stored = attempt(() => storage().getItem(TOKEN_KEY)) ?? undefined;
   let token = resumableToken(stored, invitedTo);
   const closed = signal<CloseReason | undefined>(undefined);
@@ -76,6 +77,7 @@ export const createConnection = (
   };
 
   const receive = (message: ServerMessage) => {
+    entering.value = undefined;
     error.value = undefined;
     removed.value = false;
     closed.value = undefined;
@@ -112,6 +114,7 @@ export const createConnection = (
     next.onclose = () => {
       socket = undefined;
       pending = [];
+      entering.value = undefined;
       if (token) {
         retry(resume, failures++);
       }
@@ -145,12 +148,18 @@ export const createConnection = (
     removed,
     closed,
     missed,
+    entering,
     miss: () => {
       missed.value = seat.value?.room.frame?.number;
     },
-    create: (nickname: string) => send({ type: "create", nickname }),
-    join: (code: string, nickname: string) =>
-      send({ type: "join", code, nickname }),
+    create: (nickname: string) => {
+      entering.value = "create";
+      send({ type: "create", nickname });
+    },
+    join: (code: string, nickname: string) => {
+      entering.value = "join";
+      send({ type: "join", code, nickname });
+    },
     start: () => send({ type: "start" }),
     roll: (pins: Pin[]) => send({ type: "roll", pins }),
     remove: (bowlerId: BowlerId) => send({ type: "remove", bowlerId }),

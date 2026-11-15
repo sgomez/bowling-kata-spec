@@ -115,6 +115,30 @@ describe("connection", () => {
     expect(connection.closed.value).toBeUndefined();
   });
 
+  it.each([
+    ["created", { type: "room", you: "ana", token: "t", room: ROOM }],
+    ["refused", { type: "error", error: "ROOM_FULL" }],
+  ] as const)("waits on entering a Room until it is %s", (_, reply) => {
+    const { connection, sockets } = setup();
+
+    connection.join("K7MPQ", "Bea");
+    expect(connection.entering.value).toBe("join");
+
+    sockets[0].open();
+    sockets[0].receive(reply);
+    expect(connection.entering.value).toBeUndefined();
+  });
+
+  it("stops waiting when the connection drops before an answer", () => {
+    const { connection, sockets } = setup();
+    connection.create("Ana");
+    expect(connection.entering.value).toBe("create");
+
+    sockets[0].drop();
+
+    expect(connection.entering.value).toBeUndefined();
+  });
+
   it("reconnects for the next request after the connection drops", () => {
     const { connection, sockets } = setup();
     connection.create("Ana");
