@@ -13,6 +13,7 @@ export default defineConfig({
         "apps/web/src/lane-physics.ts",
         "apps/web/src/lane-models.ts",
         "apps/web/src/lane-scene.ts",
+        "apps/web/src/lane-actors.ts",
         "apps/web/src/lane-set.ts",
         "apps/web/src/lane-texture.ts",
         "apps/web/src/lane-glow.ts",

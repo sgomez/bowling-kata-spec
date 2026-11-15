@@ -7,11 +7,11 @@ import {
   PerspectiveCamera,
   Scene,
   Vector2,
-  Vector3,
   WebGLRenderer,
 } from "three";
-import type { Spot } from "./knock.js";
-import { BALL_RADIUS, LANE_WIDTH } from "./lane-geometry.js";
+import { poseBall, posePin } from "./lane-actors.js";
+import type { Staging } from "./lane-choreography.js";
+import { BALL_RADIUS } from "./lane-geometry.js";
 import { glow } from "./lane-glow.js";
 import { overBudget } from "./lane-marks.js";
 import { ballMesh, pinGeometry, pinMaterial } from "./lane-models.js";
@@ -20,9 +20,7 @@ import { createReflections } from "./lane-reflection.js";
 import { buildSet } from "./lane-set.js";
 import { createSwipeMarks, type SwipeMarks } from "./lane-swipe-marks.js";
 
-export interface LaneView {
-  pins: ReadonlyMap<Pin, Spot>;
-  ball: Spot;
+export interface LaneView extends Staging {
   marks: SwipeMarks;
 }
 
@@ -32,9 +30,6 @@ export interface LaneScene {
 }
 
 const MAX_PIXEL_RATIO = 2;
-
-// Lane metres to world: x across, y up, z = -(along the Lane).
-const world = ({ x, y }: Spot, height = 0) => new Vector3(x, height, -y);
 
 export const createLaneScene = (
   canvas: HTMLCanvasElement,
@@ -64,17 +59,16 @@ export const createLaneScene = (
   let warned = false;
   const lens = new PerspectiveCamera();
 
-  const placePins = (spots: ReadonlyMap<Pin, Spot>) => {
-    for (const [pin, mesh] of pins) mesh.visible = spots.has(pin);
-    for (const [pin, spot] of spots) {
+  const placePins = (staged: Staging["pins"]) => {
+    for (const [pin, mesh] of pins) mesh.visible = staged.has(pin);
+    for (const [pin, staging] of staged) {
       let mesh = pins.get(pin);
       if (!mesh) {
-        mesh = new Mesh(geometry, material);
+        mesh = new Mesh(geometry, material.clone());
         pins.set(pin, mesh);
         scene.add(mesh);
       }
-      mesh.visible = true;
-      mesh.position.copy(world(spot));
+      posePin(mesh, staging);
     }
   };
 
@@ -94,10 +88,9 @@ export const createLaneScene = (
   return {
     draw(view, camera) {
       placePins(view.pins);
-      const limit = LANE_WIDTH / 2 - BALL_RADIUS / 2;
-      const x = Math.max(-limit, Math.min(limit, view.ball.x));
-      ball.position.copy(world({ x, y: view.ball.y }, BALL_RADIUS));
+      poseBall(ball, view.ball);
       halo.position.copy(ball.position);
+      halo.visible = !view.ball.gutter;
       reflections.update([...pins.values(), ball]);
       marks.draw(view.marks);
       aim(camera);

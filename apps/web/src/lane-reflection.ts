@@ -85,6 +85,8 @@ export const createReflections = (scene: Scene) => {
         const copy = copyOf(source);
         source.updateMatrix();
         copy.visible = source.visible;
+        (copy.material as Material).opacity =
+          REFLECTION * (source.material as Material).opacity;
         copy.matrix.multiplyMatrices(FLIP, source.matrix);
         copy.matrixWorldNeedsUpdate = true;
         if (!source.visible || count === MAX_SHADOWS) continue;
