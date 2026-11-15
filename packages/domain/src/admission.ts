@@ -1,9 +1,23 @@
-import { type Bowler, type Newcomer, newBowler } from "./bowler.js";
+import {
+  type Bowler,
+  type BowlerColour,
+  type Newcomer,
+  newBowler,
+} from "./bowler.js";
 import { parseNickname } from "./nickname.js";
 import type { RoomFailure } from "./room-failure.js";
 import type { Phase } from "./room-snapshot.js";
 
 export const MAX_BOWLERS = 6;
+
+const freeColour = (bowlers: readonly Bowler[]) => {
+  const held = new Set(bowlers.map((b) => b.colour));
+  let colour = 0;
+  while (held.has(colour as BowlerColour)) {
+    colour++;
+  }
+  return colour as BowlerColour;
+};
 
 export const admit = (
   bowlers: readonly Bowler[],
@@ -23,5 +37,5 @@ export const admit = (
   const key = name.toLocaleLowerCase();
   return bowlers.some((b) => b.nickname.toLocaleLowerCase() === key)
     ? "NICKNAME_TAKEN"
-    : newBowler(id, name);
+    : newBowler(id, name, freeColour(bowlers));
 };

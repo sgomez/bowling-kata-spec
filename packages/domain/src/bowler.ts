@@ -6,6 +6,8 @@ import { PINS, type Pin } from "./pins.js";
 
 export type BowlerId = string;
 
+export type BowlerColour = 0 | 1 | 2 | 3 | 4 | 5;
+
 export interface Newcomer {
   id: BowlerId;
   nickname: string;
@@ -14,6 +16,7 @@ export interface Newcomer {
 export interface Bowler {
   readonly id: BowlerId;
   readonly nickname: string;
+  readonly colour: BowlerColour;
   connected: boolean;
   game: Game;
   standing: Set<Pin>;
@@ -27,6 +30,7 @@ export interface FrameView {
 export interface BowlerView {
   id: BowlerId;
   nickname: string;
+  colour: BowlerColour;
   connected: boolean;
   finishedFrame: boolean;
   frames: FrameView[];
@@ -35,9 +39,14 @@ export interface BowlerView {
 
 const fullRack = () => new Set(PINS);
 
-export const newBowler = (id: BowlerId, nickname: string): Bowler => ({
+export const newBowler = (
+  id: BowlerId,
+  nickname: string,
+  colour: BowlerColour,
+): Bowler => ({
   id,
   nickname,
+  colour,
   connected: true,
   game: new Game(),
   standing: fullRack(),
@@ -99,6 +108,7 @@ export const bowlerView = (
   return {
     id: bowler.id,
     nickname: bowler.nickname,
+    colour: bowler.colour,
     connected: bowler.connected,
     finishedFrame: frame !== undefined && hasFinished(bowler, frame),
     frames,
