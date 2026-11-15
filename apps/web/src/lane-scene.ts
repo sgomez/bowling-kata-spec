@@ -1,21 +1,16 @@
 import type { Pin } from "@bowling/domain";
 import {
   AmbientLight,
-  BufferGeometry,
   Color,
   DirectionalLight,
-  Line,
-  LineBasicMaterial,
   Mesh,
   MeshStandardMaterial,
   PerspectiveCamera,
   PlaneGeometry,
   Scene,
   Vector2,
-  Vector3,
   WebGLRenderer,
 } from "three";
-import type { Spot } from "./knock.js";
 import { poseBall, posePin } from "./lane-actors.js";
 import type { Staging } from "./lane-choreography.js";
 import {
@@ -26,10 +21,10 @@ import {
 } from "./lane-geometry.js";
 import { ballMesh, pinGeometry, pinMaterial } from "./lane-models.js";
 import type { LaneCamera } from "./lane-projection.js";
-import type { SwipeSample } from "./swipe.js";
+import { createSwipeMarks, type SwipeMarks } from "./lane-swipe-marks.js";
 
 export interface LaneView extends Staging {
-  trail: readonly SwipeSample[];
+  marks: SwipeMarks;
 }
 
 export interface LaneScene {
@@ -38,9 +33,6 @@ export interface LaneScene {
 }
 
 const MAX_PIXEL_RATIO = 2;
-
-// Lane metres to world: x across, y up, z = -(along the Lane).
-const world = ({ x, y }: Spot, height = 0) => new Vector3(x, height, -y);
 
 const strip = (width: number, length: number, colour: string) => {
   const mesh = new Mesh(
@@ -85,15 +77,8 @@ export const createLaneScene = (
   const material = pinMaterial();
   const pins = new Map<Pin, Mesh>();
   const ball = ballMesh(ballColour);
-  const trail = new Line(
-    new BufferGeometry(),
-    new LineBasicMaterial({
-      color: "#ffffff",
-      transparent: true,
-      opacity: 0.6,
-    }),
-  );
-  scene.add(ball, trail);
+  scene.add(ball);
+  const marks = createSwipeMarks(scene);
   const lens = new PerspectiveCamera();
 
   const placePins = (staged: Staging["pins"]) => {
@@ -126,7 +111,7 @@ export const createLaneScene = (
     draw(view, camera) {
       placePins(view.pins);
       poseBall(ball, view.ball);
-      trail.geometry.setFromPoints(view.trail.map((s) => world(s, 0.002)));
+      marks.draw(view.marks);
       aim(camera);
       renderer.render(scene, lens);
     },

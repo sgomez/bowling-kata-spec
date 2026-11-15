@@ -23,7 +23,7 @@ const RELEASE_WINDOW_MS = 100;
 const SPIN_GAIN = 4;
 const MIN_LENGTH = 0.05;
 const MIN_SPEED = 0.5;
-const MAX_SPEED = 6;
+export const MAX_SPEED = 6;
 const MAX_DIRECTION = 0.35;
 const MAX_RELEASE = LANE_WIDTH / 2 - BALL_RADIUS;
 

@@ -6,8 +6,10 @@ import type { LaneRoll } from "./lane-physics.js";
 import { advance, type LanePlay, playRoll } from "./lane-play.js";
 import { REST_CAMERA } from "./lane-projection.js";
 import type { LaneScene, LaneView } from "./lane-scene.js";
+import { useSwipe } from "./lane-swipe.js";
+import { NO_MARKS } from "./lane-swipe-marks.js";
 import type { RollInputProps } from "./roll-input.js";
-import { readSwipe, toLane } from "./swipe.js";
+import { toLane } from "./swipe.js";
 
 const IDLE_BALL = { x: 0, y: FOUL_LINE / 2 };
 const manner = () => ({
@@ -31,20 +33,23 @@ export const Lane = (input: RollInputProps) => {
   const props = useRef(input);
   props.current = input;
   const [timeUp, setTimeUp] = useState(false);
-  const view = useRef<LaneView>({ ...atRest(standing, IDLE_BALL), trail: [] });
+  const swipe = useSwipe();
+  const view = useRef<LaneView>({
+    ...atRest(standing, IDLE_BALL),
+    marks: NO_MARKS,
+  });
   const roll = useRef<LaneRoll | undefined>(undefined);
   const play = useRef<LanePlay | undefined>(undefined);
   const resting = useRef(standing);
-  const aiming = useRef(false);
   const activity = (): LaneActivity =>
-    roll.current ? "rolling" : aiming.current ? "aiming" : "idle";
+    roll.current ? "rolling" : swipe.aiming() ? "aiming" : "idle";
   const frameTime = () => ({
     now: props.current.now(),
     endsAt: props.current.endsAt,
   });
   const rest = () => {
     play.current = undefined;
-    view.current = { ...atRest(resting.current, IDLE_BALL), trail: [] };
+    view.current = { ...view.current, ...atRest(resting.current, IDLE_BALL) };
   };
 
   useEffect(() => {
@@ -68,8 +73,7 @@ export const Lane = (input: RollInputProps) => {
       setTimeUp(true);
       if (time === "over") return;
       roll.current = undefined;
-      aiming.current = false;
-      rest();
+      cancel();
       props.current.onMiss();
     };
     const tick = (now: number) => {
@@ -81,7 +85,7 @@ export const Lane = (input: RollInputProps) => {
           roll.current,
           manner(),
         );
-        view.current = { ...staging, trail: [] };
+        view.current = { ...view.current, ...staging };
         if (knocked) {
           roll.current = undefined;
           resting.current = resting.current.filter((p) => !knocked.includes(p));
@@ -90,6 +94,7 @@ export const Lane = (input: RollInputProps) => {
         if (staging.done) rest();
       }
       last = now;
+      view.current.marks = swipe.marks(now);
       scene?.draw(view.current, REST_CAMERA);
       frame = requestAnimationFrame(tick);
     };
@@ -107,32 +112,30 @@ export const Lane = (input: RollInputProps) => {
     const [start] = samplesOf(event);
     if (!start || !canStartSwipe(activity(), frameTime(), start)) return;
     target.setPointerCapture(event.pointerId);
-    aiming.current = true;
+    swipe.start(start);
     rest();
-    const ball = { ...view.current.ball, ...start };
-    view.current = { ...view.current, ball, trail: [start] };
+    view.current.ball = { ...view.current.ball, ...start };
   };
 
   const onPointerMove = (event: PointerEvent) => {
-    if (!aiming.current) return;
-    const trail = [...view.current.trail, ...samplesOf(event)];
-    const ball = { ...view.current.ball, ...trail.at(-1) };
-    view.current = { ...view.current, ball, trail };
+    if (!swipe.aiming()) return;
+    const ball = swipe.extend(samplesOf(event));
+    view.current.ball = { ...view.current.ball, ...ball };
   };
 
   const cancel = () => {
-    aiming.current = false;
+    swipe.drop();
     rest();
   };
 
   const onPointerUp = async () => {
-    if (!aiming.current) return;
-    const swipe = readSwipe(view.current.trail);
-    cancel();
-    if (!swipe) return;
+    if (!swipe.aiming()) return;
+    const reading = swipe.release();
+    rest();
+    if (!reading) return;
     const { startRoll } = await physics();
-    roll.current = startRoll(props.current.standing, swipe);
-    play.current = playRoll(props.current.standing, swipe);
+    roll.current = startRoll(props.current.standing, reading);
+    play.current = playRoll(props.current.standing, reading);
   };
 
   return (
@@ -145,11 +148,8 @@ export const Lane = (input: RollInputProps) => {
         onPointerUp={onPointerUp}
         onPointerCancel={cancel}
       />
-      <p>
-        {timeUp
-          ? "Se acabó el tiempo."
-          : "Desliza el dedo hacia los bolos. Curva el gesto para darle efecto."}
-      </p>
+      {swipe.overlay(timeUp)}
+      {timeUp && <p>Se acabó el tiempo.</p>}
     </div>
   );
 };
