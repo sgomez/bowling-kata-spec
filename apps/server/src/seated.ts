@@ -8,21 +8,27 @@ export interface Seat {
 
 export type SeatedMessage = Extract<
   ClientMessage,
-  { type: "start" | "roll" | "leave" | "remove" }
+  { type: "start" | "roll" | "rematch" | "leave" | "remove" }
 >;
+
+export const isSeated = (message: ClientMessage): message is SeatedMessage =>
+  ["start", "roll", "rematch", "leave", "remove"].includes(message.type);
 
 export const act = (
   { entry, bowlerId }: Seat,
   message: SeatedMessage,
   now: number,
-) =>
-  message.type === "start"
-    ? entry.room.start(bowlerId, now)
-    : message.type === "roll"
-      ? entry.room.roll(bowlerId, message.pins, now)
-      : message.type === "leave"
-        ? entry.room.leave(bowlerId, now)
-        : entry.room.remove(bowlerId, message.bowlerId, now);
-
-export const isSeated = (message: ClientMessage): message is SeatedMessage =>
-  ["start", "roll", "leave", "remove"].includes(message.type);
+) => {
+  switch (message.type) {
+    case "start":
+      return entry.room.start(bowlerId, now);
+    case "rematch":
+      return entry.room.rematch(bowlerId, now);
+    case "roll":
+      return entry.room.roll(bowlerId, message.pins, now);
+    case "leave":
+      return entry.room.leave(bowlerId, now);
+    case "remove":
+      return entry.room.remove(bowlerId, message.bowlerId, now);
+  }
+};

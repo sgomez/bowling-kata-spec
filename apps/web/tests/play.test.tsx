@@ -99,11 +99,19 @@ describe("the final Scores", () => {
   const final = (winners: string[]) =>
     render(
       <Final
-        room={room({
-          phase: "finished",
-          winners,
-          bowlers: [bowler("ana", { total: 87 }), bowler("bea", { total: 87 })],
-        })}
+        seat={{
+          you: "ana",
+          receivedAt: 0,
+          room: room({
+            phase: "finished",
+            winners,
+            bowlers: [
+              bowler("ana", { total: 87 }),
+              bowler("bea", { total: 87 }),
+            ],
+          }),
+        }}
+        onRematch={() => {}}
       />,
     );
 

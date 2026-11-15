@@ -7,6 +7,7 @@ import {
   knock,
   type Newcomer,
   newBowler,
+  resetGame,
 } from "./bowler.js";
 import { type FrameNumber, TENTH_FRAME } from "./frame.js";
 import {
@@ -17,7 +18,7 @@ import {
   revealWindow,
 } from "./frame-window.js";
 import { connectedHeirOf, heirOf } from "./host.js";
-import { nicknameProblem } from "./nickname.js";
+import { parseNickname } from "./nickname.js";
 import type { Pin } from "./pins.js";
 import type { RoomCode } from "./room-code.js";
 import { type Created, OK, type RoomResult, refuse } from "./room-result.js";
@@ -52,12 +53,15 @@ export class Room {
     if (this.bowlers.length >= MAX_BOWLERS) {
       return refuse("ROOM_FULL");
     }
-    const trimmed = nickname.trim();
-    const problem = nicknameProblem(trimmed, this.bowlers);
-    if (problem) {
-      return refuse(problem);
+    const name = parseNickname(nickname);
+    if (name === undefined) {
+      return refuse("NICKNAME_INVALID");
     }
-    this.bowlers.push(newBowler(id, trimmed));
+    const key = name.toLocaleLowerCase();
+    if (this.bowlers.some((b) => b.nickname.toLocaleLowerCase() === key)) {
+      return refuse("NICKNAME_TAKEN");
+    }
+    this.bowlers.push(newBowler(id, name));
     return OK;
   }
 
@@ -68,9 +72,17 @@ export class Room {
     if (bowlerId !== this.hostId) {
       return refuse("NOT_HOST");
     }
-    this.phase = "playing";
-    this.window = openWindow(1, now);
-    return OK;
+    return this.play(now);
+  }
+
+  rematch(bowlerId: BowlerId, now: number): RoomResult {
+    if (bowlerId !== this.hostId) {
+      return refuse("NOT_HOST");
+    }
+    if (this.phase !== "finished") {
+      return refuse("GAMES_NOT_FINISHED");
+    }
+    return this.play(now);
   }
 
   roll(bowlerId: BowlerId, pins: readonly Pin[], now: number): RoomResult {
@@ -165,6 +177,13 @@ export class Room {
       viewer,
       now,
     });
+  }
+
+  private play(now: number) {
+    this.bowlers.forEach(resetGame);
+    this.phase = "playing";
+    this.window = openWindow(1, now);
+    return OK;
   }
 
   private find(bowlerId: BowlerId) {

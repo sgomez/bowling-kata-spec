@@ -1,9 +1,14 @@
-import type { RoomSnapshot } from "@bowling/domain";
 import { Scorecard } from "./scorecard.js";
+import type { Seat } from "./session.js";
 
 const names = new Intl.ListFormat("es-ES", { type: "conjunction" });
 
-export const Final = ({ room }: { room: RoomSnapshot }) => {
+interface FinalProps {
+  seat: Seat;
+  onRematch: () => void;
+}
+
+export const Final = ({ seat: { you, room }, onRematch }: FinalProps) => {
   const winners = room.bowlers
     .filter((b) => room.winners.includes(b.id))
     .map((b) => b.nickname);
@@ -17,6 +22,13 @@ export const Final = ({ room }: { room: RoomSnapshot }) => {
           : `Empate entre ${names.format(winners)}`}
       </p>
       <Scorecard bowlers={room.bowlers} />
+      {room.hostId === you ? (
+        <button type="button" onClick={onRematch}>
+          Revancha
+        </button>
+      ) : (
+        <p>Esperando a que el anfitrión pida la revancha…</p>
+      )}
     </main>
   );
 };

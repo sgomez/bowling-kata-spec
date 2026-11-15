@@ -133,5 +133,6 @@ export const createSession = (
       send({ type: "leave" });
       forget();
     },
+    rematch: () => send({ type: "rematch" }),
   };
 };

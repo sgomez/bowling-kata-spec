@@ -18,6 +18,7 @@ const ClientMessageSchema = v.variant("type", [
   v.object({ type: v.literal("start") }),
   v.object({ type: v.literal("leave") }),
   v.object({ type: v.literal("remove"), bowlerId: id }),
+  v.object({ type: v.literal("rematch") }),
   v.object({
     type: v.literal("roll"),
     pins: v.pipe(v.array(v.picklist(PINS)), v.maxLength(PINS.length)),

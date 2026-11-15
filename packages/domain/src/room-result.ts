@@ -3,6 +3,7 @@ export type RoomFailure =
   | { type: "NICKNAME_TAKEN" }
   | { type: "ROOM_FULL" }
   | { type: "GAMES_STARTED" }
+  | { type: "GAMES_NOT_FINISHED" }
   | { type: "NOT_HOST" }
   | { type: "NOT_IN_ROOM" }
   | { type: "WINDOW_CLOSED" }

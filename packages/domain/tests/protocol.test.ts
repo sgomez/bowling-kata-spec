@@ -22,6 +22,12 @@ describe("client messages", () => {
     });
   });
 
+  it("read the Host's request for a Rematch", () => {
+    expect(parseClientMessage(JSON.stringify({ type: "rematch" }))).toEqual({
+      type: "rematch",
+    });
+  });
+
   it("read a Roll as the Pins knocked", () => {
     expect(
       parseClientMessage(JSON.stringify({ type: "roll", pins: [1, 3, 10] })),
