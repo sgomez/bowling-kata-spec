@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import type { BowlerId } from "./bowler.js";
 import { PINS } from "./pins.js";
-import type { RoomFailure } from "./room-result.js";
+import type { RoomFailure } from "./room-failure.js";
 import type { RoomSnapshot } from "./room-snapshot.js";
 
 const nickname = v.pipe(v.string(), v.maxLength(64));
@@ -33,12 +33,19 @@ export type ErrorCode =
   | "UNKNOWN_ROOM"
   | "UNKNOWN_SESSION"
   | "ALREADY_IN_ROOM"
-  | "NOT_IN_ROOM";
+  | "NOT_IN_ROOM"
+  | "TOO_MANY_ROOMS"
+  | "TOO_MANY_CONNECTIONS"
+  | "MESSAGE_TOO_LARGE"
+  | "TOO_MANY_MESSAGES";
+
+export type CloseReason = "ROOM_CLOSED" | "SERVER_SHUTDOWN";
 
 export type ServerMessage =
   | { type: "room"; you: BowlerId; token: string; room: RoomSnapshot }
   | { type: "removed" }
-  | { type: "error"; error: ErrorCode };
+  | { type: "error"; error: ErrorCode }
+  | { type: "closed"; reason: CloseReason };
 
 const parseJson = (raw: string): unknown => {
   try {

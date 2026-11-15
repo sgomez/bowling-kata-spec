@@ -57,7 +57,7 @@ describe("a Bowler leaving", () => {
 
     room.leave("ana", T0);
 
-    expect(room.isEmpty()).toBe(true);
+    expect(room.lifecycle().bowlerCount).toBe(0);
   });
 });
 
@@ -68,7 +68,7 @@ describe("the Host removing a Bowler", () => {
     expect(room.remove("ana", "bea", T0)).toEqual({ ok: true });
 
     expect(ids(room)).toEqual(["ana"]);
-    expect(room.isEmpty()).toBe(false);
+    expect(room.lifecycle().bowlerCount).toBe(1);
   });
 
   it("is refused to anyone but the Host", () => {

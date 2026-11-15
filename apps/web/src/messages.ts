@@ -1,4 +1,4 @@
-import type { ErrorCode } from "@bowling/domain";
+import type { CloseReason, ErrorCode } from "@bowling/domain";
 
 const MESSAGES: Record<ErrorCode, string> = {
   ROOM_FULL: "La sala está completa: ya hay seis jugadores.",
@@ -15,6 +15,18 @@ const MESSAGES: Record<ErrorCode, string> = {
   WINDOW_CLOSED: "Se ha acabado el tiempo de este frame.",
   FRAME_FINISHED: "Ya has terminado este frame.",
   PIN_NOT_STANDING: "Ese bolo ya no está en pie.",
+  TOO_MANY_ROOMS: "Ahora mismo hay demasiadas salas. Prueba dentro de un rato.",
+  TOO_MANY_CONNECTIONS: "Hay demasiadas conexiones desde tu red.",
+  MESSAGE_TOO_LARGE: "Algo ha fallado. Recarga la página.",
+  TOO_MANY_MESSAGES: "Vas demasiado rápido. Espera un momento.",
 };
+
+const CLOSED: Record<CloseReason, string> = {
+  ROOM_CLOSED: "La sala se ha cerrado.",
+  SERVER_SHUTDOWN:
+    "El servidor se está reiniciando. Vuelve a entrar en un momento.",
+};
+
+export const closedMessage = (reason: CloseReason) => CLOSED[reason];
 
 export const errorMessage = (code: ErrorCode) => MESSAGES[code];

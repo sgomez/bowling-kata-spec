@@ -15,16 +15,13 @@ const memoryStore = (token?: string) => {
   return { items, store };
 };
 
+const deny = () => {
+  throw new Error("denied");
+};
 const brokenStore: TokenStore = {
-  getItem: () => {
-    throw new Error("denied");
-  },
-  setItem: () => {
-    throw new Error("denied");
-  },
-  removeItem: () => {
-    throw new Error("denied");
-  },
+  getItem: deny,
+  setItem: deny,
+  removeItem: deny,
 };
 
 const setup = (store: TokenStore) => {
@@ -95,7 +92,7 @@ describe("session token", () => {
     expect(sockets[2].sent).toEqual([{ type: "resume", token: "K7MPQ.t" }]);
   });
 
-  it("is forgotten when unknown, returning home", () => {
+  it("is forgotten when unknown", () => {
     const { items, store } = memoryStore("K7MPQ.old");
     const { session, sockets } = setup(store);
     sockets[0].open();
@@ -106,6 +103,20 @@ describe("session token", () => {
     expect(items.has("token")).toBe(false);
     expect(session.seat.value).toBeUndefined();
     expect(session.error.value).toBe("UNKNOWN_SESSION");
+  });
+
+  it("is forgotten when the Room closes", () => {
+    const { items, store } = memoryStore();
+    const { session, sockets, retries, seated } = setup(store);
+    session.create("Ana");
+    sockets[0].open();
+    seated();
+
+    sockets[0].receive({ type: "closed", reason: "ROOM_CLOSED" });
+    sockets[0].drop();
+
+    expect(items.has("token")).toBe(false);
+    expect(retries).toEqual([]);
   });
 
   it("works without storage", () => {

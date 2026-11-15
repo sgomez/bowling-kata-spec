@@ -1,8 +1,9 @@
 import type { AddressInfo } from "node:net";
 import type { ServerMessage } from "@bowling/domain";
-import { afterEach, beforeEach } from "vitest";
+import { afterEach, beforeEach, expect, vi } from "vitest";
 import { WebSocket } from "ws";
-import { createAppServer } from "../src/server.js";
+import type { Limits } from "../src/limits.js";
+import { type AppServer, createAppServer } from "../src/server.js";
 import { createFakeClock } from "./fake-clock.js";
 
 export interface Client {
@@ -10,12 +11,21 @@ export interface Client {
   sendRaw(raw: string): void;
   next(): Promise<ServerMessage>;
   close(): void;
+  closed: Promise<void>;
 }
 
 export const FIRST_CODE = "22222";
 
-export const useServer = () => {
-  let server: ReturnType<typeof createAppServer>;
+export const noticeOf = async (client: Client) => {
+  let message = await client.next();
+  while (message.type === "room") {
+    message = await client.next();
+  }
+  return message;
+};
+
+export const useServer = (limits: Partial<Limits> = {}) => {
+  let server: AppServer;
   let wsUrl: string;
   const sockets: WebSocket[] = [];
   const time = createFakeClock();
@@ -27,6 +37,7 @@ export const useServer = () => {
       webRoot: "/nonexistent",
       random,
       clock: time.clock,
+      limits,
     });
     await new Promise<void>((resolve) => server.listen(0, resolve));
     wsUrl = `ws://localhost:${(server.address() as AddressInfo).port}/ws`;
@@ -39,8 +50,8 @@ export const useServer = () => {
     await new Promise((resolve) => server.close(resolve));
   });
 
-  const connect = async (): Promise<Client> => {
-    const socket = new WebSocket(wsUrl);
+  const connect = async (headers: Record<string, string> = {}) => {
+    const socket = new WebSocket(wsUrl, { headers });
     sockets.push(socket);
     const inbox: ServerMessage[] = [];
     const waiting: ((message: ServerMessage) => void)[] = [];
@@ -53,8 +64,11 @@ export const useServer = () => {
         inbox.push(message);
       }
     });
+    const closed = new Promise<void>((resolve) =>
+      socket.once("close", () => resolve()),
+    );
     await new Promise((resolve) => socket.once("open", resolve));
-    return {
+    const client: Client = {
       send: (message) => socket.send(JSON.stringify(message)),
       sendRaw: (raw) => socket.send(raw),
       next: () => {
@@ -64,7 +78,9 @@ export const useServer = () => {
           : new Promise((resolve) => waiting.push(resolve));
       },
       close: () => socket.close(),
+      closed,
     };
+    return client;
   };
 
   const createRoom = async (nickname = "Ana") => {
@@ -72,7 +88,7 @@ export const useServer = () => {
     host.send({ type: "create", nickname });
     const message = await host.next();
     if (message.type !== "room") {
-      throw new Error(message.type);
+      throw new Error(JSON.stringify(message));
     }
     return { host, code: message.room.code, token: message.token };
   };
@@ -84,5 +100,36 @@ export const useServer = () => {
     return bowler;
   };
 
-  return { connect, createRoom, joinRoom, time };
+  const expectEmpty = async () => {
+    await vi.waitFor(() =>
+      expect(server.usage()).toEqual({
+        rooms: 0,
+        connections: 0,
+        addresses: 0,
+      }),
+    );
+    expect(time.pending()).toBe(0);
+  };
+
+  const expectDestroyed = async (...clients: Client[]) => {
+    for (const client of clients) {
+      expect(await noticeOf(client)).toEqual({
+        type: "closed",
+        reason: "ROOM_CLOSED",
+      });
+      await client.closed;
+    }
+    await expectEmpty();
+  };
+
+  return {
+    connect,
+    expectEmpty,
+    expectDestroyed,
+    createRoom,
+    joinRoom,
+    time,
+    usage: () => server.usage(),
+    shutdown: () => server.shutdown(),
+  };
 };

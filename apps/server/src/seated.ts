@@ -1,5 +1,6 @@
 import type { BowlerId, ClientMessage } from "@bowling/domain";
-import type { RoomEntry } from "./room-entry.js";
+import type { WebSocket } from "ws";
+import { type RoomEntry, send } from "./room-entry.js";
 
 export interface Seat {
   entry: RoomEntry;
@@ -31,4 +32,45 @@ export const act = (
     case "remove":
       return entry.room.remove(bowlerId, message.bowlerId, now);
   }
+};
+
+export const createSeats = () => {
+  const seats = new WeakMap<WebSocket, Seat>();
+
+  const unseat = (entry: RoomEntry, bowlerId: BowlerId) => {
+    const socket = entry.sockets.get(bowlerId);
+    if (socket) {
+      seats.delete(socket);
+    }
+    entry.sockets.delete(bowlerId);
+    entry.tokens.delete(bowlerId);
+    return socket;
+  };
+
+  return {
+    get: (socket: WebSocket) => seats.get(socket),
+    release: (socket: WebSocket) => seats.delete(socket),
+    sit: (socket: WebSocket, entry: RoomEntry, bowlerId: BowlerId) => {
+      const previous = entry.sockets.get(bowlerId);
+      if (previous) {
+        seats.delete(previous);
+        previous.close();
+      }
+      seats.set(socket, { entry, bowlerId });
+      entry.sockets.set(bowlerId, socket);
+      entry.changed();
+    },
+    afterSeated: (seat: Seat, message: SeatedMessage) => {
+      if (message.type === "leave") {
+        unseat(seat.entry, seat.bowlerId);
+      }
+      if (message.type === "remove") {
+        const removed = unseat(seat.entry, message.bowlerId);
+        if (removed) {
+          send(removed, { type: "removed" });
+        }
+      }
+      seat.entry.changed();
+    },
+  };
 };

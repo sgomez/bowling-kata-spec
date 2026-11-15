@@ -51,6 +51,14 @@ export const resetGame = (bowler: Bowler) => {
 export const hasFinished = (bowler: Bowler, frame: FrameNumber) =>
   bowler.game.isComplete() || bowler.game.currentFrame > frame;
 
+export const everyoneFinished = (
+  bowlers: readonly Bowler[],
+  frame: FrameNumber,
+) => {
+  const connected = bowlers.filter((b) => b.connected);
+  return connected.length > 0 && connected.every((b) => hasFinished(b, frame));
+};
+
 export const allStanding = (bowler: Bowler, pins: readonly Pin[]) =>
   pins.every((pin) => bowler.standing.has(pin));
 

@@ -2,7 +2,7 @@ import type { RoomSnapshot } from "@bowling/domain";
 import { describe, expect, it } from "vitest";
 import { type Client, useServer } from "./harness.js";
 
-const { connect, createRoom } = useServer();
+const { connect, createRoom, expectEmpty } = useServer();
 
 const roomOf = async (client: Client) => {
   const message = await client.next();
@@ -52,13 +52,12 @@ describe("leaving a Room", () => {
   });
 
   it("destroys the Room when the last Bowler leaves", async () => {
-    const { host, code } = await createRoom();
+    const { host } = await createRoom();
 
     host.send({ type: "leave" });
-    const late = await connect();
-    late.send({ type: "join", code, nickname: "Bea" });
+    host.close();
 
-    expect(await late.next()).toEqual({ type: "error", error: "UNKNOWN_ROOM" });
+    await expectEmpty();
   });
 
   it("is refused outside a Room", async () => {

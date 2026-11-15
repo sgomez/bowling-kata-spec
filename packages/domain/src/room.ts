@@ -1,12 +1,13 @@
+import { admit } from "./admission.js";
 import {
   allStanding,
   type Bowler,
   type BowlerId,
+  everyoneFinished,
   fillFrame,
   hasFinished,
   knock,
   type Newcomer,
-  newBowler,
   resetGame,
 } from "./bowler.js";
 import { type FrameNumber, TENTH_FRAME } from "./frame.js";
@@ -18,17 +19,14 @@ import {
   revealWindow,
 } from "./frame-window.js";
 import { connectedHeirOf, heirOf } from "./host.js";
-import { parseNickname } from "./nickname.js";
 import type { Pin } from "./pins.js";
 import type { RoomCode } from "./room-code.js";
-import { type Created, OK, type RoomResult, refuse } from "./room-result.js";
+import { type Created, OK, type RoomResult, refuse } from "./room-failure.js";
 import {
   type Phase,
   type RoomSnapshot,
   roomSnapshot,
 } from "./room-snapshot.js";
-
-export const MAX_BOWLERS = 6;
 
 export class Room {
   private readonly bowlers: Bowler[] = [];
@@ -46,22 +44,12 @@ export class Room {
     return joined.ok ? { ok: true, room } : joined;
   }
 
-  join({ id, nickname }: Newcomer): RoomResult {
-    if (this.phase !== "lobby") {
-      return refuse("GAMES_STARTED");
+  join(newcomer: Newcomer): RoomResult {
+    const admitted = admit(this.bowlers, this.phase, newcomer);
+    if (typeof admitted === "string") {
+      return refuse(admitted);
     }
-    if (this.bowlers.length >= MAX_BOWLERS) {
-      return refuse("ROOM_FULL");
-    }
-    const name = parseNickname(nickname);
-    if (name === undefined) {
-      return refuse("NICKNAME_INVALID");
-    }
-    const key = name.toLocaleLowerCase();
-    if (this.bowlers.some((b) => b.nickname.toLocaleLowerCase() === key)) {
-      return refuse("NICKNAME_TAKEN");
-    }
-    this.bowlers.push(newBowler(id, name));
+    this.bowlers.push(admitted);
     return OK;
   }
 
@@ -105,7 +93,7 @@ export class Room {
     return OK;
   }
 
-  disconnect(bowlerId: BowlerId, now: number): void {
+  disconnect(bowlerId: BowlerId, now: number) {
     const bowler = this.find(bowlerId);
     if (bowler) {
       bowler.connected = false;
@@ -147,15 +135,11 @@ export class Room {
       : refuse("NOT_HOST");
   }
 
-  isEmpty() {
-    return this.bowlers.length === 0;
-  }
-
   nextDeadline(): number | undefined {
     return this.window && dueAt(this.window);
   }
 
-  advance(now: number): void {
+  advance(now: number) {
     const window = this.window;
     if (!window || now < dueAt(window)) {
       return;
@@ -165,6 +149,10 @@ export class Room {
     } else {
       this.window = openWindow((window.frame + 1) as FrameNumber, now);
     }
+  }
+
+  lifecycle() {
+    return { phase: this.phase, bowlerCount: this.bowlers.length };
   }
 
   snapshot(viewer: BowlerId, now: number): RoomSnapshot {
@@ -192,12 +180,7 @@ export class Room {
 
   private closeIfEveryoneFinished(now: number) {
     const window = this.window;
-    const connected = this.bowlers.filter((b) => b.connected);
-    if (
-      window?.open &&
-      connected.length > 0 &&
-      connected.every((b) => hasFinished(b, window.frame))
-    ) {
+    if (window?.open && everyoneFinished(this.bowlers, window.frame)) {
       this.closeWindow(window.frame, now);
     }
   }

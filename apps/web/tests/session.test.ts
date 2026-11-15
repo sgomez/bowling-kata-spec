@@ -70,6 +70,34 @@ describe("session", () => {
     expect(session.error.value).toBeUndefined();
   });
 
+  it("leaves the Room when the server closes it", () => {
+    const { session, sockets } = setup();
+    session.create("Ana");
+    sockets[0].open();
+    sockets[0].receive({ type: "room", you: "ana", token: "t", room: ROOM });
+    sockets[0].receive({ type: "error", error: "NOT_HOST" });
+
+    sockets[0].receive({ type: "closed", reason: "ROOM_CLOSED" });
+
+    expect(session.seat.value).toBeUndefined();
+    expect(session.error.value).toBeUndefined();
+    expect(session.closed.value).toBe("ROOM_CLOSED");
+  });
+
+  it.each([
+    ["in a new Room", { type: "room", you: "ana", token: "t", room: ROOM }],
+    ["on a refusal", { type: "error", error: "TOO_MANY_ROOMS" }],
+  ] as const)("forgets the closing notice %s", (_, next) => {
+    const { session, sockets } = setup();
+    session.create("Ana");
+    sockets[0].open();
+    sockets[0].receive({ type: "closed", reason: "SERVER_SHUTDOWN" });
+
+    sockets[0].receive(next);
+
+    expect(session.closed.value).toBeUndefined();
+  });
+
   it("reconnects for the next request after the connection drops", () => {
     const { session, sockets } = setup();
     session.create("Ana");

@@ -1,6 +1,7 @@
 import type {
   BowlerId,
   ClientMessage,
+  CloseReason,
   ErrorCode,
   Pin,
   RoomSnapshot,
@@ -52,6 +53,7 @@ export const createSession = (
   const error = signal<ErrorCode | undefined>(undefined);
   const removed = signal(false);
   let token = attempt(() => storage().getItem(TOKEN_KEY)) ?? undefined;
+  const closed = signal<CloseReason | undefined>(undefined);
   let socket: SessionSocket | undefined;
   let pending: ClientMessage[] = [];
 
@@ -67,14 +69,18 @@ export const createSession = (
   };
 
   const receive = (message: ServerMessage) => {
+    error.value = undefined;
+    removed.value = false;
+    closed.value = undefined;
     if (message.type === "room") {
       keep(message.token);
       seat.value = { you: message.you, room: message.room, receivedAt: now() };
-      error.value = undefined;
-      removed.value = false;
     } else if (message.type === "removed") {
       forget();
       removed.value = true;
+    } else if (message.type === "closed") {
+      forget();
+      closed.value = message.reason;
     } else {
       if (message.error === "UNKNOWN_SESSION") {
         forget();
@@ -123,6 +129,7 @@ export const createSession = (
     seat,
     error,
     removed,
+    closed,
     create: (nickname: string) => send({ type: "create", nickname }),
     join: (code: string, nickname: string) =>
       send({ type: "join", code, nickname }),
