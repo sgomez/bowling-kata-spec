@@ -6,6 +6,7 @@ import { Home } from "./home.js";
 import { inviteLink, type ShareOutcome, shareInvite } from "./invite.js";
 import { Lobby } from "./lobby.js";
 import { closedMessage, errorMessage } from "./messages.js";
+import { Reconnecting, ServerRestart } from "./notices.js";
 import { Play } from "./play.js";
 
 interface AppProps {
@@ -14,13 +15,26 @@ interface AppProps {
   origin: string;
 }
 
-export const App = ({ connection, initialCode, origin }: AppProps) => {
+export const App = (props: AppProps) => {
+  const reconnecting = props.connection.reconnecting.value;
+  return (
+    <>
+      <Screen {...props} />
+      {reconnecting && <Reconnecting {...reconnecting} now={Date.now} />}
+    </>
+  );
+};
+
+const Screen = ({ connection, initialCode, origin }: AppProps) => {
   const shared = useSignal<ShareOutcome | undefined>(undefined);
   const removing = useSignal<BowlerId | undefined>(undefined);
   const seat = connection.seat.value;
   const error = connection.error.value;
   const closed = connection.closed.value;
 
+  if (closed === "SERVER_SHUTDOWN") {
+    return <ServerRestart />;
+  }
   if (!seat) {
     return (
       <Home
