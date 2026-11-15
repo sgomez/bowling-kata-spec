@@ -1,6 +1,6 @@
 import type { Frame } from "./frame.js";
 
-export type RollValidationFailure =
+type RollValidationFailure =
   | { type: "GAME_COMPLETE" }
   | { type: "INVALID_FORMAT"; input: unknown }
   | { type: "PINS_OUT_OF_RANGE"; pinCount: number }

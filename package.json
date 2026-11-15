@@ -9,7 +9,10 @@
     "start": "tsx src/cli.ts",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit",
-    "arch": "depcruise src tests"
+    "arch": "depcruise src tests",
+    "knip": "knip",
+    "size": "node scripts/size.mjs --report-only",
+    "prepare": "lefthook install"
   },
   "keywords": [
     "bowling",
