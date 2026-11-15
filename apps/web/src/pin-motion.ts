@@ -2,12 +2,7 @@ import { entry } from "./easing.js";
 import type { Spot } from "./knock.js";
 import { LANE_LENGTH, LANE_WIDTH, PIN_RADIUS } from "./lane-geometry.js";
 
-export type PinState =
-  | "standing"
-  | "wobbling"
-  | "falling"
-  | "knocked"
-  | "removed";
+type PinState = "standing" | "wobbling" | "falling" | "knocked" | "removed";
 
 export interface PinStaging extends Spot {
   state: PinState;

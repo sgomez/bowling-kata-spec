@@ -10,7 +10,7 @@ import {
 } from "./pin-motion.js";
 import type { Swipe } from "./swipe.js";
 
-export type { PinStaging, PinState } from "./pin-motion.js";
+export type { PinStaging } from "./pin-motion.js";
 
 export interface BallStaging extends Spot {
   roll: number;

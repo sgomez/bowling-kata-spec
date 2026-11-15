@@ -16,7 +16,7 @@ export const shifted = (pin: Pin, dx: number, dy = 0): [Pin, Pose] => {
 };
 
 // The ball reaches the head Pin 500 ms into the Roll, moving these Pins.
-export const IMPACT = 500;
+const IMPACT = 500;
 export const hit = (...moved: [Pin, Pose][]) =>
   observe(trackRoll(PINS, straight), {
     elapsed: IMPACT,

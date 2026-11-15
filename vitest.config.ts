@@ -13,6 +13,7 @@ export default defineConfig({
         "apps/web/src/lane-physics.ts",
         "apps/web/src/lane-models.ts",
         "apps/web/src/lane-scene.ts",
+        "apps/web/src/lane-actors.ts",
       ],
       thresholds: {
         lines: 90,
