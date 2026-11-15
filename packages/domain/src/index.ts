@@ -11,6 +11,11 @@ export {
   parseClientMessage,
   type ServerMessage,
 } from "./protocol.js";
+export {
+  issueResumeToken,
+  type ResumeToken,
+  roomOfResumeToken,
+} from "./resume-token.js";
 export { Room } from "./room.js";
 export { generateRoomCode, parseRoomCode, type RoomCode } from "./room-code.js";
 export type { RoomFailure, RoomResult } from "./room-failure.js";

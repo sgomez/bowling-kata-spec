@@ -5,11 +5,13 @@ import {
   type ClientMessage,
   type ErrorCode,
   generateRoomCode,
+  issueResumeToken,
   parseClientMessage,
   parseRoomCode,
   Room,
   type RoomCode,
   type RoomResult,
+  roomOfResumeToken,
 } from "@bowling/domain";
 import { WebSocketServer } from "ws";
 import type { Clock } from "./clock.js";
@@ -56,12 +58,15 @@ export const attachRoomSocket = (
     };
 
     const seatNew = (entry: RoomEntry, bowlerId: BowlerId) => {
-      entry.tokens.set(bowlerId, `${entry.room.code}.${randomUUID()}`);
+      entry.tokens.set(
+        bowlerId,
+        issueResumeToken(entry.room.code, randomUUID()),
+      );
       seats.sit(socket, entry, bowlerId);
     };
 
     const resume = (token: string) => {
-      const code = parseRoomCode(token.split(".")[0] ?? "");
+      const code = roomOfResumeToken(token);
       const entry = code ? rooms.get(code) : undefined;
       const bowlerId = entry?.bowlerWith(token);
       if (!entry || !bowlerId) {
