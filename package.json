@@ -21,7 +21,7 @@
     "tdd"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "EUPL-1.2",
   "devDependencies": {
     "@biomejs/biome": "^2.6.7",
     "@commitlint/cli": "^21.2.4",
