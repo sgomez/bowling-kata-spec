@@ -8,6 +8,7 @@ import type { FrameNumber } from "./frame.js";
 import { type FrameWindow, windowView } from "./frame-window.js";
 import type { Pin } from "./pins.js";
 import type { RoomCode } from "./room-code.js";
+import { leaders, standings } from "./standings.js";
 
 export type Phase = "lobby" | "playing" | "finished";
 
@@ -31,10 +32,8 @@ interface RoomState {
   now: number;
 }
 
-const winnersOf = (bowlers: BowlerView[]) => {
-  const best = Math.max(...bowlers.map((b) => b.total));
-  return bowlers.filter((b) => b.total === best).map((b) => b.id);
-};
+const winnersOf = (bowlers: BowlerView[]) =>
+  leaders(standings(bowlers)).map((b) => b.id);
 
 export const roomSnapshot = ({
   code,

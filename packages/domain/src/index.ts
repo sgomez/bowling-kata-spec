@@ -30,3 +30,4 @@ export {
 } from "./room-code.js";
 export type { RoomFailure, RoomResult } from "./room-failure.js";
 export type { RoomSnapshot } from "./room-snapshot.js";
+export { leaders, type Standing, standings } from "./standings.js";
