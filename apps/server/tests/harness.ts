@@ -3,6 +3,7 @@ import type { ServerMessage } from "@bowling/domain";
 import { afterEach, beforeEach } from "vitest";
 import { WebSocket } from "ws";
 import { createAppServer } from "../src/server.js";
+import { createFakeClock } from "./fake-clock.js";
 
 export interface Client {
   send(message: unknown): void;
@@ -17,11 +18,16 @@ export const useServer = () => {
   let server: ReturnType<typeof createAppServer>;
   let wsUrl: string;
   const sockets: WebSocket[] = [];
+  const time = createFakeClock();
 
   beforeEach(async () => {
     let draws = 0;
     const random = () => (draws++ < 5 ? 0 : Math.random());
-    server = createAppServer({ webRoot: "/nonexistent", random });
+    server = createAppServer({
+      webRoot: "/nonexistent",
+      random,
+      clock: time.clock,
+    });
     await new Promise<void>((resolve) => server.listen(0, resolve));
     wsUrl = `ws://localhost:${(server.address() as AddressInfo).port}/ws`;
   });
@@ -78,5 +84,5 @@ export const useServer = () => {
     return bowler;
   };
 
-  return { connect, createRoom, joinRoom };
+  return { connect, createRoom, joinRoom, time };
 };

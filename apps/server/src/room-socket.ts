@@ -9,52 +9,54 @@ import {
   parseRoomCode,
   Room,
   type RoomCode,
-  type ServerMessage,
 } from "@bowling/domain";
-import { type WebSocket, WebSocketServer } from "ws";
-
-interface Entry {
-  room: Room;
-  sockets: Map<BowlerId, WebSocket>;
-}
+import { WebSocketServer } from "ws";
+import type { Clock } from "./clock.js";
+import { RoomEntry, send } from "./room-entry.js";
 
 interface Seat {
-  entry: Entry;
+  entry: RoomEntry;
   bowlerId: BowlerId;
 }
 
-const send = (socket: WebSocket, message: ServerMessage) =>
-  socket.send(JSON.stringify(message));
+type SeatedMessage = Extract<ClientMessage, { type: "start" | "roll" }>;
 
-const broadcast = ({ room, sockets }: Entry) => {
-  const snapshot = room.snapshot();
-  for (const [you, socket] of sockets) {
-    send(socket, { type: "room", you, room: snapshot });
-  }
-};
+const act = ({ entry, bowlerId }: Seat, message: SeatedMessage, now: number) =>
+  message.type === "start"
+    ? entry.room.start(bowlerId, now)
+    : entry.room.roll(bowlerId, message.pins, now);
 
-export const attachLobby = (server: Server, random: () => number) => {
-  const rooms = new Map<RoomCode, Entry>();
+export const attachRoomSocket = (
+  server: Server,
+  random: () => number,
+  clock: Clock,
+) => {
+  const rooms = new Map<RoomCode, RoomEntry>();
   const wss = new WebSocketServer({ server, path: "/ws" });
-  server.on("close", () => wss.close());
+  server.on("close", () => {
+    for (const entry of rooms.values()) {
+      entry.dispose();
+    }
+    wss.close();
+  });
 
   wss.on("connection", (socket) => {
     let seat: Seat | undefined;
     const fail = (error: ErrorCode) => send(socket, { type: "error", error });
 
-    const sit = (entry: Entry, bowlerId: BowlerId) => {
+    const sit = (entry: RoomEntry, bowlerId: BowlerId) => {
       seat = { entry, bowlerId };
       entry.sockets.set(bowlerId, socket);
-      broadcast(entry);
+      entry.changed();
     };
 
     const handle = (message: ClientMessage) => {
-      if (message.type === "start") {
+      if (message.type === "start" || message.type === "roll") {
         if (!seat) {
           return fail("NOT_IN_ROOM");
         }
-        const result = seat.entry.room.start(seat.bowlerId);
-        return result.ok ? broadcast(seat.entry) : fail(result.failure.type);
+        const result = act(seat, message, clock.now());
+        return result.ok ? seat.entry.changed() : fail(result.failure.type);
       }
       if (seat) {
         return fail("ALREADY_IN_ROOM");
@@ -66,7 +68,7 @@ export const attachLobby = (server: Server, random: () => number) => {
         if (!created.ok) {
           return fail(created.failure.type);
         }
-        const entry = { room: created.room, sockets: new Map() };
+        const entry = new RoomEntry(created.room, clock);
         rooms.set(code, entry);
         return sit(entry, bowler.id);
       }
@@ -89,7 +91,11 @@ export const attachLobby = (server: Server, random: () => number) => {
     });
 
     socket.on("close", () => {
-      seat?.entry.sockets.delete(seat.bowlerId);
+      if (seat) {
+        seat.entry.sockets.delete(seat.bowlerId);
+        seat.entry.room.disconnect(seat.bowlerId, clock.now());
+        seat.entry.changed();
+      }
     });
   });
 };

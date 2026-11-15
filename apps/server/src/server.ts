@@ -1,11 +1,13 @@
 import { readFile, stat } from "node:fs/promises";
 import { createServer, type Server, type ServerResponse } from "node:http";
 import { extname, join, resolve, sep } from "node:path";
-import { attachLobby } from "./lobby.js";
+import { type Clock, systemClock } from "./clock.js";
+import { attachRoomSocket } from "./room-socket.js";
 
 interface AppServerOptions {
   webRoot: string;
   random?: () => number;
+  clock?: Clock;
 }
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -33,6 +35,7 @@ const sendFile = async (response: ServerResponse, path: string) => {
 export const createAppServer = ({
   webRoot,
   random = Math.random,
+  clock = systemClock,
 }: AppServerOptions): Server => {
   const root = resolve(webRoot);
   const indexHtml = join(root, "index.html");
@@ -53,6 +56,6 @@ export const createAppServer = ({
     }
     await sendFile(response, await resolveAsset(url));
   });
-  attachLobby(server, random);
+  attachRoomSocket(server, random, clock);
   return server;
 };

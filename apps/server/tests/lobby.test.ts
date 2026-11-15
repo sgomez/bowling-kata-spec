@@ -10,7 +10,7 @@ describe("WebSocket Lobby", () => {
     host.send({ type: "create", nickname: " Ana " });
 
     const message = await host.next();
-    expect(message).toEqual({
+    expect(message).toMatchObject({
       type: "room",
       you: expect.any(String),
       room: {
@@ -41,7 +41,7 @@ describe("WebSocket Lobby", () => {
 
     const forBea = await bea.next();
     const forHost = await host.next();
-    expect(forBea.type === "room" && forBea.room.bowlers).toEqual([
+    expect(forBea.type === "room" && forBea.room.bowlers).toMatchObject([
       { id: expect.any(String), nickname: "Ana" },
       { id: expect.any(String), nickname: "Bea" },
     ]);
