@@ -1,4 +1,5 @@
-import { useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
+import { pastSwipeLimit } from "./lane-gate.js";
 import { NO_MARKS, type SwipeMarks } from "./lane-swipe-marks.js";
 import { readSwipe, type Swipe, type SwipeSample } from "./swipe.js";
 import { aimOf } from "./swipe-aim.js";
@@ -17,14 +18,32 @@ const marksOf = (
   aim: swipe ? aimOf(swipe) : [],
 });
 
-export const useSwipe = () => {
+// Long enough to read the Foul before the Lane moves on.
+export const FOUL_PAUSE_MS = 3_000;
+
+export const useSwipe = (onPlayed: () => void) => {
   const [hint, setHint] = useState(() => !hintSeen());
   const [reading, setReading] = useState<Swipe | undefined>(undefined);
   const [swiping, setSwiping] = useState(false);
+  const [thrown, setThrown] = useState(false);
   const aiming = useRef(false);
   const samples = useRef<SwipeSample[]>([]);
   const live = useRef(NO_MARKS);
   const released = useRef({ marks: NO_MARKS, at: 0 });
+  const pause = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const played = () => {
+    setThrown(false);
+    onPlayed();
+  };
+
+  const settle = () => {
+    if (!pause.current) return;
+    clearTimeout(pause.current);
+    pause.current = undefined;
+    played();
+  };
+  useEffect(() => settle, []);
 
   const follow = (trail: SwipeSample[]) => {
     const swipe = readSwipe(trail);
@@ -43,6 +62,7 @@ export const useSwipe = () => {
     aiming: () => aiming.current,
     start(sample: SwipeSample) {
       aiming.current = true;
+      settle();
       follow([sample]);
       setSwiping(true);
     },
@@ -51,10 +71,20 @@ export const useSwipe = () => {
       return samples.current.at(-1) as SwipeSample;
     },
     drop,
+    overstepped(event: { clientY: number; currentTarget: EventTarget | null }) {
+      const rect = (event.currentTarget as Element).getBoundingClientRect();
+      if (!pastSwipeLimit(event.clientY, rect)) return false;
+      drop();
+      setThrown(true);
+      pause.current = setTimeout(settle, FOUL_PAUSE_MS);
+      return true;
+    },
+    played,
     release() {
       const swipe = readSwipe(samples.current);
       drop();
       if (swipe) {
+        setThrown(true);
         rememberHint();
         setHint(false);
       }
@@ -65,8 +95,13 @@ export const useSwipe = () => {
       const { marks, at } = released.current;
       return { ...marks, opacity: trailOpacity(now - at) };
     },
-    overlay: (timeUp: boolean) => (
+    overlay: (timeUp: boolean, finished: boolean) => (
       <>
+        {!finished && !thrown && (
+          <div class="swipe-limit">
+            <span>Línea de falta</span>
+          </div>
+        )}
         {hint && !swiping && !timeUp && <SwipeHint />}
         {reading && <SwipeGauge swipe={reading} />}
       </>

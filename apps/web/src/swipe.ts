@@ -1,6 +1,7 @@
 import { BALL_RADIUS, LANE_WIDTH } from "./lane-geometry.js";
 import {
   type LaneCamera,
+  REST_CAMERA,
   toLanePoint,
   type Viewport,
 } from "./lane-projection.js";
@@ -88,4 +89,12 @@ export const toLane = (
   const point = { x: touch.clientX, y: touch.clientY };
   const spot = toLanePoint(point, viewport, camera);
   return spot && { ...spot, t: touch.timeStamp };
+};
+
+export const samplesOf = (event: PointerEvent) => {
+  const samples = event.getCoalescedEvents?.() ?? [];
+  const rect = (event.currentTarget as Element).getBoundingClientRect();
+  return (samples.length > 0 ? samples : [event]).flatMap(
+    (e) => toLane(e, rect, REST_CAMERA) ?? [],
+  );
 };

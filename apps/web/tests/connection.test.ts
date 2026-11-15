@@ -42,6 +42,7 @@ describe("connection", () => {
 
     connection.start();
     connection.roll([1, 5]);
+    connection.roll([], true);
     connection.rematch();
 
     expect(sockets).toHaveLength(1);
@@ -49,6 +50,7 @@ describe("connection", () => {
       { type: "join", code: "k7mpq", nickname: "Bea" },
       { type: "start" },
       { type: "roll", pins: [1, 5] },
+      { type: "roll", pins: [], foul: true },
       { type: "rematch" },
     ]);
   });

@@ -308,6 +308,11 @@
   animation: outcome-out 1ms 1.6s forwards;
 }
 
+/* Matches FOUL_PAUSE_MS. */
+.outcome.fleeting.foul {
+  animation-delay: 3s;
+}
+
 .outcome-symbol {
   font-family: var(--font-display);
   font-size: 150px;
@@ -335,7 +340,8 @@
     0 0 70px rgb(61 232 255 / 70%);
 }
 
-.outcome.zero .outcome-symbol {
+.outcome.zero .outcome-symbol,
+.outcome.foul .outcome-symbol {
   color: #f2f1f8;
   text-shadow:
     0 0 8px var(--text-soft),
@@ -420,6 +426,7 @@
   }
 
   .outcome.zero,
+  .outcome.foul,
   .outcome.count {
     animation: outcome-fade 200ms var(--ease-exit) both;
   }
@@ -429,10 +436,15 @@
   }
 
   .outcome.fleeting.zero,
+  .outcome.fleeting.foul,
   .outcome.fleeting.count {
     animation:
       outcome-fade 200ms var(--ease-exit) both,
       outcome-out 250ms var(--ease-exit) 1.6s forwards;
+  }
+
+  .outcome.fleeting.foul {
+    animation-delay: 0s, 3s;
   }
 }
 

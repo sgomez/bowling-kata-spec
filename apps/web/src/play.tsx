@@ -14,7 +14,7 @@ import "./styles/play.css";
 interface PlayProps {
   seat: Seat;
   frame: NonNullable<RoomSnapshot["frame"]>;
-  onRoll: (knocked: Pin[]) => void;
+  onRoll: (knocked: Pin[], foul?: boolean) => void;
   missedAt?: number;
   onMiss: () => void;
   leaving: boolean;

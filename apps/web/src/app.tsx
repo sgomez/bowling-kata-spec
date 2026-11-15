@@ -77,9 +77,9 @@ const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
         <Play
           seat={seat}
           frame={seat.room.frame}
-          onRoll={(knocked) => {
+          onRoll={(knocked, foul) => {
             playing.value = number;
-            connection.roll(knocked);
+            connection.roll(knocked, foul);
           }}
           playing={playing.value === number}
           onPlayed={() => {

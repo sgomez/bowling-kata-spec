@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canStartSwipe, checkTime } from "../src/lane-gate.js";
+import { canStartSwipe, checkTime, pastSwipeLimit } from "../src/lane-gate.js";
 import { FOUL_LINE, LANE_WIDTH } from "../src/lane-geometry.js";
 
 const open = { now: 1_000, endsAt: 2_000 };
@@ -50,5 +50,18 @@ describe("the Lane's time gate", () => {
     expect(canStartSwipe("idle", open, beside)).toBe(false);
     expect(canStartSwipe("idle", open, before)).toBe(false);
     expect(canStartSwipe("idle", open, undefined)).toBe(false);
+  });
+});
+
+describe("the Swipe limit", () => {
+  const screen = { left: 0, top: 100, width: 300, height: 900 };
+
+  it("lets the finger roam the bottom two fifths of the screen", () => {
+    expect(pastSwipeLimit(1_000, screen)).toBe(false);
+    expect(pastSwipeLimit(640, screen)).toBe(false);
+  });
+
+  it("calls a Foul once the finger goes above it", () => {
+    expect(pastSwipeLimit(639, screen)).toBe(true);
   });
 });

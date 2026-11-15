@@ -1,14 +1,13 @@
 import { admit } from "./admission.js";
 import {
-  allStanding,
   type Bowler,
   type BowlerId,
   everyoneFinished,
   fillFrame,
-  hasFinished,
   knock,
   type Newcomer,
   resetGame,
+  rollRefusal,
 } from "./bowler.js";
 import { type FrameNumber, TENTH_FRAME } from "./frame.js";
 import {
@@ -73,7 +72,7 @@ export class Room {
     return this.play(now);
   }
 
-  roll(bowlerId: BowlerId, pins: readonly Pin[], now: number): RoomResult {
+  roll(bowlerId: BowlerId, pins: readonly Pin[], now: number, foul = false) {
     const bowler = this.find(bowlerId);
     const window = this.window;
     if (!bowler) {
@@ -82,13 +81,11 @@ export class Room {
     if (!window || !acceptsRollAt(window, now)) {
       return refuse("WINDOW_CLOSED");
     }
-    if (hasFinished(bowler, window.frame)) {
-      return refuse("FRAME_FINISHED");
+    const refusal = rollRefusal(bowler, window.frame, pins);
+    if (refusal) {
+      return refuse(refusal);
     }
-    if (!allStanding(bowler, pins)) {
-      return refuse("PIN_NOT_STANDING");
-    }
-    knock(bowler, pins);
+    knock(bowler, pins, foul);
     this.closeIfEveryoneFinished(now);
     return OK;
   }

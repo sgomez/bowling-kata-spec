@@ -1,7 +1,7 @@
 import type { FrameNumber, PinCount } from "./frame.js";
 import { buildFrames } from "./frames.js";
 import { Game } from "./game.js";
-import { notation } from "./notation.js";
+import { FOUL, notation } from "./notation.js";
 import { PINS, type Pin } from "./pins.js";
 
 export type BowlerId = string;
@@ -20,6 +20,8 @@ export interface Bowler {
   connected: boolean;
   game: Game;
   standing: Set<Pin>;
+  // "frame:roll" of each Foul; the Game itself only sees zero Pins.
+  fouls: Set<string>;
 }
 
 export interface FrameView {
@@ -50,14 +52,16 @@ export const newBowler = (
   connected: true,
   game: new Game(),
   standing: fullRack(),
+  fouls: new Set(),
 });
 
 export const resetGame = (bowler: Bowler) => {
   bowler.game = new Game();
   bowler.standing = fullRack();
+  bowler.fouls = new Set();
 };
 
-export const hasFinished = (bowler: Bowler, frame: FrameNumber) =>
+const hasFinished = (bowler: Bowler, frame: FrameNumber) =>
   bowler.game.isComplete() || bowler.game.currentFrame > frame;
 
 export const everyoneFinished = (
@@ -68,11 +72,21 @@ export const everyoneFinished = (
   return connected.length > 0 && connected.every((b) => hasFinished(b, frame));
 };
 
-export const allStanding = (bowler: Bowler, pins: readonly Pin[]) =>
-  pins.every((pin) => bowler.standing.has(pin));
+export const rollRefusal = (
+  bowler: Bowler,
+  frame: FrameNumber,
+  pins: readonly Pin[],
+) => {
+  if (hasFinished(bowler, frame)) return "FRAME_FINISHED";
+  if (!pins.every((pin) => bowler.standing.has(pin))) return "PIN_NOT_STANDING";
+  return undefined;
+};
 
-export const knock = (bowler: Bowler, pins: readonly Pin[]) => {
-  const knocked = new Set(pins);
+// Pins knocked on a Foul don't count.
+export const knock = (bowler: Bowler, pins: readonly Pin[], foul = false) => {
+  const { game } = bowler;
+  if (foul) bowler.fouls.add(`${game.currentFrame}:${game.currentRoll}`);
+  const knocked = new Set(foul ? [] : pins);
   bowler.game.roll(knocked.size as PinCount);
   bowler.standing = bowler.game.isFreshRack
     ? fullRack()
@@ -102,7 +116,9 @@ export const bowlerView = (
       )
     : played;
   const frames = visible.map((f) => ({
-    rolls: notation(f),
+    rolls: notation(f).map((mark, i) =>
+      bowler.fouls.has(`${f.frameNumber}:${i + 1}`) ? FOUL : mark,
+    ),
     score: f.cumulativeScore,
   }));
   return {

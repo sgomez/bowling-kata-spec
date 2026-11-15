@@ -32,6 +32,11 @@ describe("client messages", () => {
     expect(
       parseClientMessage(JSON.stringify({ type: "roll", pins: [1, 3, 10] })),
     ).toEqual({ type: "roll", pins: [1, 3, 10] });
+    expect(
+      parseClientMessage(
+        JSON.stringify({ type: "roll", pins: [], foul: true }),
+      ),
+    ).toEqual({ type: "roll", pins: [], foul: true });
   });
 
   it.each([

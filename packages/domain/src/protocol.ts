@@ -22,6 +22,7 @@ const ClientMessageSchema = v.variant("type", [
   v.object({
     type: v.literal("roll"),
     pins: v.pipe(v.array(v.picklist(PINS)), v.maxLength(PINS.length)),
+    foul: v.optional(v.boolean()),
   }),
 ]);
 

@@ -1,5 +1,7 @@
 import { type Frame, PINS_PER_RACK, type PinCount } from "./frame.js";
 
+export const FOUL = "F";
+
 const symbol = (pins: PinCount) => (pins === 0 ? "-" : String(pins));
 
 export const notation = (frame: Frame): string[] => {

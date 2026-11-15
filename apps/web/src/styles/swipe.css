@@ -1,3 +1,25 @@
+.swipe-limit {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40%;
+  border-top: 2px dashed rgb(255 255 255 / 55%);
+  pointer-events: none;
+}
+
+.swipe-limit span {
+  position: absolute;
+  bottom: 100%;
+  left: var(--space-3);
+  margin-bottom: var(--space-1);
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 70%);
+}
+
 .swipe-hint,
 .swipe-gauge {
   position: absolute;
