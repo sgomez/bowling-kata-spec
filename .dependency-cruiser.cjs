@@ -4,22 +4,22 @@ module.exports = {
     {
       name: "domain-imports-only-domain",
       comment:
-        "The domain stays portable: no presentation, CLI, input, node: modules or external packages.",
+        "The domain stays portable: no apps, node: modules or external packages (the schema library will be allowed).",
       severity: "error",
-      from: { path: "^src/domain/" },
-      to: { pathNot: "^src/domain/" },
+      from: { path: "^packages/domain/" },
+      to: { pathNot: "^packages/domain/" },
     },
     {
-      name: "presentation-imports-only-domain",
+      name: "server-never-imports-web",
       severity: "error",
-      from: { path: "^src/presentation/" },
-      to: { pathNot: "^src/(domain|presentation)/" },
+      from: { path: "^apps/server/" },
+      to: { path: "^apps/web/" },
     },
     {
-      name: "input-imports-only-domain",
+      name: "web-never-imports-server",
       severity: "error",
-      from: { path: "^src/input/" },
-      to: { pathNot: "^src/(domain|input)/" },
+      from: { path: "^apps/web/" },
+      to: { path: "^apps/server/" },
     },
     {
       name: "no-circular",
@@ -30,19 +30,19 @@ module.exports = {
     {
       name: "production-never-imports-tests",
       severity: "error",
-      from: { path: "^src/" },
-      to: { path: ["^tests/", "\\.test(-d)?\\.ts$"] },
+      from: { path: "^(packages|apps)/[^/]+/src/" },
+      to: { path: ["^(packages|apps)/[^/]+/tests/", "\\.test(-d)?\\.tsx?$"] },
     },
   ],
   options: {
     doNotFollow: { path: "node_modules" },
+    exclude: { path: "(^|/)(dist|coverage)/" },
     // dependency-cruiser cannot use the TypeScript 7 compiler yet.
     parser: "swc",
-    tsConfig: { fileName: "tsconfig.json" },
     enhancedResolveOptions: {
       exportsFields: ["exports"],
       conditionNames: ["import", "require", "node", "default", "types"],
-      extensions: [".ts", ".js"],
+      extensions: [".ts", ".tsx", ".js"],
     },
   },
 };

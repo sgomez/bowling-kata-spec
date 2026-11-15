@@ -1,6 +1,21 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["tests/**/*.test.ts", "tests/**/*.test-d.ts"],
-  "project": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.mjs"],
-  "ignoreDependencies": ["@swc/core"]
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs"],
+      "ignoreDependencies": ["@swc/core"]
+    },
+    "packages/domain": {
+      "entry": ["tests/**/*.test.ts", "tests/**/*.test-d.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "apps/server": {
+      "entry": ["tests/**/*.test.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "apps/web": {
+      "entry": ["tests/**/*.test.tsx"],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
+    }
+  }
 }
