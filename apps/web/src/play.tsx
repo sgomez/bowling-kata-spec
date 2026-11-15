@@ -6,6 +6,7 @@ import { PlayHeader } from "./play-header.js";
 import { Reveal } from "./reveal.js";
 import { RivalStrip } from "./rival-strip.js";
 import type { RollInput } from "./roll-input.js";
+import { clearsRack } from "./roll-kind.js";
 import { RollOutcome } from "./roll-outcome.js";
 import { Button, Chip, Dialog, Toast } from "./ui.js";
 import "./styles/play.css";
@@ -90,7 +91,7 @@ export const Play = ({
         frame={frame.number}
         rolls={rolls}
         finished={finished}
-        standing={room.standing}
+        standing={playing && clearsRack(rolls.at(-1)) ? [] : room.standing}
         endsAt={endsAt}
         now={now}
         onAskLeave={onAskLeave}

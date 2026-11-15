@@ -44,6 +44,20 @@ describe("the header", () => {
       'aria-label="Bolos en pie: 3 de 10"',
     );
   });
+
+  it.each([[["X"]], [["7", "/"]]])(
+    "maps no Pin standing while the Lane plays out %j",
+    (rolls) => {
+      const strike = yourFrame(10, rolls);
+
+      expect(play("ana", strike, false, false, true, true)).toContain(
+        'aria-label="Bolos en pie: 0 de 10"',
+      );
+      expect(play("ana", strike)).toContain(
+        'aria-label="Bolos en pie: 10 de 10"',
+      );
+    },
+  );
 });
 
 describe("leaving the Room", () => {
