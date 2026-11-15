@@ -18,12 +18,22 @@ const describe = (rolls: readonly string[]) => {
   };
 };
 
-export const RollOutcome = ({ rolls }: { rolls: readonly string[] }) => {
+export const RollOutcome = ({
+  rolls,
+  fleeting = false,
+}: {
+  rolls: readonly string[];
+  fleeting?: boolean;
+}) => {
   if (rolls.length === 0) return null;
   const { kind, symbol, label, detail } = describe(rolls);
   return (
     // Keyed by Roll, so each one plays its entrance afresh.
-    <div key={rolls.length} class={`outcome ${kind}`} role="status">
+    <div
+      key={rolls.length}
+      class={`outcome ${kind}${fleeting ? " fleeting" : ""}`}
+      role="status"
+    >
       <span class="outcome-symbol">{symbol}</span>
       <span class="outcome-label">{label}</span>
       {detail && <span class="outcome-detail">{detail}</span>}

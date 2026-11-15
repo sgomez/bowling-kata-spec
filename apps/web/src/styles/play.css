@@ -293,15 +293,19 @@
 }
 
 .outcome {
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
-  bottom: 30%;
+  top: min(60dvh, 100dvh - 280px);
   z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
   pointer-events: none;
+}
+
+.outcome.fleeting {
+  animation: outcome-out 1ms 1.6s forwards;
 }
 
 .outcome-symbol {
@@ -418,6 +422,24 @@
   .outcome.zero,
   .outcome.count {
     animation: outcome-fade 200ms var(--ease-exit) both;
+  }
+
+  .outcome.fleeting {
+    animation: outcome-out 250ms var(--ease-exit) 1.6s forwards;
+  }
+
+  .outcome.fleeting.zero,
+  .outcome.fleeting.count {
+    animation:
+      outcome-fade 200ms var(--ease-exit) both,
+      outcome-out 250ms var(--ease-exit) 1.6s forwards;
+  }
+}
+
+@keyframes outcome-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
   }
 }
 

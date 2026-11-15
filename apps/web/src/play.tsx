@@ -126,7 +126,7 @@ export const Play = ({
           onPlayed={onPlayed}
         />
       )}
-      {onLane && <RollOutcome rolls={rolls} />}
+      {onLane && <RollOutcome rolls={rolls} fleeting />}
       <RivalStrip rivals={room.bowlers.filter((b) => b.id !== you)} />
       {dialog}
     </main>
