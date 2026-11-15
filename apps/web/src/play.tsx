@@ -1,9 +1,9 @@
 import type { Pin, RoomSnapshot } from "@bowling/domain";
+import type { Seat } from "./connection.js";
 import { Countdown } from "./countdown.js";
 import { Lane } from "./lane.js";
 import type { RollInput } from "./roll-input.js";
 import { Scorecard } from "./scorecard.js";
-import type { Seat } from "./session.js";
 
 interface PlayProps {
   seat: Seat;

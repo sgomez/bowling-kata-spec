@@ -60,7 +60,7 @@ export const attachRoomSocket = (
       const entry = code ? rooms.get(code) : undefined;
       const bowlerId = entry?.bowlerWith(token);
       if (!entry || !bowlerId) {
-        return fail("UNKNOWN_SESSION");
+        return fail("UNKNOWN_TOKEN");
       }
       entry.room.reconnect(bowlerId);
       seats.sit(socket, entry, bowlerId);

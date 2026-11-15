@@ -1,11 +1,11 @@
 import { useSignal } from "@preact/signals";
+import type { Connection } from "./connection.js";
 import { Final } from "./final.js";
 import { Home } from "./home.js";
 import { inviteLink, type ShareOutcome, shareInvite } from "./invite.js";
 import { Lobby } from "./lobby.js";
 import { closedMessage, errorMessage } from "./messages.js";
 import { Play } from "./play.js";
-import type { Session } from "./session.js";
 
 const SHARE_NOTICES: Record<ShareOutcome, string | undefined> = {
   shared: undefined,
@@ -15,16 +15,16 @@ const SHARE_NOTICES: Record<ShareOutcome, string | undefined> = {
 };
 
 interface AppProps {
-  session: Session;
+  connection: Connection;
   initialCode: string;
   origin: string;
 }
 
-export const App = ({ session, initialCode, origin }: AppProps) => {
+export const App = ({ connection, initialCode, origin }: AppProps) => {
   const shareNotice = useSignal<string | undefined>(undefined);
-  const seat = session.seat.value;
-  const error = session.error.value;
-  const closed = session.closed.value;
+  const seat = connection.seat.value;
+  const error = connection.error.value;
+  const closed = connection.closed.value;
 
   if (!seat) {
     return (
@@ -33,26 +33,26 @@ export const App = ({ session, initialCode, origin }: AppProps) => {
         error={
           closed
             ? closedMessage(closed)
-            : session.removed.value
+            : connection.removed.value
               ? "El anfitrión te ha sacado de la sala."
               : error && errorMessage(error)
         }
-        onCreate={session.create}
-        onJoin={session.join}
+        onCreate={connection.create}
+        onJoin={connection.join}
       />
     );
   }
 
   const notice = error && errorMessage(error);
   if (seat.room.phase === "finished") {
-    return <Final seat={seat} onRematch={session.rematch} />;
+    return <Final seat={seat} onRematch={connection.rematch} />;
   }
   if (seat.room.frame) {
     return (
       <>
-        <Play seat={seat} frame={seat.room.frame} onRoll={session.roll} />
+        <Play seat={seat} frame={seat.room.frame} onRoll={connection.roll} />
         {notice && <p role="alert">{notice}</p>}
-        <button type="button" onClick={session.leave}>
+        <button type="button" onClick={connection.leave}>
           Salir de la sala
         </button>
       </>
@@ -68,9 +68,9 @@ export const App = ({ session, initialCode, origin }: AppProps) => {
       onShare={async () => {
         shareNotice.value = SHARE_NOTICES[await shareInvite(link, navigator)];
       }}
-      onStart={session.start}
-      onLeave={session.leave}
-      onRemove={session.remove}
+      onStart={connection.start}
+      onLeave={connection.leave}
+      onRemove={connection.remove}
     />
   );
 };

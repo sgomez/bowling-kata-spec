@@ -80,7 +80,7 @@ describe("resuming a seat", () => {
 
     expect(await stranger.next()).toEqual({
       type: "error",
-      error: "UNKNOWN_SESSION",
+      error: "UNKNOWN_TOKEN",
     });
   });
 });

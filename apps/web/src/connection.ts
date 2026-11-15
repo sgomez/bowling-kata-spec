@@ -13,7 +13,7 @@ const OPEN = 1;
 const TOKEN_KEY = "token";
 const RETRY_MS = 1_000;
 
-export type SessionSocket = Pick<
+export type ConnectionSocket = Pick<
   WebSocket,
   "readyState" | "send" | "onopen" | "onmessage" | "onclose"
 >;
@@ -26,12 +26,12 @@ export interface Seat {
   receivedAt: number;
 }
 
-interface SessionOptions {
+interface ConnectionOptions {
   storage?: () => TokenStore;
   retry?: (run: () => void) => void;
 }
 
-export type Session = ReturnType<typeof createSession>;
+export type Connection = ReturnType<typeof createConnection>;
 
 const attempt = <T>(run: () => T): T | undefined => {
   try {
@@ -41,20 +41,20 @@ const attempt = <T>(run: () => T): T | undefined => {
   }
 };
 
-export const createSession = (
-  connect: () => SessionSocket,
+export const createConnection = (
+  connect: () => ConnectionSocket,
   now: () => number = Date.now,
   {
     storage = () => localStorage,
     retry = (run) => setTimeout(run, RETRY_MS),
-  }: SessionOptions = {},
+  }: ConnectionOptions = {},
 ) => {
   const seat = signal<Seat | undefined>(undefined);
   const error = signal<ErrorCode | undefined>(undefined);
   const removed = signal(false);
   let token = attempt(() => storage().getItem(TOKEN_KEY)) ?? undefined;
   const closed = signal<CloseReason | undefined>(undefined);
-  let socket: SessionSocket | undefined;
+  let socket: ConnectionSocket | undefined;
   let pending: ClientMessage[] = [];
 
   const keep = (next: string) => {
@@ -82,7 +82,7 @@ export const createSession = (
       forget();
       closed.value = message.reason;
     } else {
-      if (message.error === "UNKNOWN_SESSION") {
+      if (message.error === "UNKNOWN_TOKEN") {
         forget();
       }
       error.value = message.error;

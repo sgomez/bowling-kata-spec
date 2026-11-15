@@ -1,12 +1,12 @@
 import type { ServerMessage } from "@bowling/domain";
-import type { SessionSocket } from "../src/session.js";
+import type { ConnectionSocket } from "../src/connection.js";
 
-export class FakeSocket implements SessionSocket {
-  readyState: SessionSocket["readyState"] = 0;
+export class FakeSocket implements ConnectionSocket {
+  readyState: ConnectionSocket["readyState"] = 0;
   sent: unknown[] = [];
-  onopen: SessionSocket["onopen"] = null;
-  onmessage: SessionSocket["onmessage"] = null;
-  onclose: SessionSocket["onclose"] = null;
+  onopen: ConnectionSocket["onopen"] = null;
+  onmessage: ConnectionSocket["onmessage"] = null;
+  onclose: ConnectionSocket["onclose"] = null;
 
   send(data: string) {
     this.sent.push(JSON.parse(data));

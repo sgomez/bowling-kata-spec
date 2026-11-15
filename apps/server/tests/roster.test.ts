@@ -95,7 +95,7 @@ describe("the Host removing a Bowler", () => {
 
     expect(await again.next()).toEqual({
       type: "error",
-      error: "UNKNOWN_SESSION",
+      error: "UNKNOWN_TOKEN",
     });
   });
 

@@ -1,5 +1,5 @@
+import type { Seat } from "./connection.js";
 import { Scorecard } from "./scorecard.js";
-import type { Seat } from "./session.js";
 
 const names = new Intl.ListFormat("es-ES", { type: "conjunction" });
 

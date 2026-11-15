@@ -1,9 +1,9 @@
 import { effect } from "@preact/signals";
 import { render } from "preact";
 import { App } from "./app.js";
+import { createConnection } from "./connection.js";
 import { DesktopGate, isDesktop } from "./desktop-gate.js";
 import { codeFromPath } from "./invite.js";
-import { createSession } from "./session.js";
 import "./styles.css";
 
 const root = document.getElementById("app");
@@ -17,21 +17,21 @@ if (root && desktop) {
   render(<DesktopGate url={location.href} />, root);
 } else if (root) {
   const scheme = location.protocol === "https:" ? "wss" : "ws";
-  const session = createSession(
+  const connection = createConnection(
     () => new WebSocket(`${scheme}://${location.host}/ws`),
   );
   effect(() => {
-    const code = session.seat.value?.room.code;
+    const code = connection.seat.value?.room.code;
     if (code && location.pathname !== `/${code}`) {
       history.replaceState(null, "", `/${code}`);
     }
-    if (session.closed.value) {
+    if (connection.closed.value) {
       history.replaceState(null, "", "/");
     }
   });
   render(
     <App
-      session={session}
+      connection={connection}
       initialCode={codeFromPath(location.pathname)}
       origin={location.origin}
     />,

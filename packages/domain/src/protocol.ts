@@ -31,7 +31,7 @@ export type ErrorCode =
   | RoomFailure["type"]
   | "INVALID_MESSAGE"
   | "UNKNOWN_ROOM"
-  | "UNKNOWN_SESSION"
+  | "UNKNOWN_TOKEN"
   | "ALREADY_IN_ROOM"
   | "NOT_IN_ROOM"
   | "TOO_MANY_ROOMS"

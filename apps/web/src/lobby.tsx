@@ -1,5 +1,5 @@
 import { type BowlerId, MAX_BOWLERS } from "@bowling/domain";
-import type { Seat } from "./session.js";
+import type { Seat } from "./connection.js";
 
 interface LobbyProps {
   seat: Seat;
