@@ -11,6 +11,7 @@
   "dependencies": {
     "@bowling/domain": "workspace:*",
     "@preact/signals": "^2.11.4",
+    "planck": "1.5.1",
     "preact": "^11.2.0",
     "uqr": "^0.1.3"
   },

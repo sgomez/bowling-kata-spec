@@ -56,54 +56,18 @@ ul {
   padding: 16px;
 }
 
-.pin-tapper {
-  display: grid;
-  gap: 8px;
-  justify-items: center;
-}
-
-.pin-row {
-  display: flex;
-  gap: 8px;
-}
-
-.pin {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  padding: 0;
-}
-
-.pin[aria-pressed="true"] {
-  background: #d33;
-  color: white;
-}
-
-.pin:disabled {
-  opacity: 0.2;
-}
-
-.scorecard {
-  overflow-x: auto;
-}
-
-.scorecard table {
-  border-collapse: collapse;
-  font-size: 0.8rem;
-}
-
-.scorecard th,
-.scorecard td {
-  border: 1px solid currentColor;
-  padding: 4px;
-  min-width: 2.2em;
-}
-
-.scorecard td span {
+.lane canvas {
   display: block;
+  margin: 0 auto;
+  width: min(100%, calc((100dvh - 220px) * 1.05 / 2.3));
+  aspect-ratio: 1.05 / 2.3;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 8px;
 }
 
-.winner {
-  font-size: 1.5rem;
-  font-weight: bold;
+.lane p {
+  font-size: 0.875rem;
+  margin: 8px 0 0;
 }

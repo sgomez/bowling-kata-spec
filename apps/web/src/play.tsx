@@ -1,6 +1,6 @@
 import type { Pin, RoomSnapshot } from "@bowling/domain";
 import { Countdown } from "./countdown.js";
-import { PinTapper } from "./pin-tapper.js";
+import { Lane } from "./lane.js";
 import type { RollInput } from "./roll-input.js";
 import { Scorecard } from "./scorecard.js";
 import type { Seat } from "./session.js";
@@ -17,7 +17,7 @@ export const Play = ({
   seat: { you, room, receivedAt },
   frame,
   onRoll,
-  RollInput = PinTapper,
+  RollInput = Lane,
   now = Date.now,
 }: PlayProps) => {
   const countdown = (
@@ -42,7 +42,11 @@ export const Play = ({
       {finished ? (
         <p>Has terminado este frame. Esperando al resto…</p>
       ) : (
-        <RollInput standing={room.standing} onRoll={onRoll} />
+        <RollInput
+          key={frame.number}
+          standing={room.standing}
+          onRoll={onRoll}
+        />
       )}
       <ul class="progress">
         {room.bowlers.map((bowler) => (
