@@ -37,6 +37,7 @@ export const App = ({ connection, initialCode, origin }: AppProps) => {
               ? "El anfitrión te ha sacado de la sala."
               : error && errorMessage(error)
         }
+        entering={connection.entering.value}
         onCreate={connection.create}
         onJoin={connection.join}
       />

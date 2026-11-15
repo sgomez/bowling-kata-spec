@@ -26,7 +26,7 @@ describe("app", () => {
     );
 
     expect(html).toContain("Crear sala");
-    expect(html).toContain('value="K7MPQ"');
+    expect(html).toContain("Te han invitado a la sala <strong>K7MPQ</strong>");
   });
 
   it("shows the last refusal in Spanish", () => {
@@ -36,6 +36,15 @@ describe("app", () => {
     const html = render(<App connection={s} initialCode="" origin="" />);
 
     expect(html).toContain("No existe ninguna sala con ese código.");
+  });
+
+  it("waits on the Room the Bowler is entering", () => {
+    const s = connection();
+    s.create("Ana");
+
+    const html = render(<App connection={s} initialCode="" origin="" />);
+
+    expect(html).toContain("Conectando…");
   });
 
   it.each([
@@ -51,7 +60,7 @@ describe("app", () => {
 
       expect(html).toContain(text);
       expect(html).toContain("Crear sala");
-      expect(html).not.toContain('value="K7MPQ"');
+      expect(html).not.toContain("K7MPQ");
     },
   );
 
