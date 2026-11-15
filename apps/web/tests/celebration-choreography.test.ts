@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
   type Manner,
   observe,
+  recordRoll,
   settle,
   stage,
-  trackRoll,
 } from "../src/lane-choreography.js";
 import { spotOf, still, straight } from "./choreography-setup.js";
 
@@ -13,7 +13,7 @@ import { spotOf, still, straight } from "./choreography-setup.js";
 const SETTLED = 500;
 const rolled = (standing: readonly Pin[], knocked: readonly Pin[]) =>
   settle(
-    observe(trackRoll(standing, straight), {
+    observe(recordRoll(standing, straight), {
       elapsed: SETTLED,
       ball: { ...spotOf(1), angle: 0 },
       pins: still(),
@@ -25,22 +25,22 @@ const strike = rolled(PINS, PINS);
 const spare = rolled([7, 10], [7, 10]);
 
 const celebrationAt = (
-  track: ReturnType<typeof rolled>,
+  record: ReturnType<typeof rolled>,
   since: number,
   manner: Manner = {},
-) => stage(track, SETTLED + since, manner).celebration;
+) => stage(record, SETTLED + since, manner).celebration;
 
-const timeline = (track: ReturnType<typeof rolled>, manner: Manner = {}) =>
-  Array.from({ length: 100 }, (_, i) => celebrationAt(track, i * 20, manner));
+const timeline = (record: ReturnType<typeof rolled>, manner: Manner = {}) =>
+  Array.from({ length: 100 }, (_, i) => celebrationAt(record, i * 20, manner));
 
-const flashes = (track: ReturnType<typeof rolled>, manner: Manner = {}) =>
-  timeline(track, manner).filter(
+const flashes = (record: ReturnType<typeof rolled>, manner: Manner = {}) =>
+  timeline(record, manner).filter(
     (now, i, all) => (now?.lights ?? 0) > 0 && (all[i - 1]?.lights ?? 0) === 0,
   ).length;
 
 describe("choosing the celebration", () => {
   it("plays nothing while the ball still rolls", () => {
-    const rolling = observe(trackRoll(PINS, straight), {
+    const rolling = observe(recordRoll(PINS, straight), {
       elapsed: SETTLED,
       ball: { ...spotOf(1), angle: 0 },
       pins: still(),

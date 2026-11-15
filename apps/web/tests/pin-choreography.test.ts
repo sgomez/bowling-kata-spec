@@ -77,17 +77,17 @@ describe("choreographing the Pins", () => {
   });
 
   describe("once the Roll's outcome is known", () => {
-    const track = hit(shifted(2, 0, 0.05));
+    const record = hit(shifted(2, 0, 0.05));
 
     it("keeps standing a Pin the outcome didn't count", () => {
-      const pins = stage(settle(track, []), 1200).pins;
+      const pins = stage(settle(record, []), 1200).pins;
 
       expect(pins.get(2)).toMatchObject({ ...spotOf(2), state: "standing" });
     });
 
     it("topples a Pin the outcome counted, from when it settled", () => {
       const pins = (elapsed: number) =>
-        stage(settle(track, [2, 9]), elapsed).pins;
+        stage(settle(record, [2, 9]), elapsed).pins;
 
       expect(pins(900).get(2)?.state).toBe("knocked");
       expect(pins(619).get(9)?.state).toBe("standing");
