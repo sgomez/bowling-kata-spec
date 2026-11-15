@@ -5,8 +5,15 @@
   "type": "module",
   "main": "src/cli.ts",
   "scripts": {
-    "test": "vitest run",
-    "start": "tsx src/cli.ts"
+    "test": "vitest run --coverage",
+    "start": "tsx src/cli.ts",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit",
+    "arch": "depcruise src tests",
+    "knip": "knip",
+    "size": "node scripts/size.mjs",
+    "prepare": "lefthook install",
+    "check": "pnpm lint && pnpm typecheck && pnpm size && pnpm arch && pnpm knip && pnpm test"
   },
   "keywords": [
     "bowling",
@@ -16,9 +23,18 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@biomejs/biome": "^2.6.7",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@swc/core": "^1.16.22",
     "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.0",
+    "dependency-cruiser": "^18.7.2",
+    "knip": "^6.45.1",
+    "lefthook": "^2.2.2",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
-  }
+  },
+  "packageManager": "pnpm@12.14.0"
 }
