@@ -1,21 +1,17 @@
-import type { Frame } from "./frame.js";
+import type { Frame, FrameNumber, PinCount } from "./frame.js";
 
 type RollValidationFailure =
   | { type: "GAME_COMPLETE" }
-  | { type: "INVALID_FORMAT"; input: unknown }
-  | { type: "PINS_OUT_OF_RANGE"; pinCount: number }
-  | { type: "STRIKE_ON_SECOND_ROLL" }
-  | { type: "STRIKE_FEWER_PINS" }
-  | { type: "SPARE_ON_FIRST_ROLL" }
-  | { type: "SPARE_ON_FRESH_RACK" }
-  | { type: "EXCEEDS_REMAINING_PINS"; remainingPins: number };
+  | { type: "EXCEEDS_REMAINING_PINS"; remainingPins: PinCount };
 
 export type RollValidationResult =
-  | { valid: true; pins: number }
+  | { valid: true; pins: PinCount }
   | { valid: false; failure: RollValidationFailure };
 
+const standing = (knocked: PinCount): PinCount => (10 - knocked) as PinCount;
+
 export class Game {
-  private rolls: number[] = [];
+  private rolls: PinCount[] = [];
 
   get isFreshRack(): boolean {
     const activeFrame = this.frames.find((f) => !f.isComplete);
@@ -38,95 +34,29 @@ export class Game {
     return rolls[0] === 10 ? rolls[1] === 10 : rolls[0] + rolls[1] === 10;
   }
 
-  validateRoll(pins: number | string): RollValidationResult {
+  validateRoll(pins: PinCount): RollValidationResult {
     if (this.isComplete()) {
       return { valid: false, failure: { type: "GAME_COMPLETE" } };
     }
 
     const remaining = this.remainingPins;
-    let pinCount: number;
-
-    if (typeof pins === "string") {
-      const trimmed = pins.trim().toUpperCase();
-      if (trimmed === "X") {
-        if (!this.isFreshRack) {
-          if (this.currentFrame < 10) {
-            return { valid: false, failure: { type: "STRIKE_ON_SECOND_ROLL" } };
-          }
-          if (remaining !== 10) {
-            return { valid: false, failure: { type: "STRIKE_FEWER_PINS" } };
-          }
-          return { valid: false, failure: { type: "STRIKE_ON_SECOND_ROLL" } };
-        }
-        pinCount = 10;
-      } else if (trimmed === "/") {
-        if (this.isFreshRack) {
-          if (this.currentRoll === 1) {
-            return { valid: false, failure: { type: "SPARE_ON_FIRST_ROLL" } };
-          }
-          return { valid: false, failure: { type: "SPARE_ON_FRESH_RACK" } };
-        }
-        pinCount = remaining;
-      } else if (trimmed === "-") {
-        pinCount = 0;
-      } else {
-        if (!/^\d+$/.test(trimmed)) {
-          return {
-            valid: false,
-            failure: { type: "INVALID_FORMAT", input: pins },
-          };
-        }
-        pinCount = parseInt(trimmed, 10);
-      }
-    } else {
-      if (!Number.isInteger(pins)) {
-        return {
-          valid: false,
-          failure: { type: "INVALID_FORMAT", input: pins },
-        };
-      }
-      pinCount = pins;
-    }
-
-    if (pinCount < 0 || pinCount > 10) {
-      return { valid: false, failure: { type: "PINS_OUT_OF_RANGE", pinCount } };
-    }
-
-    if (pinCount > remaining) {
+    if (pins > remaining) {
       return {
         valid: false,
         failure: { type: "EXCEEDS_REMAINING_PINS", remainingPins: remaining },
       };
     }
 
-    return { valid: true, pins: pinCount };
+    return { valid: true, pins };
   }
 
-  roll(pins: number | string): void {
+  roll(pins: PinCount): void {
     const result = this.validateRoll(pins);
     if (!result.valid) {
       const f = result.failure;
       switch (f.type) {
         case "GAME_COMPLETE":
           throw new Error("Game is already complete");
-        case "INVALID_FORMAT":
-          throw new Error(`Invalid roll input: ${pins}`);
-        case "PINS_OUT_OF_RANGE":
-          throw new Error(`Invalid pin count: ${f.pinCount}`);
-        case "STRIKE_ON_SECOND_ROLL":
-          throw new Error(
-            this.currentFrame < 10
-              ? "Cannot roll a strike on the second roll of frames 1-9"
-              : "Cannot roll a strike on the second roll of a frame",
-          );
-        case "STRIKE_FEWER_PINS":
-          throw new Error(
-            "Cannot roll a strike when fewer than 10 pins are standing",
-          );
-        case "SPARE_ON_FIRST_ROLL":
-          throw new Error("Cannot roll a spare on the first roll");
-        case "SPARE_ON_FRESH_RACK":
-          throw new Error("Cannot roll a spare when all pins are reset");
         case "EXCEEDS_REMAINING_PINS":
           throw new Error(
             `Pin count exceeds remaining pins: ${pins} > ${f.remainingPins}`,
@@ -149,7 +79,7 @@ export class Game {
     return true;
   }
 
-  get remainingPins(): number {
+  get remainingPins(): PinCount {
     const activeFrame = this.frames.find((f) => !f.isComplete);
     if (!activeFrame) {
       return 0;
@@ -159,7 +89,7 @@ export class Game {
       if (activeFrame.rolls.length === 0) {
         return 10;
       }
-      return 10 - activeFrame.rolls[0];
+      return standing(activeFrame.rolls[0]);
     }
 
     // Tenth Frame
@@ -168,16 +98,16 @@ export class Game {
       return 10;
     }
     if (rolls.length === 1) {
-      return rolls[0] === 10 ? 10 : 10 - rolls[0];
+      return rolls[0] === 10 ? 10 : standing(rolls[0]);
     }
     if (rolls[0] === 10) {
-      return rolls[1] === 10 ? 10 : 10 - rolls[1];
+      return rolls[1] === 10 ? 10 : standing(rolls[1]);
     }
     // Spare on first two rolls
     return 10;
   }
 
-  get currentFrame(): number {
+  get currentFrame(): FrameNumber {
     const activeFrame = this.frames.find((f) => !f.isComplete);
     if (!activeFrame) {
       return 10;
@@ -208,10 +138,10 @@ export class Game {
     return this.frames.every((f) => f.isComplete);
   }
 
-  get frames(): Frame[] {
+  get frames(): readonly Frame[] {
     const frameData: {
-      frameNumber: number;
-      rolls: number[];
+      frameNumber: FrameNumber;
+      rolls: PinCount[];
       isComplete: boolean;
       startIndex: number;
     }[] = [];
@@ -219,7 +149,7 @@ export class Game {
 
     for (let frameIndex = 1; frameIndex <= 10; frameIndex++) {
       const startIndex = rollIndex;
-      const frameRolls: number[] = [];
+      const frameRolls: PinCount[] = [];
 
       if (frameIndex < 10) {
         if (rollIndex < this.rolls.length) {
@@ -236,7 +166,7 @@ export class Game {
             : frameRolls.length === 2;
 
         frameData.push({
-          frameNumber: frameIndex,
+          frameNumber: frameIndex as FrameNumber,
           rolls: frameRolls,
           isComplete,
           startIndex,
@@ -262,7 +192,7 @@ export class Game {
           (frameRolls.length === 2 && frameRolls[0] + frameRolls[1] < 10);
 
         frameData.push({
-          frameNumber: frameIndex,
+          frameNumber: frameIndex as FrameNumber,
           rolls: frameRolls,
           isComplete,
           startIndex,
@@ -300,7 +230,7 @@ export class Game {
       }
 
       // 10th frame
-      return f.rolls.reduce((sum, r) => sum + r, 0);
+      return f.rolls.reduce<number>((sum, r) => sum + r, 0);
     });
 
     // Calculate cumulative scores

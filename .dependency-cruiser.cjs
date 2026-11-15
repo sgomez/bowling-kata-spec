@@ -4,7 +4,7 @@ module.exports = {
     {
       name: "domain-imports-only-domain",
       comment:
-        "The domain stays portable: no presentation, CLI, node: modules or external packages.",
+        "The domain stays portable: no presentation, CLI, input, node: modules or external packages.",
       severity: "error",
       from: { path: "^src/domain/" },
       to: { pathNot: "^src/domain/" },
@@ -14,6 +14,12 @@ module.exports = {
       severity: "error",
       from: { path: "^src/presentation/" },
       to: { pathNot: "^src/(domain|presentation)/" },
+    },
+    {
+      name: "input-imports-only-domain",
+      severity: "error",
+      from: { path: "^src/input/" },
+      to: { pathNot: "^src/(domain|input)/" },
     },
     {
       name: "no-circular",

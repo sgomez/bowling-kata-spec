@@ -1,7 +1,26 @@
 import { stdin as defaultStdin, stdout as defaultStdout } from "node:process";
 import * as readline from "node:readline/promises";
 import { Game } from "./domain/game.js";
+import { type NotationFailure, parseNotation } from "./input/notation.js";
 import { formatScorecard } from "./presentation/scorecard.js";
+
+const INVALID_ENTRY =
+  "Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n";
+
+function notationMessage(failure: NotationFailure): string {
+  switch (failure.type) {
+    case "STRIKE_ON_SECOND_ROLL":
+      return "No se puede registrar un strike ('X') en el segundo lanzamiento.\n";
+    case "STRIKE_FEWER_PINS":
+      return "No se puede registrar un strike ('X') cuando quedan menos de 10 bolos.\n";
+    case "SPARE_ON_FIRST_ROLL":
+      return "No se puede registrar un spare ('/') en el primer lanzamiento.\n";
+    case "SPARE_ON_FRESH_RACK":
+      return "No se puede registrar un spare ('/') con todos los bolos en pie.\n";
+    default:
+      return INVALID_ENTRY;
+  }
+}
 
 export async function runCli(
   input: NodeJS.ReadableStream = defaultStdin,
@@ -51,40 +70,20 @@ export async function runCli(
           continue;
         }
 
-        const validation = game.validateRoll(trimmed);
+        const parsed = parseNotation(trimmed, game);
+        if (!parsed.valid) {
+          output.write(notationMessage(parsed.failure));
+          continue;
+        }
+
+        const validation = game.validateRoll(parsed.pins);
         if (!validation.valid) {
-          switch (validation.failure.type) {
-            case "STRIKE_ON_SECOND_ROLL":
-              output.write(
-                "No se puede registrar un strike ('X') en el segundo lanzamiento.\n",
-              );
-              break;
-            case "STRIKE_FEWER_PINS":
-              output.write(
-                "No se puede registrar un strike ('X') cuando quedan menos de 10 bolos.\n",
-              );
-              break;
-            case "SPARE_ON_FIRST_ROLL":
-              output.write(
-                "No se puede registrar un spare ('/') en el primer lanzamiento.\n",
-              );
-              break;
-            case "SPARE_ON_FRESH_RACK":
-              output.write(
-                "No se puede registrar un spare ('/') con todos los bolos en pie.\n",
-              );
-              break;
-            case "EXCEEDS_REMAINING_PINS":
-              output.write(
-                `El total de bolos en el marco no puede superar 10 (bolos restantes: ${validation.failure.remainingPins}).\n`,
-              );
-              break;
-            default:
-              output.write(
-                "Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n",
-              );
-              break;
-          }
+          const failure = validation.failure;
+          output.write(
+            failure.type === "EXCEEDS_REMAINING_PINS"
+              ? `El total de bolos en el marco no puede superar 10 (bolos restantes: ${failure.remainingPins}).\n`
+              : INVALID_ENTRY,
+          );
           continue;
         }
 

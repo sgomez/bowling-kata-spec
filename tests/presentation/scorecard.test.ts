@@ -157,9 +157,9 @@ describe("formatScorecard", () => {
       for (let i = 0; i < 18; i++) {
         game.roll(0);
       }
-      game.roll("X");
+      game.roll(10);
       game.roll(9);
-      game.roll("/");
+      game.roll(1);
 
       const lines = formatScorecard(game).trim().split("\n");
       expect(lines[5]).toBe(
@@ -176,8 +176,8 @@ describe("formatScorecard", () => {
         game.roll(0);
       }
       game.roll(8);
-      game.roll("/");
-      game.roll("X");
+      game.roll(2);
+      game.roll(10);
 
       const lines = formatScorecard(game).trim().split("\n");
       expect(lines[5]).toBe(
@@ -210,7 +210,7 @@ describe("formatScorecard", () => {
       for (let i = 0; i < 18; i++) {
         game.roll(0);
       }
-      game.roll("X");
+      game.roll(10);
 
       let lines = formatScorecard(game).trim().split("\n");
       expect(lines[5]).toBe(
@@ -234,10 +234,10 @@ describe("formatScorecard", () => {
   describe("Scorecard Notation and Undo Display", () => {
     it("renders '-' for zero-pin rolls in open frames and gutter games", () => {
       const game = new Game();
-      game.roll("-");
+      game.roll(0);
       game.roll(7);
       game.roll(8);
-      game.roll("-");
+      game.roll(0);
 
       const lines = formatScorecard(game).trim().split("\n");
       expect(lines[5]).toBe(
@@ -251,7 +251,7 @@ describe("formatScorecard", () => {
     it("renders '-' for a complete gutter game", () => {
       const game = new Game();
       for (let i = 0; i < 20; i++) {
-        game.roll("-");
+        game.roll(0);
       }
 
       const lines = formatScorecard(game).trim().split("\n");
