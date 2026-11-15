@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Bolos</title>
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="#0e0b1a"/>
+  <g filter="url(#glow)" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="16">
+    <path stroke="#ff3d8b" d="M256 120c-22 0-32 18-32 38 0 16 8 26 8 40 0 18-30 44-30 96 0 46 20 78 26 98h56c6-20 26-52 26-98 0-52-30-78-30-96 0-14 8-24 8-40 0-20-10-38-32-38z"/>
+    <path stroke="#3de8ff" d="M234 214h44M228 232h56"/>
+  </g>
+</svg>
