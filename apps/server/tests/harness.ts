@@ -72,9 +72,9 @@ export const useServer = () => {
     host.send({ type: "create", nickname });
     const message = await host.next();
     if (message.type !== "room") {
-      throw new Error(message.error);
+      throw new Error(message.type);
     }
-    return { host, code: message.room.code };
+    return { host, code: message.room.code, token: message.token };
   };
 
   const joinRoom = async (code: string, nickname: string) => {

@@ -11,5 +11,5 @@ export {
 } from "./protocol.js";
 export { MAX_BOWLERS, Room } from "./room.js";
 export { generateRoomCode, parseRoomCode, type RoomCode } from "./room-code.js";
-export type { RoomFailure } from "./room-result.js";
+export type { RoomFailure, RoomResult } from "./room-result.js";
 export type { RoomSnapshot } from "./room-snapshot.js";

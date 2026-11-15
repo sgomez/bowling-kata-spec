@@ -7,6 +7,7 @@ export const send = (socket: WebSocket, message: ServerMessage) =>
 
 export class RoomEntry {
   readonly sockets = new Map<BowlerId, WebSocket>();
+  readonly tokens = new Map<BowlerId, string>();
   private cancelTimer: (() => void) | undefined;
   private disposed = false;
 
@@ -23,6 +24,10 @@ export class RoomEntry {
     this.reschedule();
   }
 
+  bowlerWith(token: string) {
+    return [...this.tokens].find(([, t]) => t === token)?.[0];
+  }
+
   dispose() {
     this.disposed = true;
     this.cancelTimer?.();
@@ -31,7 +36,9 @@ export class RoomEntry {
   private broadcast() {
     const now = this.clock.now();
     for (const [you, socket] of this.sockets) {
-      send(socket, { type: "room", you, room: this.room.snapshot(you, now) });
+      const token = this.tokens.get(you) ?? "";
+      const room = this.room.snapshot(you, now);
+      send(socket, { type: "room", you, token, room });
     }
   }
 

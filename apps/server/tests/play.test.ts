@@ -9,7 +9,7 @@ const STRIKE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const snapshot = async (client: Client): Promise<RoomSnapshot> => {
   const message = await client.next();
   if (message.type !== "room") {
-    throw new Error(message.error);
+    throw new Error(message.type);
   }
   return message.room;
 };

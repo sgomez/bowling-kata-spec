@@ -9,22 +9,12 @@ import {
   parseRoomCode,
   Room,
   type RoomCode,
+  type RoomResult,
 } from "@bowling/domain";
-import { WebSocketServer } from "ws";
+import { type WebSocket, WebSocketServer } from "ws";
 import type { Clock } from "./clock.js";
 import { RoomEntry, send } from "./room-entry.js";
-
-interface Seat {
-  entry: RoomEntry;
-  bowlerId: BowlerId;
-}
-
-type SeatedMessage = Extract<ClientMessage, { type: "start" | "roll" }>;
-
-const act = ({ entry, bowlerId }: Seat, message: SeatedMessage, now: number) =>
-  message.type === "start"
-    ? entry.room.start(bowlerId, now)
-    : entry.room.roll(bowlerId, message.pins, now);
+import { act, isSeated, type Seat, type SeatedMessage } from "./seated.js";
 
 export const attachRoomSocket = (
   server: Server,
@@ -32,6 +22,7 @@ export const attachRoomSocket = (
   clock: Clock,
 ) => {
   const rooms = new Map<RoomCode, RoomEntry>();
+  const seats = new WeakMap<WebSocket, Seat>();
   const wss = new WebSocketServer({ server, path: "/ws" });
   server.on("close", () => {
     for (const entry of rooms.values()) {
@@ -40,26 +31,89 @@ export const attachRoomSocket = (
     wss.close();
   });
 
+  const unseat = (entry: RoomEntry, bowlerId: BowlerId) => {
+    const socket = entry.sockets.get(bowlerId);
+    if (socket) {
+      seats.delete(socket);
+    }
+    entry.sockets.delete(bowlerId);
+    entry.tokens.delete(bowlerId);
+    return socket;
+  };
+
+  const settle = (entry: RoomEntry) => {
+    if (entry.room.isEmpty()) {
+      entry.dispose();
+      rooms.delete(entry.room.code);
+    } else {
+      entry.changed();
+    }
+  };
+
+  const afterSeated = (seat: Seat, message: SeatedMessage) => {
+    if (message.type === "leave") {
+      unseat(seat.entry, seat.bowlerId);
+    }
+    if (message.type === "remove") {
+      const removed = unseat(seat.entry, message.bowlerId);
+      if (removed) {
+        send(removed, { type: "removed" });
+      }
+    }
+    settle(seat.entry);
+  };
+
   wss.on("connection", (socket) => {
-    let seat: Seat | undefined;
     const fail = (error: ErrorCode) => send(socket, { type: "error", error });
+    const failed = (result: RoomResult) => {
+      if (!result.ok) {
+        fail(result.failure.type);
+      }
+      return !result.ok;
+    };
 
     const sit = (entry: RoomEntry, bowlerId: BowlerId) => {
-      seat = { entry, bowlerId };
+      const previous = entry.sockets.get(bowlerId);
+      if (previous) {
+        seats.delete(previous);
+        previous.close();
+      }
+      seats.set(socket, { entry, bowlerId });
       entry.sockets.set(bowlerId, socket);
       entry.changed();
     };
 
+    const seatNew = (entry: RoomEntry, bowlerId: BowlerId) => {
+      entry.tokens.set(bowlerId, `${entry.room.code}.${randomUUID()}`);
+      sit(entry, bowlerId);
+    };
+
+    const resume = (token: string) => {
+      const code = parseRoomCode(token.split(".")[0] ?? "");
+      const entry = code ? rooms.get(code) : undefined;
+      const bowlerId = entry?.bowlerWith(token);
+      if (!entry || !bowlerId) {
+        return fail("UNKNOWN_SESSION");
+      }
+      entry.room.reconnect(bowlerId);
+      sit(entry, bowlerId);
+    };
+
     const handle = (message: ClientMessage) => {
-      if (message.type === "start" || message.type === "roll") {
+      const seat = seats.get(socket);
+      if (isSeated(message)) {
         if (!seat) {
           return fail("NOT_IN_ROOM");
         }
-        const result = act(seat, message, clock.now());
-        return result.ok ? seat.entry.changed() : fail(result.failure.type);
+        return (
+          failed(act(seat, message, clock.now())) || afterSeated(seat, message)
+        );
       }
       if (seat) {
         return fail("ALREADY_IN_ROOM");
+      }
+      if (message.type === "resume") {
+        return resume(message.token);
       }
       const bowler = { id: randomUUID(), nickname: message.nickname };
       if (message.type === "create") {
@@ -70,15 +124,14 @@ export const attachRoomSocket = (
         }
         const entry = new RoomEntry(created.room, clock);
         rooms.set(code, entry);
-        return sit(entry, bowler.id);
+        return seatNew(entry, bowler.id);
       }
       const code = parseRoomCode(message.code);
       const entry = code && rooms.get(code);
       if (!entry) {
         return fail("UNKNOWN_ROOM");
       }
-      const joined = entry.room.join(bowler);
-      return joined.ok ? sit(entry, bowler.id) : fail(joined.failure.type);
+      return failed(entry.room.join(bowler)) || seatNew(entry, bowler.id);
     };
 
     socket.on("message", (data) => {
@@ -91,7 +144,9 @@ export const attachRoomSocket = (
     });
 
     socket.on("close", () => {
+      const seat = seats.get(socket);
       if (seat) {
+        seats.delete(socket);
         seat.entry.sockets.delete(seat.bowlerId);
         seat.entry.room.disconnect(seat.bowlerId, clock.now());
         seat.entry.changed();

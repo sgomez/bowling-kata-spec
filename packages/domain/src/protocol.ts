@@ -5,6 +5,7 @@ import type { RoomFailure } from "./room-result.js";
 import type { RoomSnapshot } from "./room-snapshot.js";
 
 const nickname = v.pipe(v.string(), v.maxLength(64));
+const id = v.pipe(v.string(), v.maxLength(64));
 
 const ClientMessageSchema = v.variant("type", [
   v.object({ type: v.literal("create"), nickname }),
@@ -13,7 +14,10 @@ const ClientMessageSchema = v.variant("type", [
     code: v.pipe(v.string(), v.maxLength(16)),
     nickname,
   }),
+  v.object({ type: v.literal("resume"), token: id }),
   v.object({ type: v.literal("start") }),
+  v.object({ type: v.literal("leave") }),
+  v.object({ type: v.literal("remove"), bowlerId: id }),
   v.object({
     type: v.literal("roll"),
     pins: v.pipe(v.array(v.picklist(PINS)), v.maxLength(PINS.length)),
@@ -26,11 +30,13 @@ export type ErrorCode =
   | RoomFailure["type"]
   | "INVALID_MESSAGE"
   | "UNKNOWN_ROOM"
+  | "UNKNOWN_SESSION"
   | "ALREADY_IN_ROOM"
   | "NOT_IN_ROOM";
 
 export type ServerMessage =
-  | { type: "room"; you: BowlerId; room: RoomSnapshot }
+  | { type: "room"; you: BowlerId; token: string; room: RoomSnapshot }
+  | { type: "removed" }
   | { type: "error"; error: ErrorCode };
 
 const parseJson = (raw: string): unknown => {
