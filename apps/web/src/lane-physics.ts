@@ -9,10 +9,10 @@ import {
   PIN_RADIUS,
 } from "./lane-geometry.js";
 import type { Swipe } from "./swipe.js";
+import { HOOK } from "./swipe-aim.js";
 
 // Every constant here is hand-tuned on a phone, not physically measured.
 const STEP = 1 / 120;
-const HOOK = 2.5;
 const BALL = { density: 190, friction: 0.1, restitution: 0.4 };
 const PIN = { density: 130, friction: 0.2, restitution: 0.5 };
 const BALL_DAMPING = 0.05;
