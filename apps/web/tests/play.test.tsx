@@ -1,58 +1,7 @@
-import type {
-  BowlerView,
-  FrameView,
-  RoomCode,
-  RoomSnapshot,
-} from "@bowling/domain";
 import { render } from "preact-render-to-string";
 import { describe, expect, it } from "vitest";
 import { Final } from "../src/final.js";
-import { Play } from "../src/play.js";
-import type { RollInputProps } from "../src/roll-input.js";
-
-const emptyFrames = (): FrameView[] =>
-  Array.from({ length: 10 }, () => ({ rolls: [], score: null }));
-
-const bowler = (id: string, extra: Partial<BowlerView> = {}): BowlerView => ({
-  id,
-  nickname: id.toUpperCase(),
-  colour: 0,
-  connected: true,
-  finishedFrame: false,
-  frames: emptyFrames(),
-  total: 0,
-  ...extra,
-});
-
-const room = (extra: Partial<RoomSnapshot>): RoomSnapshot => ({
-  code: "K7MPQ" as RoomCode,
-  phase: "playing",
-  hostId: "ana",
-  bowlers: [bowler("ana"), bowler("bea", { finishedFrame: true })],
-  frame: { number: 3, open: true, remainingMs: 12_300 },
-  standing: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-  winners: [],
-  ...extra,
-});
-
-const FakeInput = ({ standing, endsAt }: RollInputProps) => (
-  <p>
-    input:{standing.join(",")} until:{endsAt}
-  </p>
-);
-
-const play = (you: string, snapshot: RoomSnapshot, missed = false) =>
-  render(
-    <Play
-      seat={{ you, room: snapshot, receivedAt: 1_000 }}
-      frame={snapshot.frame as NonNullable<RoomSnapshot["frame"]>}
-      onRoll={() => {}}
-      missed={missed}
-      onMiss={() => {}}
-      RollInput={FakeInput}
-      now={() => 3_000}
-    />,
-  );
+import { bowler, emptyFrames, play, room, yourFrame } from "./play-setup.js";
 
 describe("an open Frame Window", () => {
   it("counts down and lets an unfinished Bowler Roll at the standing Pins", () => {
@@ -67,21 +16,32 @@ describe("an open Frame Window", () => {
     expect(play("ana", room({}))).toContain("until:13300");
   });
 
-  it("shows who has finished the Frame", () => {
-    expect(play("ana", room({}))).toMatch(/ANA.*jugando.*BEA.*ha terminado/s);
-  });
-
-  it("shows who is disconnected", () => {
-    const bowlers = [bowler("ana"), bowler("bea", { connected: false })];
-
-    expect(play("ana", room({ bowlers }))).toMatch(/BEA.*desconectado/s);
-  });
-
-  it("makes a finished Bowler wait for the rest", () => {
-    const html = play("bea", room({}));
+  it("makes a finished Bowler wait for the reveal with their own result", () => {
+    const html = play("ana", yourFrame(3, ["X"], { finishedFrame: true }));
 
     expect(html).not.toContain("input:");
-    expect(html).toContain("Esperando al resto");
+    expect(html).toMatch(
+      /X.*Has terminado este frame\..*Esperando al resto….*Los resultados se revelan al cerrarse el frame\./s,
+    );
+  });
+
+  it("announces the Tenth Frame's bonus Roll", () => {
+    expect(play("ana", yourFrame(10, ["X", "8"]))).toContain(
+      "Tirada de bonificación",
+    );
+    expect(play("ana", yourFrame(10, ["X"]))).not.toContain(
+      "Tirada de bonificación",
+    );
+    expect(
+      play("ana", yourFrame(10, ["X", "8", "1"], { finishedFrame: true })),
+    ).not.toContain("Tirada de bonificación");
+  });
+
+  it("tells the Bowler a Roll cut short by the window did not count", () => {
+    expect(play("ana", room({}), true)).toMatch(
+      /role="status".*Se acabó el tiempo: esa tirada no ha contado\./s,
+    );
+    expect(play("ana", room({}))).not.toContain("Se acabó el tiempo");
   });
 });
 

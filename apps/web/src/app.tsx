@@ -8,6 +8,7 @@ import { Lobby } from "./lobby.js";
 import { closedMessage, errorMessage } from "./messages.js";
 import { Reconnecting, ServerRestart } from "./notices.js";
 import { Play } from "./play.js";
+import { Notice } from "./ui.js";
 
 interface AppProps {
   connection: Connection;
@@ -28,6 +29,7 @@ export const App = (props: AppProps) => {
 const Screen = ({ connection, initialCode, origin }: AppProps) => {
   const shared = useSignal<ShareOutcome | undefined>(undefined);
   const removing = useSignal<BowlerId | undefined>(undefined);
+  const leaving = useSignal(false);
   const seat = connection.seat.value;
   const error = connection.error.value;
   const closed = connection.closed.value;
@@ -72,11 +74,19 @@ const Screen = ({ connection, initialCode, origin }: AppProps) => {
           onRoll={connection.roll}
           missed={connection.missed.value === seat.room.frame.number}
           onMiss={connection.miss}
+          leaving={leaving.value}
+          onAskLeave={() => {
+            leaving.value = true;
+          }}
+          onCancelLeave={() => {
+            leaving.value = false;
+          }}
+          onLeave={() => {
+            leaving.value = false;
+            connection.leave();
+          }}
         />
-        {notice && <p role="alert">{notice}</p>}
-        <button type="button" onClick={connection.leave}>
-          Salir de la sala
-        </button>
+        {notice && <Notice tone="error">{notice}</Notice>}
       </>
     );
   }
