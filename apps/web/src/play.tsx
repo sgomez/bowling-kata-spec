@@ -51,6 +51,18 @@ export const Play = ({
     </Toast>
   );
 
+  const dialog = leaving && (
+    <Dialog title="¿Salir de la sala?">
+      <p>La partida seguirá sin ti y no podrás volver a entrar.</p>
+      <Button variant="danger" onClick={onLeave}>
+        Salir de la sala
+      </Button>
+      <Button variant="plain" onClick={onCancelLeave}>
+        Seguir jugando
+      </Button>
+    </Dialog>
+  );
+
   if (!frame.open) {
     return (
       <Reveal
@@ -59,8 +71,10 @@ export const Play = ({
         frame={frame.number}
         endsAt={endsAt}
         now={now}
+        onAskLeave={onAskLeave}
       >
         {notice}
+        {dialog}
       </Reveal>
     );
   }
@@ -113,17 +127,7 @@ export const Play = ({
       )}
       {onLane && <RollOutcome rolls={rolls} />}
       <RivalStrip rivals={room.bowlers.filter((b) => b.id !== you)} />
-      {leaving && (
-        <Dialog title="¿Salir de la sala?">
-          <p>La partida seguirá sin ti y no podrás volver a entrar.</p>
-          <Button variant="danger" onClick={onLeave}>
-            Salir de la sala
-          </Button>
-          <Button variant="plain" onClick={onCancelLeave}>
-            Seguir jugando
-          </Button>
-        </Dialog>
-      )}
+      {dialog}
     </main>
   );
 };

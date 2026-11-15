@@ -54,6 +54,23 @@ describe("leaving the Room", () => {
     expect(html).not.toContain('role="dialog"');
   });
 
+  const reveal = room({
+    frame: { number: 2, open: false, remainingMs: 4_000 },
+  });
+
+  it("offers to leave during the reveal between Frames", () => {
+    const html = play("ana", reveal);
+
+    expect(html).toMatch(/Resultados.*Salir de la sala/s);
+    expect(html).not.toContain('role="dialog"');
+  });
+
+  it("asks before leaving during the reveal", () => {
+    expect(play("ana", reveal, false, true)).toMatch(
+      /role="dialog".*¿Salir de la sala\?.*Seguir jugando/s,
+    );
+  });
+
   it("warns that the Game goes on without the Bowler for good", () => {
     const html = play("ana", room({}), false, true);
 

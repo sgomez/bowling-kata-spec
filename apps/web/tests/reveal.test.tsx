@@ -28,6 +28,7 @@ const reveal = (bowlers: BowlerView[], you = "luis") =>
       frame={1}
       endsAt={6_000}
       now={() => 1_500}
+      onAskLeave={() => {}}
     />,
   );
 

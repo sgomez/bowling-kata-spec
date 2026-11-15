@@ -8,7 +8,7 @@ import {
 import type { ComponentChildren } from "preact";
 import { NextFrame } from "./next-frame.js";
 import { ScorecardButton } from "./scorecard-sheet.js";
-import { Avatar, Chip, Icon } from "./ui.js";
+import { Avatar, Button, Chip, Icon } from "./ui.js";
 import "./styles/reveal.css";
 import { CROWN } from "./icons.js";
 
@@ -35,6 +35,7 @@ interface RevealProps {
   frame: FrameNumber;
   endsAt: number;
   now: () => number;
+  onAskLeave: () => void;
   children?: ComponentChildren;
 }
 
@@ -44,6 +45,7 @@ export const Reveal = ({
   frame,
   endsAt,
   now,
+  onAskLeave,
   children,
 }: RevealProps) => {
   const ranked = standings(bowlers);
@@ -123,6 +125,9 @@ export const Reveal = ({
       <footer class="reveal-actions">
         <ScorecardButton you={you} bowlers={bowlers} />
         <NextFrame endsAt={endsAt} now={now} />
+        <Button variant="plain" onClick={onAskLeave}>
+          Salir de la sala
+        </Button>
       </footer>
     </main>
   );
