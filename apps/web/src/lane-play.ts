@@ -22,7 +22,6 @@ export const playRoll = (standing: readonly Pin[], swipe: Swipe): LanePlay => ({
   elapsed: 0,
 });
 
-// Steps the physics, if still rolling; `knocked` is set on the frame it settles.
 export const advance = (
   play: LanePlay,
   ms: number,

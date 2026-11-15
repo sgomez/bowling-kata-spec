@@ -37,8 +37,7 @@ const radiusOf = (mesh: Mesh) => {
   return mesh.geometry.boundingBox?.max.x ?? 0;
 };
 
-// A mirrored copy of each Pin and the ball under the Lane, and a dark disc
-// under each instead of a shadow map.
+// Dark discs under the mirrored copies stand in for a shadow map.
 export const createReflections = (scene: Scene) => {
   const copies = new Map<Mesh, Mesh>();
   const materials = new Map<Material, Material>();

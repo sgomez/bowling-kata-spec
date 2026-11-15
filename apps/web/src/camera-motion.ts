@@ -22,7 +22,6 @@ const nudgeAt = (since: number) => {
   return 1 - pulse(Math.min(1, (since - NUDGE_IN_MS) / NUDGE_OUT_MS));
 };
 
-// Moves the camera a share of the way to where it looks on the Lane.
 const closer = (camera: LaneCamera, share: number): LaneCamera => {
   const tilt = (camera.tilt * Math.PI) / 180;
   const push = NUDGE * share * camera.height;
@@ -33,7 +32,6 @@ const closer = (camera: LaneCamera, share: number): LaneCamera => {
   };
 };
 
-// Back to rest once the Pins are still.
 export const shoot = (
   ball: number,
   sinceImpact: number,

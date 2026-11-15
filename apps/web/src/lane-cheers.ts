@@ -6,7 +6,6 @@ import { glow } from "./lane-glow.js";
 const FRONT_Y = LANE_LENGTH + 0.28;
 const FRONT_H = 0.6;
 
-// The impact flash and the front lights that flash for a Strike or a Spare.
 export const createCheers = (scene: Scene) => {
   const flash = glow("#FFFFFF", 0);
   flash.scale.setScalar(BALL_RADIUS * 9);

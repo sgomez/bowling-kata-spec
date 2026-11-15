@@ -17,7 +17,6 @@ const marksOf = (
   aim: swipe ? aimOf(swipe) : [],
 });
 
-// The Swipe in progress: its trail, aim and indicators, and the first-time hint.
 export const useSwipe = () => {
   const [hint, setHint] = useState(() => !hintSeen());
   const [reading, setReading] = useState<Swipe | undefined>(undefined);

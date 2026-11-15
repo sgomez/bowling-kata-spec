@@ -23,7 +23,6 @@ const FLASHES: Record<RollKind, number> = {
   count: 0,
 };
 
-// Lit for 120 ms, dark for 120 ms, as many times as the kind flashes.
 const lightsAt = (kind: RollKind, since: number) => {
   const flash = Math.floor(since / FLASH_MS);
   return flash % 2 === 0 && flash / 2 < FLASHES[kind] ? 1 : 0;
