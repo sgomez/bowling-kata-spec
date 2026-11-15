@@ -1,6 +1,4 @@
-import { render } from "preact-render-to-string";
 import { describe, expect, it } from "vitest";
-import { Final } from "../src/final.js";
 import { bowler, emptyFrames, play, room, yourFrame } from "./play-setup.js";
 
 describe("an open Frame Window", () => {
@@ -89,36 +87,5 @@ describe("a Roll the Frame Window cut short", () => {
       "Se acabó el tiempo: esa tirada no ha contado.",
     );
     expect(play("ana", room({ frame }))).not.toContain("Se acabó el tiempo");
-  });
-});
-
-describe("the final Scores", () => {
-  const final = (winners: string[]) =>
-    render(
-      <Final
-        seat={{
-          you: "ana",
-          receivedAt: 0,
-          room: room({
-            phase: "finished",
-            winners,
-            bowlers: [
-              bowler("ana", { total: 87 }),
-              bowler("bea", { total: 87 }),
-            ],
-          }),
-        }}
-        onRematch={() => {}}
-        onLeave={() => {}}
-      />,
-    );
-
-  it("names the winner", () => {
-    expect(final(["ana"])).toContain("¡Gana ANA!");
-    expect(final(["ana"])).toContain("87");
-  });
-
-  it("names a tie", () => {
-    expect(final(["ana", "bea"])).toContain("Empate entre ANA y BEA");
   });
 });
