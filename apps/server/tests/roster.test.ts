@@ -99,6 +99,16 @@ describe("the Host removing a Bowler", () => {
     });
   });
 
+  it("is a plain leave when the Host removes themselves", async () => {
+    const { ana, bea } = await threeBowlers();
+
+    ana.send({ type: "remove", bowlerId: bea.room.hostId });
+
+    expect((await roomOf(bea.client)).room.hostId).toBe(bea.you);
+    ana.send({ type: "create", nickname: "Ana" });
+    expect((await roomOf(ana)).room.bowlers).toHaveLength(1);
+  });
+
   it("is refused to anyone but the Host", async () => {
     const { bea, carlos } = await threeBowlers();
 

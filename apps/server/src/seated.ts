@@ -66,7 +66,7 @@ export const createSeats = () => {
       }
       if (message.type === "remove") {
         const removed = unseat(seat.entry, message.bowlerId);
-        if (removed) {
+        if (removed && message.bowlerId !== seat.bowlerId) {
           send(removed, { type: "removed" });
         }
       }
