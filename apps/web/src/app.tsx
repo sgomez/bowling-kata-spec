@@ -5,7 +5,7 @@ import { Final } from "./final.js";
 import { Home } from "./home.js";
 import { inviteLink, type ShareOutcome, shareInvite } from "./invite.js";
 import { Lobby } from "./lobby.js";
-import { closedMessage, errorMessage } from "./messages.js";
+import { closedMessage, errorMessage, refusal } from "./messages.js";
 import { Reconnecting, ServerRestart } from "./notices.js";
 import { Play } from "./play.js";
 import { Notice } from "./ui.js";
@@ -46,12 +46,12 @@ const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
     return (
       <Home
         initialCode={closed ? "" : initialCode}
-        error={
+        refusal={
           closed
-            ? closedMessage(closed)
+            ? { text: closedMessage(closed), tone: "error" }
             : connection.removed.value
-              ? "El anfitrión te ha sacado de la sala."
-              : error && errorMessage(error)
+              ? { text: "El anfitrión te ha sacado de la sala.", tone: "error" }
+              : error && refusal(error)
         }
         entering={connection.entering.value}
         onCreate={connection.create}

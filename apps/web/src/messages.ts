@@ -30,3 +30,18 @@ const CLOSED: Record<CloseReason, string> = {
 export const closedMessage = (reason: CloseReason) => CLOSED[reason];
 
 export const errorMessage = (code: ErrorCode) => MESSAGES[code];
+
+export interface Refusal {
+  text: string;
+  tone: "error" | "warning";
+  nickname?: boolean;
+}
+
+const WARNINGS = new Set<ErrorCode>(["TOO_MANY_ROOMS"]);
+const NICKNAME = new Set<ErrorCode>(["NICKNAME_TAKEN", "NICKNAME_INVALID"]);
+
+export const refusal = (code: ErrorCode): Refusal => ({
+  text: MESSAGES[code],
+  tone: WARNINGS.has(code) ? "warning" : "error",
+  nickname: NICKNAME.has(code),
+});
