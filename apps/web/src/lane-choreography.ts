@@ -1,13 +1,10 @@
 import type { Pin } from "@bowling/domain";
+import { flashAt, RETURN_MS, shoot } from "./camera-motion.js";
+import { type Celebration, celebrate } from "./celebration.js";
 import { knockedPins, type Pose, rack, type Spot } from "./knock.js";
 import { BALL_RADIUS, FOUL_LINE, LANE_WIDTH } from "./lane-geometry.js";
-import {
-  fall,
-  type PinStaging,
-  type Push,
-  upright,
-  wobble,
-} from "./pin-motion.js";
+import type { LaneCamera } from "./lane-projection.js";
+import { type PinStaging, type Push, stagePins } from "./pin-motion.js";
 import type { Swipe } from "./swipe.js";
 
 export type { PinStaging } from "./pin-motion.js";
@@ -21,6 +18,9 @@ export interface BallStaging extends Spot {
 export interface Staging {
   pins: ReadonlyMap<Pin, PinStaging>;
   ball: BallStaging;
+  camera: LaneCamera;
+  flash: number;
+  celebration?: Celebration;
   done: boolean;
 }
 
@@ -43,14 +43,11 @@ export interface RollTrack {
   toppled: ReadonlyMap<Pin, Push>;
 }
 
-const ROW_MS = 40;
 // Hand-tuned: radians per second at full spin.
 const SPIN_RATE = 4 * Math.PI;
 // Below these a Pin is untouched, not nudged.
 const TOUCHED = 0.002;
 const TURNED = 0.01;
-
-const rowOf = (pin: Pin) => (pin <= 1 ? 0 : pin <= 3 ? 1 : pin <= 6 ? 2 : 3);
 
 export const trackRoll = (
   standing: readonly Pin[],
@@ -127,35 +124,37 @@ export const stage = (
   elapsed: number,
   { reducedMotion = false }: Manner = {},
 ): Staging => {
-  const pushes = [...track.nudged.values(), ...track.toppled.values()];
-  const impact = Math.min(...pushes.map(({ at }) => at));
-  const pinAt = (pin: Pin, spot: Spot): PinStaging => {
-    const push = track.toppled.get(pin);
-    if (push) {
-      const at = Math.max(push.at, impact + rowOf(pin) * ROW_MS);
-      const pose = track.poses.get(pin) ?? spot;
-      return fall(pose, { ...push, at }, elapsed, reducedMotion);
-    }
-    const nudge = track.nudged.get(pin);
-    if (nudge && !reducedMotion) return wobble(spot, nudge, elapsed);
-    return upright(spot);
-  };
-  const pins = new Map(
-    [...track.spots].map(([pin, spot]) => [pin, pinAt(pin, spot)] as const),
-  );
+  const { pins, impact, stillAt } = stagePins(track, elapsed, reducedMotion);
   const ball = {
     ...track.ball,
     roll: track.travelled / BALL_RADIUS,
     spin: (SPIN_RATE * track.spin * elapsed) / 1000,
     gutter: track.gutter,
   };
-  const still = ({ state }: PinStaging) =>
-    state === "standing" || state === "removed";
-  const done = track.knocked !== undefined && [...pins.values()].every(still);
-  return { pins, ball, done };
+  const settled = track.knocked !== undefined;
+  const since = elapsed - impact;
+  const sinceStill = settled
+    ? elapsed - Math.max(track.elapsed, stillAt)
+    : -Infinity;
+  const celebration =
+    track.knocked &&
+    celebrate(
+      track.spots.size,
+      track.knocked.length,
+      elapsed - track.elapsed,
+      reducedMotion,
+    );
+  return {
+    pins,
+    ball,
+    camera: shoot(track.ball.y, since, sinceStill, reducedMotion),
+    flash: flashAt(since, reducedMotion),
+    celebration,
+    done: sinceStill >= RETURN_MS,
+  };
 };
 
 export const atRest = (standing: readonly Pin[], ball: Spot): Staging => {
   const swipe = { release: ball.x, direction: 0, speed: 0, spin: 0 };
-  return stage({ ...trackRoll(standing, swipe), ball, knocked: [] }, 0);
+  return { ...stage({ ...trackRoll(standing, swipe), ball }, 0), done: true };
 };

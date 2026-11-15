@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "preact/hooks";
+import { CelebrationOverlay } from "./celebration-overlay.js";
 import { atRest } from "./lane-choreography.js";
 import { canStartSwipe, checkTime, type LaneActivity } from "./lane-gate.js";
 import { FOUL_LINE } from "./lane-geometry.js";
+import { runLane } from "./lane-loop.js";
 import type { LaneRoll } from "./lane-physics.js";
 import { advance, type LanePlay, playRoll } from "./lane-play.js";
 import { REST_CAMERA } from "./lane-projection.js";
-import type { LaneScene, LaneView } from "./lane-scene.js";
+import type { LaneView } from "./lane-scene.js";
 import { useSwipe } from "./lane-swipe.js";
 import { NO_MARKS } from "./lane-swipe-marks.js";
 import type { RollInputProps } from "./roll-input.js";
@@ -17,7 +19,6 @@ const manner = () => ({
 });
 
 const physics = () => import("./lane-physics.js");
-const scenery = () => import("./lane-scene.js");
 
 const samplesOf = (event: PointerEvent) => {
   const samples = event.getCoalescedEvents?.() ?? [];
@@ -33,6 +34,7 @@ export const Lane = (input: RollInputProps) => {
   const props = useRef(input);
   props.current = input;
   const [timeUp, setTimeUp] = useState(false);
+  const [party, setParty] = useState(false);
   const swipe = useSwipe();
   const view = useRef<LaneView>({
     ...atRest(standing, IDLE_BALL),
@@ -48,7 +50,9 @@ export const Lane = (input: RollInputProps) => {
     endsAt: props.current.endsAt,
   });
   const rest = () => {
+    if (play.current) props.current.onPlayed();
     play.current = undefined;
+    setParty(false);
     view.current = { ...view.current, ...atRest(resting.current, IDLE_BALL) };
   };
 
@@ -59,13 +63,6 @@ export const Lane = (input: RollInputProps) => {
 
   useEffect(() => {
     physics();
-    let scene: LaneScene | undefined;
-    let gone = false;
-    scenery().then(({ createLaneScene }) => {
-      if (gone || !canvas.current) return;
-      scene = createLaneScene(canvas.current, props.current.ball);
-    });
-    let frame = 0;
     let last = performance.now();
     const expire = () => {
       const time = checkTime(activity(), frameTime());
@@ -76,7 +73,7 @@ export const Lane = (input: RollInputProps) => {
       cancel();
       props.current.onMiss();
     };
-    const tick = (now: number) => {
+    const frame = (now: number) => {
       expire();
       if (play.current) {
         const { staging, knocked } = advance(
@@ -86,6 +83,7 @@ export const Lane = (input: RollInputProps) => {
           manner(),
         );
         view.current = { ...view.current, ...staging };
+        setParty(staging.celebration?.confetti ?? false);
         if (knocked) {
           roll.current = undefined;
           resting.current = resting.current.filter((p) => !knocked.includes(p));
@@ -95,14 +93,16 @@ export const Lane = (input: RollInputProps) => {
       }
       last = now;
       view.current.marks = swipe.marks(now);
-      scene?.draw(view.current, REST_CAMERA);
-      frame = requestAnimationFrame(tick);
+      return view.current;
     };
-    frame = requestAnimationFrame(tick);
+    const stop = runLane(
+      canvas.current as HTMLCanvasElement,
+      props.current.ball,
+      frame,
+    );
     return () => {
-      gone = true;
-      cancelAnimationFrame(frame);
-      scene?.dispose();
+      stop();
+      if (play.current) props.current.onPlayed();
       if (roll.current) props.current.onMiss();
     };
   }, []);
@@ -110,6 +110,7 @@ export const Lane = (input: RollInputProps) => {
   const onPointerDown = (event: PointerEvent) => {
     const target = event.currentTarget as Element;
     const [start] = samplesOf(event);
+    if (props.current.finished) return;
     if (!start || !canStartSwipe(activity(), frameTime(), start)) return;
     target.setPointerCapture(event.pointerId);
     swipe.start(start);
@@ -149,6 +150,7 @@ export const Lane = (input: RollInputProps) => {
         onPointerCancel={cancel}
       />
       {swipe.overlay(timeUp)}
+      {party && <CelebrationOverlay />}
       {timeUp && <p>Se acabó el tiempo.</p>}
     </div>
   );

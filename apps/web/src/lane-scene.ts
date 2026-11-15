@@ -10,6 +10,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { poseBall, posePin } from "./lane-actors.js";
+import { createCheers } from "./lane-cheers.js";
 import type { Staging } from "./lane-choreography.js";
 import { BALL_RADIUS } from "./lane-geometry.js";
 import { glow } from "./lane-glow.js";
@@ -25,7 +26,7 @@ export interface LaneView extends Staging {
 }
 
 export interface LaneScene {
-  draw(view: LaneView, camera: LaneCamera): void;
+  draw(view: LaneView): void;
   dispose(): void;
 }
 
@@ -56,6 +57,7 @@ export const createLaneScene = (
   halo.scale.setScalar(BALL_RADIUS * 5);
   scene.add(ball, halo);
   const marks = createSwipeMarks(scene);
+  const cheer = createCheers(scene);
   let warned = false;
   const lens = new PerspectiveCamera();
 
@@ -86,14 +88,15 @@ export const createLaneScene = (
   };
 
   return {
-    draw(view, camera) {
+    draw(view) {
       placePins(view.pins);
       poseBall(ball, view.ball);
       halo.position.copy(ball.position);
       halo.visible = !view.ball.gutter;
       reflections.update([...pins.values(), ball]);
       marks.draw(view.marks);
-      aim(camera);
+      cheer(view);
+      aim(view.camera);
       renderer.render(scene, lens);
       if (!warned && overBudget(renderer.info.render)) {
         warned = true;

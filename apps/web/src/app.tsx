@@ -31,6 +31,7 @@ const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
   const shared = useSignal<ShareOutcome | undefined>(undefined);
   const removing = useSignal<BowlerId | undefined>(undefined);
   const leaving = useSignal(false);
+  const playing = useSignal<number | undefined>(undefined);
   const seat = connection.seat.value;
   const error = connection.error.value;
   const closed = connection.closed.value;
@@ -67,14 +68,22 @@ const Screen = ({ connection, initialCode, origin, webgl }: AppProps) => {
     );
   }
   if (seat.room.frame) {
+    const { number } = seat.room.frame;
     return (
       <>
         <Play
           seat={seat}
           frame={seat.room.frame}
-          onRoll={connection.roll}
+          onRoll={(knocked) => {
+            playing.value = number;
+            connection.roll(knocked);
+          }}
+          playing={playing.value === number}
+          onPlayed={() => {
+            playing.value = undefined;
+          }}
           webgl={webgl}
-          missed={connection.missed.value === seat.room.frame.number}
+          missed={connection.missed.value === number}
           onMiss={connection.miss}
           leaving={leaving.value}
           onAskLeave={() => {
