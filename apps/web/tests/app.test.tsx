@@ -47,22 +47,47 @@ describe("app", () => {
     expect(html).toContain("Conectando…");
   });
 
-  it.each([
-    ["ROOM_CLOSED", "La sala se ha cerrado."],
-    ["SERVER_SHUTDOWN", "El servidor se está reiniciando."],
-  ] as const)(
-    "returns home explaining %s, without the old code",
-    (reason, text) => {
-      const s = connection();
-      s.closed.value = reason;
+  it("returns home explaining the Room closed, without the old code", () => {
+    const s = connection();
+    s.closed.value = "ROOM_CLOSED";
 
-      const html = render(<App connection={s} initialCode="K7MPQ" origin="" />);
+    const html = render(<App connection={s} initialCode="K7MPQ" origin="" />);
 
-      expect(html).toContain(text);
-      expect(html).toContain("Crear sala");
-      expect(html).not.toContain("K7MPQ");
-    },
-  );
+    expect(html).toContain("La sala se ha cerrado.");
+    expect(html).toContain("Crear sala");
+    expect(html).not.toContain("K7MPQ");
+  });
+
+  it("tells the server is restarting instead of the Home", () => {
+    const s = connection();
+    s.closed.value = "SERVER_SHUTDOWN";
+
+    const html = render(<App connection={s} initialCode="K7MPQ" origin="" />);
+
+    expect(html).toContain("El servidor se está reiniciando.");
+    expect(html).toContain("Volver al inicio");
+    expect(html).not.toContain("Crear sala");
+  });
+
+  it("lays the reconnecting notice over the current screen", () => {
+    const s = connection();
+    s.seat.value = { you: "ana", room: ROOM, receivedAt: 0 };
+    s.reconnecting.value = { attempt: 2, nextAt: Date.now() + 3_000 };
+
+    const html = render(<App connection={s} initialCode="" origin="" />);
+
+    expect(html).toContain("Empezar partida");
+    expect(html).toContain("Intento 2 · siguiente en 3 s");
+  });
+
+  it("drops the reconnecting notice once reconnected", () => {
+    const s = connection();
+    s.seat.value = { you: "ana", room: ROOM, receivedAt: 0 };
+
+    const html = render(<App connection={s} initialCode="" origin="" />);
+
+    expect(html).not.toContain("Reconectando…");
+  });
 
   it("moves to the Lobby once in a Room", () => {
     const s = connection();

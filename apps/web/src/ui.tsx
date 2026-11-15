@@ -71,7 +71,7 @@ const ICONS: Record<Tone, string> = {
   warning: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2",
 };
 
-const Icon = ({ d, class: name }: { d: string; class?: string }) => (
+export const Icon = ({ d, class: name }: { d: string; class?: string }) => (
   <svg
     aria-hidden="true"
     class={name}
