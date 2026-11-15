@@ -45,7 +45,13 @@ export const App = ({ connection, initialCode, origin }: AppProps) => {
 
   const notice = error && errorMessage(error);
   if (seat.room.phase === "finished") {
-    return <Final seat={seat} onRematch={connection.rematch} />;
+    return (
+      <Final
+        seat={seat}
+        onRematch={connection.rematch}
+        onLeave={connection.leave}
+      />
+    );
   }
   if (seat.room.frame) {
     return (

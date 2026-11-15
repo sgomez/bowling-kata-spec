@@ -131,6 +131,7 @@ describe("the final Scores", () => {
           }),
         }}
         onRematch={() => {}}
+        onLeave={() => {}}
       />,
     );
 

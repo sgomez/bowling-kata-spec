@@ -6,9 +6,14 @@ const names = new Intl.ListFormat("es-ES", { type: "conjunction" });
 interface FinalProps {
   seat: Seat;
   onRematch: () => void;
+  onLeave: () => void;
 }
 
-export const Final = ({ seat: { you, room }, onRematch }: FinalProps) => {
+export const Final = ({
+  seat: { you, room },
+  onRematch,
+  onLeave,
+}: FinalProps) => {
   const winners = room.bowlers
     .filter((b) => room.winners.includes(b.id))
     .map((b) => b.nickname);
@@ -29,6 +34,9 @@ export const Final = ({ seat: { you, room }, onRematch }: FinalProps) => {
       ) : (
         <p>Esperando a que el anfitrión pida la revancha…</p>
       )}
+      <button type="button" onClick={onLeave}>
+        Salir de la sala
+      </button>
     </main>
   );
 };
