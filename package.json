@@ -8,7 +8,8 @@
     "test": "vitest run --coverage",
     "start": "tsx src/cli.ts",
     "lint": "biome check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "arch": "depcruise src tests"
   },
   "keywords": [
     "bowling",
@@ -21,6 +22,7 @@
     "@biomejs/biome": "^2.6.7",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
+    "@swc/core": "^1.16.22",
     "@types/node": "^26.6.6",
     "@vitest/coverage-v8": "^5.1.0",
     "dependency-cruiser": "^18.7.2",
