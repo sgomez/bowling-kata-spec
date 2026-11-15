@@ -4,7 +4,6 @@ import { runCli } from "../../src/cli.js";
 
 describe("runCli validation", () => {
   it("handles invalid inputs with Spanish error messages and re-prompts", async () => {
-    // Attempt invalid string, then out of range, then valid rolls
     const inputs = [
       "abc\n", // invalid non-number
       "-1\n", // out of range
@@ -37,10 +36,6 @@ describe("runCli validation", () => {
   });
 
   it("rejects 'X' on roll 2 after a 0-pin first roll in frames 1-9 and uses 'strike' terminology", async () => {
-    // Frame 1, roll 1: 0
-    // Frame 1, roll 2: X (invalid, should reject with Spanish message using 'strike')
-    // Frame 1, roll 2 re-prompt: 5
-    // Remaining 18 rolls as gutters
     const inputs = ["0\n", "X\n", "5\n", ...Array(18).fill("0\n"), "n\n"];
     const inStream = Readable.from(inputs);
 
