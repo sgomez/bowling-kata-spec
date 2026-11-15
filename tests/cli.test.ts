@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
 import { Readable, Writable } from "node:stream";
+import { describe, expect, it } from "vitest";
 import { runCli } from "../src/cli.js";
 
 describe("runCli", () => {

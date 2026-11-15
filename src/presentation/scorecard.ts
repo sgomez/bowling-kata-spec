@@ -1,4 +1,4 @@
-import { Game } from "../domain/game.js";
+import type { Game } from "../domain/game.js";
 
 function centerText(text: string, width: number): string {
   if (text.length >= width) {

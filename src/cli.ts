@@ -1,5 +1,5 @@
-import * as readline from "node:readline/promises";
 import { stdin as defaultStdin, stdout as defaultStdout } from "node:process";
+import * as readline from "node:readline/promises";
 import { Game } from "./domain/game.js";
 import { formatScorecard } from "./presentation/scorecard.js";
 
@@ -29,7 +29,7 @@ export async function runCli(
 
     while (playAgain) {
       const game = new Game();
-      output.write("\n" + formatScorecard(game) + "\n\n");
+      output.write(`\n${formatScorecard(game)}\n\n`);
 
       while (!game.isComplete()) {
         const prompt = `Marco ${game.currentFrame}, Lanzamiento ${game.currentRoll}: `;
@@ -47,7 +47,7 @@ export async function runCli(
             continue;
           }
           game.undo();
-          output.write("\n" + formatScorecard(game) + "\n\n");
+          output.write(`\n${formatScorecard(game)}\n\n`);
           continue;
         }
 
@@ -79,8 +79,6 @@ export async function runCli(
                 `El total de bolos en el marco no puede superar 10 (bolos restantes: ${validation.failure.remainingPins}).\n`,
               );
               break;
-            case "INVALID_FORMAT":
-            case "PINS_OUT_OF_RANGE":
             default:
               output.write(
                 "Por favor, introduce un número válido de bolos (0-10), 'X', '/' o '-'.\n",
@@ -91,7 +89,7 @@ export async function runCli(
         }
 
         game.roll(validation.pins);
-        output.write("\n" + formatScorecard(game) + "\n\n");
+        output.write(`\n${formatScorecard(game)}\n\n`);
       }
 
       output.write(

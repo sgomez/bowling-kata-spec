@@ -1,4 +1,4 @@
-import { Frame } from "./frame.js";
+import type { Frame } from "./frame.js";
 
 export type RollValidationFailure =
   | { type: "GAME_COMPLETE" }
@@ -201,8 +201,9 @@ export class Game {
   score(): number {
     const scores = this.cumulativeScores();
     for (let i = scores.length - 1; i >= 0; i--) {
-      if (scores[i] !== null) {
-        return scores[i]!;
+      const score = scores[i];
+      if (score !== null) {
+        return score;
       }
     }
     return 0;

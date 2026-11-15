@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Game } from "../../src/domain/game.js";
 
 describe("Game", () => {
