@@ -1,4 +1,4 @@
-import type { PinCount } from "../domain/frame.js";
+import { PINS_PER_RACK, type PinCount, TENTH_FRAME } from "../domain/frame.js";
 import type { Game } from "../domain/game.js";
 
 export type NotationFailure =
@@ -26,9 +26,12 @@ const fail = (failure: NotationFailure): NotationResult => ({
 
 function parseStrike(game: GameState): NotationResult {
   if (game.isFreshRack) {
-    return ok(10);
+    return ok(PINS_PER_RACK);
   }
-  if (game.currentFrame === 10 && game.remainingPins !== 10) {
+  if (
+    game.currentFrame === TENTH_FRAME &&
+    game.remainingPins !== PINS_PER_RACK
+  ) {
     return fail({ type: "STRIKE_FEWER_PINS" });
   }
   return fail({ type: "STRIKE_ON_SECOND_ROLL" });
@@ -44,22 +47,22 @@ function parseSpare(game: GameState): NotationResult {
   });
 }
 
-export function parseNotation(token: string, game: GameState): NotationResult {
-  const symbol = token.trim().toUpperCase();
-  if (symbol === "X") {
+export function parseNotation(input: string, game: GameState): NotationResult {
+  const token = input.trim().toUpperCase();
+  if (token === "X") {
     return parseStrike(game);
   }
-  if (symbol === "/") {
+  if (token === "/") {
     return parseSpare(game);
   }
-  if (symbol === "-") {
+  if (token === "-") {
     return ok(0);
   }
-  if (!/^\d+$/.test(symbol)) {
-    return fail({ type: "INVALID_FORMAT", input: token });
+  if (!/^\d+$/.test(token)) {
+    return fail({ type: "INVALID_FORMAT", input });
   }
-  const pinCount = Number.parseInt(symbol, 10);
-  if (pinCount > 10) {
+  const pinCount = Number.parseInt(token, 10);
+  if (pinCount > PINS_PER_RACK) {
     return fail({ type: "PINS_OUT_OF_RANGE", pinCount });
   }
   return ok(pinCount as PinCount);

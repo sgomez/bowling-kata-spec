@@ -8,3 +8,7 @@ export interface Frame {
   readonly isComplete: boolean;
   readonly cumulativeScore: number | null;
 }
+
+export const PINS_PER_RACK = 10;
+
+export const TENTH_FRAME = 10;

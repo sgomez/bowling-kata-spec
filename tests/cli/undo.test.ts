@@ -6,7 +6,7 @@ describe("runCli undo", () => {
   it("displays polite message when undo is attempted on empty history", async () => {
     const inputs = [
       "undo\n", // no rolls yet
-      "u\n", // shorthand u on empty history
+      "u\n", // alias u on empty history
       ...Array(20).fill("1\n"),
       "n\n",
     ];
@@ -27,10 +27,6 @@ describe("runCli undo", () => {
   });
 
   it("undoes the last roll and re-prompts for the reverted frame and roll", async () => {
-    // Frame 1, roll 1: 5
-    // User types 'undo' -> should revert to Frame 1, roll 1
-    // User rolls 4, then 3 -> Frame 1 complete (total 7)
-    // Remaining 18 rolls as gutters
     const inputs = [
       "5\n",
       "undo\n",
@@ -56,11 +52,7 @@ describe("runCli undo", () => {
     expect(outputText).toContain("¡Partida finalizada! Puntuación final: 7");
   });
 
-  it("supports 'u' shorthand for undo across frame boundaries", async () => {
-    // Frame 1: strike 'X' -> advances to Marco 2, roll 1
-    // User types 'u' -> reverts strike, prompts Marco 1, roll 1
-    // Frame 1: rolls 8, 1 -> Frame 1 complete (score 9)
-    // Remaining 18 rolls as gutters
+  it("supports 'u' as an alias for undo across frame boundaries", async () => {
     const inputs = [
       "X\n",
       "u\n",
@@ -86,11 +78,6 @@ describe("runCli undo", () => {
   });
 
   it("supports multiple consecutive undos in the tenth frame", async () => {
-    // Frames 1-9: gutters
-    // Frame 10: X, X (prompts roll 3)
-    // 'UNDO' -> reverts roll 2, prompts roll 2
-    // 'u' -> reverts roll 1, prompts roll 1
-    // User rolls 7, 2 (open frame, game completes with score 9)
     const inputs = [
       ...Array(18).fill("0\n"),
       "X\n",
