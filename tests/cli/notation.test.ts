@@ -45,7 +45,7 @@ describe("runCli Notation", () => {
     expect(outputText).toContain("¡Partida finalizada! Puntuación final: 70");
   });
 
-  it("handles '-' shorthand notation for 0 pins in CLI loop", async () => {
+  it("handles '-' notation for 0 pins in CLI loop", async () => {
     // Frame 1: "-" (0 pins), "7" (7 pins) -> Marco 2
     // Frame 2-10: 18 rolls of "-"
     // 'n' to exit

@@ -44,21 +44,21 @@ function parseSpare(game: GameState): NotationResult {
   });
 }
 
-export function parseNotation(token: string, game: GameState): NotationResult {
-  const symbol = token.trim().toUpperCase();
-  if (symbol === "X") {
+export function parseNotation(input: string, game: GameState): NotationResult {
+  const token = input.trim().toUpperCase();
+  if (token === "X") {
     return parseStrike(game);
   }
-  if (symbol === "/") {
+  if (token === "/") {
     return parseSpare(game);
   }
-  if (symbol === "-") {
+  if (token === "-") {
     return ok(0);
   }
-  if (!/^\d+$/.test(symbol)) {
-    return fail({ type: "INVALID_FORMAT", input: token });
+  if (!/^\d+$/.test(token)) {
+    return fail({ type: "INVALID_FORMAT", input });
   }
-  const pinCount = Number.parseInt(symbol, 10);
+  const pinCount = Number.parseInt(token, 10);
   if (pinCount > 10) {
     return fail({ type: "PINS_OUT_OF_RANGE", pinCount });
   }

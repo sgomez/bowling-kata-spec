@@ -6,7 +6,7 @@ describe("runCli undo", () => {
   it("displays polite message when undo is attempted on empty history", async () => {
     const inputs = [
       "undo\n", // no rolls yet
-      "u\n", // shorthand u on empty history
+      "u\n", // alias u on empty history
       ...Array(20).fill("1\n"),
       "n\n",
     ];
@@ -56,7 +56,7 @@ describe("runCli undo", () => {
     expect(outputText).toContain("¡Partida finalizada! Puntuación final: 7");
   });
 
-  it("supports 'u' shorthand for undo across frame boundaries", async () => {
+  it("supports 'u' as an alias for undo across frame boundaries", async () => {
     // Frame 1: strike 'X' -> advances to Marco 2, roll 1
     // User types 'u' -> reverts strike, prompts Marco 1, roll 1
     // Frame 1: rolls 8, 1 -> Frame 1 complete (score 9)
