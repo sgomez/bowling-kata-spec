@@ -34,10 +34,8 @@ export class Game {
     if (rolls.length === 1) {
       return rolls[0] === 10;
     }
-    if (rolls.length === 2) {
-      return rolls[0] === 10 ? rolls[1] === 10 : rolls[0] + rolls[1] === 10;
-    }
-    return false;
+    // An active Tenth Frame never holds three rolls.
+    return rolls[0] === 10 ? rolls[1] === 10 : rolls[0] + rolls[1] === 10;
   }
 
   validateRoll(pins: number | string): RollValidationResult {
@@ -172,14 +170,11 @@ export class Game {
     if (rolls.length === 1) {
       return rolls[0] === 10 ? 10 : 10 - rolls[0];
     }
-    if (rolls.length === 2) {
-      if (rolls[0] === 10) {
-        return rolls[1] === 10 ? 10 : 10 - rolls[1];
-      }
-      // Spare on first two rolls
-      return 10;
+    if (rolls[0] === 10) {
+      return rolls[1] === 10 ? 10 : 10 - rolls[1];
     }
-    return 0;
+    // Spare on first two rolls
+    return 10;
   }
 
   get currentFrame(): number {
@@ -301,18 +296,11 @@ export class Game {
         }
 
         // Open frame
-        if (f.rolls.length === 2) {
-          return f.rolls[0] + f.rolls[1];
-        }
-
-        return null;
-      } else {
-        // 10th frame
-        if (!f.isComplete) {
-          return null;
-        }
-        return f.rolls.reduce((sum, r) => sum + r, 0);
+        return f.rolls[0] + f.rolls[1];
       }
+
+      // 10th frame
+      return f.rolls.reduce((sum, r) => sum + r, 0);
     });
 
     // Calculate cumulative scores
