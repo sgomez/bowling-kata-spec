@@ -1,5 +1,10 @@
 export { MAX_BOWLERS } from "./admission.js";
-export type { BowlerId, BowlerView, FrameView } from "./bowler.js";
+export type {
+  BowlerColour,
+  BowlerId,
+  BowlerView,
+  FrameView,
+} from "./bowler.js";
 export type { Frame, FrameNumber, PinCount } from "./frame.js";
 export { Game, type RollValidationResult } from "./game.js";
 export { MAX_NICKNAME_LENGTH } from "./nickname.js";
