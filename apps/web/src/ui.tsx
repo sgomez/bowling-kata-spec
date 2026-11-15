@@ -12,6 +12,7 @@ import "./styles/chip.css";
 import "./styles/notice.css";
 import "./styles/avatar.css";
 import "./styles/dialog.css";
+import { SPINNER } from "./icons.js";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant: "primary" | "secondary" | "danger" | "plain";
@@ -35,7 +36,7 @@ export const Button = ({
   >
     {busy ? (
       <>
-        <Icon class="spinner" d="M21 12a9 9 0 1 1-6.22-8.56" />
+        <Icon class="spinner" d={SPINNER} />
         {busy}
       </>
     ) : (

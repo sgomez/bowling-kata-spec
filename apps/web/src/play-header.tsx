@@ -1,10 +1,10 @@
 import { type FrameNumber, frameWindowMs, type Pin } from "@bowling/domain";
 import { secondsLeft, useTick } from "./countdown.js";
 import { rollsOfFrame } from "./frame-progress.js";
+import { LEAVE } from "./icons.js";
 import { PinMap } from "./pin-map.js";
 import { Icon } from "./ui.js";
 
-const LEAVE = "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9";
 const URGENT_SECONDS = 5;
 const SLOTS = ["first", "second", "third"];
 

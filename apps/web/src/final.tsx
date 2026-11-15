@@ -8,10 +8,7 @@ import type { Seat } from "./connection.js";
 import { Scorecard, ScorecardLegend } from "./scorecard.js";
 import { Avatar, Button, Icon } from "./ui.js";
 import "./styles/final.css";
-
-const CROWN = "M3 7l4.5 5L12 5l4.5 7L21 7l-2 11H5z";
-const REMATCH =
-  "M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15";
+import { CROWN, RETRY } from "./icons.js";
 
 const names = new Intl.ListFormat("es-ES", { type: "conjunction" });
 
@@ -77,7 +74,7 @@ export const Final = ({
       <footer class="final-actions">
         {room.hostId === you ? (
           <Button variant="primary" onClick={onRematch}>
-            <Icon d={REMATCH} />
+            <Icon d={RETRY} />
             Revancha
           </Button>
         ) : (

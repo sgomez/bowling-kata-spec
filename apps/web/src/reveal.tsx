@@ -10,8 +10,8 @@ import { NextFrame } from "./next-frame.js";
 import { ScorecardButton } from "./scorecard-sheet.js";
 import { Avatar, Chip, Icon } from "./ui.js";
 import "./styles/reveal.css";
+import { CROWN } from "./icons.js";
 
-const CROWN = "M3 7l4.5 5L12 5l4.5 7L21 7l-2 11H5z";
 const FLIP_FROM_MS = 300;
 const FLIP_MS = 320;
 const BOWLER_GAP_MS = 140;

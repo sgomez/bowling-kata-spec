@@ -1,7 +1,6 @@
 import type { BowlerId, BowlerView } from "@bowling/domain";
+import { CROWN } from "./icons.js";
 import { Avatar, Chip, Icon } from "./ui.js";
-
-const CROWN = "M3 7l4.5 5L12 5l4.5 7L21 7l-2 11H5z";
 
 interface LobbyBowlerProps {
   bowler: BowlerView;
